@@ -6,6 +6,7 @@ using SmartQuant;
 using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Providers;
+using System.Reflection;
 
 namespace QuantBox.OQ.CTP
 {
@@ -28,43 +29,19 @@ namespace QuantBox.OQ.CTP
                 //timerAccount.Enabled = false;
                 //timerAccount.Enabled = true;
                 //timerPonstion.Enabled = false;
-                //timerPonstion.Enabled = true;    
+                //timerPonstion.Enabled = true;
 
                 BrokerAccount brokerAccount = new BrokerAccount(m_TradingAccount.AccountID);
 
                 // account fields
                 brokerAccount.BuyingPower = m_TradingAccount.Available;
 
-                brokerAccount.AddField("AccountID", m_TradingAccount.AccountID.ToString());
-                brokerAccount.AddField("Available", m_TradingAccount.Available.ToString());
-                brokerAccount.AddField("BrokerID", m_TradingAccount.BrokerID.ToString());
-                brokerAccount.AddField("Balance", m_TradingAccount.Balance.ToString());
-                brokerAccount.AddField("CashIn", m_TradingAccount.CashIn.ToString());
-                brokerAccount.AddField("CloseProfit", m_TradingAccount.CloseProfit.ToString());
-                brokerAccount.AddField("Commission", m_TradingAccount.Commission.ToString());
-                brokerAccount.AddField("Credit", m_TradingAccount.Credit.ToString());
-                brokerAccount.AddField("CurrMargin", m_TradingAccount.CurrMargin.ToString());
-                brokerAccount.AddField("DeliveryMargin", m_TradingAccount.DeliveryMargin.ToString());
-                brokerAccount.AddField("Deposit", m_TradingAccount.Deposit.ToString());
-                brokerAccount.AddField("ExchangeDeliveryMargin", m_TradingAccount.ExchangeDeliveryMargin.ToString());
-                brokerAccount.AddField("ExchangeMargin", m_TradingAccount.ExchangeMargin.ToString());
-                brokerAccount.AddField("FrozenCash", m_TradingAccount.FrozenCash.ToString());
-                brokerAccount.AddField("FrozenCommission", m_TradingAccount.FrozenCommission.ToString());
-                brokerAccount.AddField("FrozenMargin", m_TradingAccount.FrozenMargin.ToString());
-                brokerAccount.AddField("Interest", m_TradingAccount.Interest.ToString());
-                brokerAccount.AddField("InterestBase", m_TradingAccount.InterestBase.ToString());
-                brokerAccount.AddField("Mortgage", m_TradingAccount.Mortgage.ToString());
-                brokerAccount.AddField("PositionProfit", m_TradingAccount.PositionProfit.ToString());
-                brokerAccount.AddField("PreBalance", m_TradingAccount.PreBalance.ToString());
-                brokerAccount.AddField("PreCredit", m_TradingAccount.PreCredit.ToString());
-                brokerAccount.AddField("PreDeposit", m_TradingAccount.PreDeposit.ToString());
-                brokerAccount.AddField("PreMargin", m_TradingAccount.PreMargin.ToString());
-                brokerAccount.AddField("PreMortgage", m_TradingAccount.PreMortgage.ToString());
-                brokerAccount.AddField("Reserve", m_TradingAccount.Reserve.ToString());
-                brokerAccount.AddField("SettlementID", m_TradingAccount.Reserve.ToString());
-                brokerAccount.AddField("TradingDay", m_TradingAccount.SettlementID.ToString());
-                brokerAccount.AddField("Withdraw", m_TradingAccount.Withdraw.ToString());
-                brokerAccount.AddField("WithdrawQuota", m_TradingAccount.WithdrawQuota.ToString());
+                Type t = typeof(CThostFtdcTradingAccountField);
+                FieldInfo[] fields = t.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                foreach (FieldInfo field in fields)
+                {
+                    brokerAccount.AddField(field.Name, field.GetValue(m_TradingAccount).ToString());
+                }
 
                 DataRow[] rows = _dbInMemInvestorPosition.SelectAll();
 
