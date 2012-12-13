@@ -5,7 +5,7 @@ using QuantBox.CSharp2CTP;
 
 namespace QuantBox.OQ.CTP
 {
-    class DbInMemInvestorPosition
+    class DbInMemInvestorPosition : IDisposable
     {
         public const string InstrumentID = "InstrumentID";
         public const string PosiDirection = "PosiDirection";
@@ -15,12 +15,30 @@ namespace QuantBox.OQ.CTP
 
         private DataTable dtInvestorPosition = new DataTable("Position");
 
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                if (dtInvestorPosition != null)
+                {
+                    dtInvestorPosition.Dispose();
+                    dtInvestorPosition = null;
+                }
+        }
+        ~DbInMemInvestorPosition()
+        {
+            Dispose(false);
+        }
         public DbInMemInvestorPosition()
         {
             dtInvestorPosition.Columns.Add(InstrumentID, Type.GetType("System.String"));
-            dtInvestorPosition.Columns.Add(PosiDirection, typeof(QuantBox.CSharp2CTP.TThostFtdcPosiDirectionType));
-            dtInvestorPosition.Columns.Add(HedgeFlag, typeof(QuantBox.CSharp2CTP.TThostFtdcHedgeFlagType));
-            dtInvestorPosition.Columns.Add(PositionDate, typeof(QuantBox.CSharp2CTP.TThostFtdcPositionDateType));
+            dtInvestorPosition.Columns.Add(PosiDirection, typeof(TThostFtdcPosiDirectionType));
+            dtInvestorPosition.Columns.Add(HedgeFlag, typeof(TThostFtdcHedgeFlagType));
+            dtInvestorPosition.Columns.Add(PositionDate, typeof(TThostFtdcPositionDateType));
             dtInvestorPosition.Columns.Add(Position, Type.GetType("System.Int32"));
             //dtInvestorPosition.Columns.Add("TodayPosition", Type.GetType("System.Int32"));
             //因为PositionDate有了区分，所以TodayPosition可以不专门用字段记录
@@ -164,7 +182,7 @@ namespace QuantBox.OQ.CTP
                             InstrumentID,
                             (int)PosiDirection,
                             (int)HedgeFlag);
-                view.Sort = string.Format("PositionDate DESC");//将历史的排前面
+                view.Sort = "PositionDate DESC";//将历史的排前面
 
 
                 int restVol = volume;
@@ -319,7 +337,7 @@ namespace QuantBox.OQ.CTP
             }
         }
 
-        public void Save()
+        public static void Save()
         {
             //dtInvestorPosition.WriteXml("D:\\1.xml");
         }

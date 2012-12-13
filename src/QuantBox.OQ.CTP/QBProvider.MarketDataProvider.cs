@@ -11,7 +11,6 @@ namespace QuantBox.OQ.CTP
     public partial class QBProvider:IMarketDataProvider
     {
         private IBarFactory factory;
-        private IMarketDataFilter marketDataFilter;
 
         public event MarketDataRequestRejectEventHandler MarketDataRequestReject;
         public event MarketDataSnapshotEventHandler MarketDataSnapshot;
@@ -38,16 +37,16 @@ namespace QuantBox.OQ.CTP
             {
                 if (factory != null)
                 {
-                    factory.NewBar -= new BarEventHandler(OnNewBar);
-                    factory.NewBarOpen -= new BarEventHandler(OnNewBarOpen);
-                    factory.NewBarSlice -= new BarSliceEventHandler(OnNewBarSlice);
+                    factory.NewBar -= OnNewBar;
+                    factory.NewBarOpen -= OnNewBarOpen;
+                    factory.NewBarSlice -= OnNewBarSlice;
                 }
                 factory = value;
                 if (factory != null)
                 {
-                    factory.NewBar += new BarEventHandler(OnNewBar);
-                    factory.NewBarOpen += new BarEventHandler(OnNewBarOpen);
-                    factory.NewBarSlice += new BarSliceEventHandler(OnNewBarSlice);
+                    factory.NewBar += OnNewBar;
+                    factory.NewBarOpen += OnNewBarOpen;
+                    factory.NewBarSlice += OnNewBarSlice;
                 }
             }
         }
@@ -86,7 +85,8 @@ namespace QuantBox.OQ.CTP
                     case DataManager.MARKET_DATA_SUBSCRIBE:
                         if (!_bMdConnected)
                         {
-                            EmitError(-1,-1,"行情服务器没有连接,无法订阅行情");
+                            EmitError(-1, -1, "行情服务器没有连接,无法订阅行情");
+                            mdlog.ErrorFormat("行情服务器没有连接,无法订阅行情");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -96,7 +96,7 @@ namespace QuantBox.OQ.CTP
                             //通过订阅的方式，由平台传入合约对象，在行情接收处将要使用到合约
                             CThostFtdcDepthMarketDataField DepthMarket;
                             Instrument inst = InstrumentManager.Instruments[group.Symbol];
-                            string altSymbol = inst.GetSymbol(this.Name);
+                            string altSymbol = inst.GetSymbol(Name);
 
                             if (!_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
                             {
@@ -105,13 +105,12 @@ namespace QuantBox.OQ.CTP
                             }
 
                             _dictAltSymbol2Instrument[altSymbol] = inst;
-                            Console.WriteLine("MdApi:订阅合约 {0}",altSymbol);
+                            mdlog.InfoFormat("订阅合约 {0}", altSymbol);
                             MdApi.MD_Subscribe(m_pMdApi, altSymbol);
                        
                         }
                         if (!_bTdConnected)
                         {
-                            EmitError(-1, -1, "交易服务器没有连接，无法保证持仓真实");
                             return;
                         }
                         TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
@@ -121,7 +120,7 @@ namespace QuantBox.OQ.CTP
                     case DataManager.MARKET_DATA_UNSUBSCRIBE:
                         if (!_bMdConnected)
                         {
-                            EmitError(-1, -1, "行情服务器没有连接，退订合约无效");
+                            mdlog.ErrorFormat("行情服务器没有连接，退订合约无效");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -129,16 +128,15 @@ namespace QuantBox.OQ.CTP
                             FIXRelatedSymGroup group = request.GetRelatedSymGroup(i);
 
                             Instrument inst = InstrumentManager.Instruments[group.Symbol];
-                            string altSymbol = inst.GetSymbol(this.Name);
+                            string altSymbol = inst.GetSymbol(Name);
 
                             _dictDepthMarketData.Remove(altSymbol);
-
-                            Console.WriteLine("MdApi:取消订阅 {0}", altSymbol);
+                            mdlog.InfoFormat("取消订阅 {0}", altSymbol);
                             MdApi.MD_Unsubscribe(m_pMdApi, altSymbol);
                         }
                         break;
                     default:
-                        throw new ArgumentException("Unknown subscription type: " + request.SubscriptionRequestType.ToString());
+                        throw new ArgumentException("Unknown subscription type: " + request.SubscriptionRequestType);
                 }
             }
         }
@@ -170,11 +168,7 @@ namespace QuantBox.OQ.CTP
 
 
         #region OpenQuant3接口的新方法
-        public IMarketDataFilter MarketDataFilter
-        {
-            get { return marketDataFilter; }
-            set { marketDataFilter = value; }
-        }
+        public IMarketDataFilter MarketDataFilter { get; set; }
         #endregion
     }
 }

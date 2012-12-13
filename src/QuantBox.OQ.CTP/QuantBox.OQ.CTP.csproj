@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="QuantBox.CSharp2CTP">
       <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
     </Reference>

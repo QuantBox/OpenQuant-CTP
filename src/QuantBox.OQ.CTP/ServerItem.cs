@@ -75,8 +75,8 @@ namespace QuantBox.OQ.CTP
 
         public ServerItem()
         {
-            marketData.ListChanged += new ListChangedEventHandler(Settings_ListChanged);
-            trading.ListChanged += new ListChangedEventHandler(Settings_ListChanged);
+            marketData.ListChanged += Settings_ListChanged;
+            trading.ListChanged += Settings_ListChanged;
         }
         
         public event EventHandler Changed;

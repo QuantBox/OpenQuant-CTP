@@ -12,7 +12,7 @@ namespace QuantBox.OQ.CTP
 {
     public partial class QBProvider : IExecutionProvider
     {
-        private Dictionary<SingleOrder, OrderRecord> orderRecords = new Dictionary<SingleOrder, OrderRecord>();
+        private readonly Dictionary<SingleOrder, OrderRecord> orderRecords = new Dictionary<SingleOrder, OrderRecord>();
 
         public event ExecutionReportEventHandler ExecutionReport;
         public event OrderCancelRejectEventHandler OrderCancelReject;
@@ -23,7 +23,7 @@ namespace QuantBox.OQ.CTP
 
             if (IsConnected)
             {
-                Console.WriteLine(string.Format("GetBrokerInfo:{0}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")));
+                tdlog.Info("GetBrokerInfo");
                 //TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
                 //TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
                 //timerAccount.Enabled = false;
@@ -31,10 +31,7 @@ namespace QuantBox.OQ.CTP
                 //timerPonstion.Enabled = false;
                 //timerPonstion.Enabled = true;
 
-                BrokerAccount brokerAccount = new BrokerAccount(m_TradingAccount.AccountID);
-
-                // account fields
-                brokerAccount.BuyingPower = m_TradingAccount.Available;
+                BrokerAccount brokerAccount = new BrokerAccount(m_TradingAccount.AccountID) { BuyingPower = m_TradingAccount.Available };
 
                 Type t = typeof(CThostFtdcTradingAccountField);
                 FieldInfo[] fields = t.GetFields(BindingFlags.Public | BindingFlags.Instance);
@@ -83,7 +80,7 @@ namespace QuantBox.OQ.CTP
         public void SendNewOrderSingle(NewOrderSingle order)
         {
             SingleOrder key = order as SingleOrder;
-            this.orderRecords.Add(key, new OrderRecord(key));
+            orderRecords.Add(key, new OrderRecord(key));
             Send(key);
         }
 
@@ -111,6 +108,7 @@ namespace QuantBox.OQ.CTP
             //SingleOrder order2 = order as SingleOrder;
             //this.provider.CallReplace(order2);
             EmitError(-1,-1,"不支持改单指令");
+            tdlog.ErrorFormat("不支持改单指令");
         }
 
         public void SendOrderCancelRequest(FIXOrderCancelRequest request)
@@ -149,13 +147,13 @@ namespace QuantBox.OQ.CTP
 
         public void EmitExecutionReport(SingleOrder order, OrdStatus status, string text)
         {
-            OrderRecord record = this.orderRecords[order];
+            OrderRecord record = orderRecords[order];
             EmitExecutionReport(record, status, 0.0, 0, text);
         }
 
         public void EmitExecutionReport(SingleOrder order, double price, int quantity)
         {
-            OrderRecord record = this.orderRecords[order];
+            OrderRecord record = orderRecords[order];
             EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "");
         }
 
@@ -195,7 +193,7 @@ namespace QuantBox.OQ.CTP
             report.AvgPx = record.AvgPx;
             report.CumQty = record.CumQty;
             report.LeavesQty = record.LeavesQty;
-            report.ExecType = this.GetExecType(ordStatus);
+            report.ExecType = QBProvider.GetExecType(ordStatus);
             report.OrdStatus = ordStatus;
             report.Text = text;
 
@@ -227,7 +225,7 @@ namespace QuantBox.OQ.CTP
             EmitExecutionReport(order, OrdStatus.Rejected, message);
         }
 
-        private ExecType GetExecType(OrdStatus status)
+        private static ExecType GetExecType(OrdStatus status)
         {
             switch (status)
             {

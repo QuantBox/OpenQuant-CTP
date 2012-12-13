@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using QuantBox.CSharp2CTP;
@@ -13,6 +12,7 @@ using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
+using log4net;
 
 namespace QuantBox.OQ.CTP
 {
@@ -61,47 +61,43 @@ namespace QuantBox.OQ.CTP
         private IntPtr m_pTdApi = IntPtr.Zero;      //交易对象指针
 
         //行情有效状态，约定连接上并通过认证为有效
-        private volatile bool _bMdConnected = false;
+        private volatile bool _bMdConnected;
         //交易有效状态，约定连接上，通过认证并进行结算单确认为有效
-        private volatile bool _bTdConnected = false;
+        private volatile bool _bTdConnected;
 
         //表示用户操作，也许有需求是用户有多个行情，只连接第一个等
         private bool _bWantMdConnect;
         private bool _bWantTdConnect;
 
-        private object _lockMd = new object();
-        private object _lockTd = new object();
-        private object _lockMsgQueue = new object();
+        private readonly object _lockMd = new object();
+        private readonly object _lockTd = new object();
+        private readonly object _lockMsgQueue = new object();
 
         //记录交易登录成功后的SessionID、FrontID等信息
         private CThostFtdcRspUserLoginField _RspUserLogin;
 
         //记录界面生成的报单，用于定位收到回报消息时所确定的报单,可以多个Ref对应一个Order
-        private Dictionary<string, SingleOrder> _OrderRef2Order = new Dictionary<string, SingleOrder>();
+        private readonly Dictionary<string, SingleOrder> _OrderRef2Order = new Dictionary<string, SingleOrder>();
         //一个Order可能分拆成多个报单，如可能由平今与平昨，或开新单组合而成
-        private Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>> _Orders4Cancel
-            = new Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>>();
+        private readonly Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>> _Orders4Cancel = new Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>>();
 
         //记录账号的实际持仓，保证以最低成本选择开平
-        private DbInMemInvestorPosition _dbInMemInvestorPosition = new DbInMemInvestorPosition();
+        private readonly DbInMemInvestorPosition _dbInMemInvestorPosition = new DbInMemInvestorPosition();
         //记录合约实际行情，用于向界面通知行情用，这里应当记录AltSymbol
-        private Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = new Dictionary<string, CThostFtdcDepthMarketDataField>();
+        private readonly Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = new Dictionary<string, CThostFtdcDepthMarketDataField>();
         //记录合约列表,从实盘合约名到对象的映射
-        private Dictionary<string, CThostFtdcInstrumentField> _dictInstruments = new Dictionary<string, CThostFtdcInstrumentField>();
+        private readonly Dictionary<string, CThostFtdcInstrumentField> _dictInstruments = new Dictionary<string, CThostFtdcInstrumentField>();
         //记录手续费率,从实盘合约名到对象的映射
-        private Dictionary<string, CThostFtdcInstrumentCommissionRateField> _dictCommissionRate = new Dictionary<string, CThostFtdcInstrumentCommissionRateField>();
+        private readonly Dictionary<string, CThostFtdcInstrumentCommissionRateField> _dictCommissionRate = new Dictionary<string, CThostFtdcInstrumentCommissionRateField>();
         //记录保证金率,从实盘合约名到对象的映射
-        private Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = new Dictionary<string, CThostFtdcInstrumentMarginRateField>();
+        private readonly Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = new Dictionary<string, CThostFtdcInstrumentMarginRateField>();
         //记录
-        private Dictionary<string, Instrument> _dictAltSymbol2Instrument = new Dictionary<string, Instrument>();
-
-        private volatile bool _runThread = false;   //控制消息队列轮询线程是否运行
-        private Thread _thread;                     //消息队列轮询线程
+        private readonly Dictionary<string, Instrument> _dictAltSymbol2Instrument = new Dictionary<string, Instrument>();
 
         //用于行情的时间，只在登录时改动，所以要求开盘时能得到更新
-        private int _yyyy = 0;
-        private int _MM = 0;
-        private int _dd = 0;
+        private int _yyyy;
+        private int _MM;
+        private int _dd;
 
         private ServerItem server;
         private AccountItem account;
@@ -122,54 +118,15 @@ namespace QuantBox.OQ.CTP
             _MM = 0;
             _dd = 0;
         }
-        #endregion
 
-        #region 消息队列处理线程
-        public void ThreadProc()
+        private void ChangeDay()
         {
-            timerConnect.Enabled = true;
-            timerAccount.Enabled = true;
-            timerPonstion.Enabled = true;
-
-            while (_runThread)
+            //只在每天的1点以内更新一次
+            if (_dd != DateTime.Now.Day
+                &&DateTime.Now.Hour<1)
             {
-                //如果队列中数据太多，一直在处理也不好，所以做了个简单处理
-                for (int i = 0; i < 32;++i)
-                {
-                    //如果查询队列为空则休息一下，反之不等待直接处理
-                    if (!CommApi.CTP_ProcessMsgQueue(m_pMsgQueue))
-                    {
-                        Thread.Sleep(1);
-                        break;
-                    }
-                }
-            }
-
-            timerConnect.Enabled = false;
-            timerAccount.Enabled = false;
-            timerPonstion.Enabled = false;
-
-            Disconnect_MD();
-            Disconnect_TD();
-            Disconnect_MsgQueue();
-            _thread = null;
-        }
-        #endregion
-
-        #region 定时器
-        private System.Timers.Timer timerConnect = new System.Timers.Timer(1 * 60 * 1000);
-        private System.Timers.Timer timerAccount = new System.Timers.Timer(3 * 60 * 1000);
-        private System.Timers.Timer timerPonstion = new System.Timers.Timer(5 * 60 * 1000);
-
-        void timerConnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            //网络问题从来没有连上，超时直接跳出
-            if (!isConnected)
-                return;
-
-            //换日了，进行部分内容的清理
-            if (_dd != DateTime.Now.Day)
-            {
+                //测试平台晚上会出现交易日为明天的情况，如果现在清空会导致有行情过来，但不显示在界面上
+                //所以修改行情接收部分总是更新
                 _dictDepthMarketData.Clear();
                 _dictInstruments.Clear();
                 _dictCommissionRate.Clear();
@@ -179,35 +136,39 @@ namespace QuantBox.OQ.CTP
                 _MM = DateTime.Now.Month;
                 _dd = DateTime.Now.Day;
             }
+        }
+        #endregion
 
-            if (_bWantMdConnect && !_bMdConnected)
+        #region 定时器
+        private readonly System.Timers.Timer timerDisconnect = new System.Timers.Timer(20 * 1000);
+        private readonly System.Timers.Timer timerAccount = new System.Timers.Timer(3 * 60 * 1000);
+        private readonly System.Timers.Timer timerPonstion = new System.Timers.Timer(5 * 60 * 1000);
+
+        void timerDisconnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //如果从来没有连接上，在用户不知情的情况下又会自动连接上，所以要求定时断开连接
+            if (!isConnected)
             {
-                Disconnect_MD();
-                Connect_MD();
+                tdlog.Warn("从未连接成功，停止尝试！");
+                _Disconnect();
             }
-            if (_bWantTdConnect && !_bTdConnected)
-            {
-                Disconnect_TD();
-                Connect_TD();
-            }
-            //Console.WriteLine(string.Format("Thread:{0},定时检查连通性", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")));
         }
 
         void timerPonstion_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, "");
-                //Console.WriteLine(string.Format("Thread:{0},定时查询持仓", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")));
-            }            
+            }
         }
 
         void timerAccount_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
-                //Console.WriteLine(string.Format("Thread:{0},定时查询资金", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")));
             }
         }
 
@@ -275,7 +236,7 @@ namespace QuantBox.OQ.CTP
             if (false == bCheckOk)
             {
                 ChangeStatus(ProviderStatus.Disconnected);
-                EmitDisconnectedEvent();
+                isConnected = false;
                 return;
             }
 
@@ -287,8 +248,14 @@ namespace QuantBox.OQ.CTP
             //如果前面一次连接一直连不上，新改地址后也会没响应，所以先删除
             Disconnect_MD();
             Disconnect_TD();
-
-            Connect_MsgQueue();
+            
+            if (_bWantMdConnect || _bWantTdConnect)
+            {
+                timerDisconnect.Enabled = true;
+                timerAccount.Enabled = true;
+                timerPonstion.Enabled = true;
+                Connect_MsgQueue();
+            }
             if (_bWantMdConnect)
             {
                 Connect_MD();
@@ -296,17 +263,6 @@ namespace QuantBox.OQ.CTP
             if (_bWantTdConnect)
             {
                 Connect_TD();
-            }
-
-            if (_bWantMdConnect||_bWantTdConnect)
-            {
-                //建立消息队列读取线程
-                if (null == _thread)
-                {
-                    _runThread = true;
-                    _thread = new Thread(new ThreadStart(ThreadProc));
-                    _thread.Start();
-                }
             }
         }
 
@@ -323,6 +279,8 @@ namespace QuantBox.OQ.CTP
                     CommApi.CTP_RegOnConnect(m_pMsgQueue, _fnOnConnect_Holder);
                     CommApi.CTP_RegOnDisconnect(m_pMsgQueue, _fnOnDisconnect_Holder);
                     CommApi.CTP_RegOnRspError(m_pMsgQueue, _fnOnRspError_Holder);
+
+                    CommApi.CTP_StartMsgQueue(m_pMsgQueue);
                 }
             }
         }
@@ -381,24 +339,24 @@ namespace QuantBox.OQ.CTP
         #endregion
 
         #region 断开连接
-        private void _Disconnect(bool bInThread)
+        private void _Disconnect()
         {
+            timerDisconnect.Enabled = false;
+            timerAccount.Enabled = false;
+            timerPonstion.Enabled = false;
+
             CTPAPI.GetInstance().__RegInstrumentDictionary(null);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(null);
             CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(null);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(null);
 
-            _runThread = false;
-            //等线程结束
-            if (null != _thread)
-            {
-                //如果是在线程中被调用，不得用Join
-                if (!bInThread)
-                    _thread.Join();
-            }
+            Disconnect_MD();
+            Disconnect_TD();
+            Disconnect_MsgQueue();
 
             Clear();
             ChangeStatus(ProviderStatus.Disconnected);
+            isConnected = false;
             EmitDisconnectedEvent();
         }
 
@@ -408,6 +366,8 @@ namespace QuantBox.OQ.CTP
             {
                 if (null != m_pMsgQueue && IntPtr.Zero != m_pMsgQueue)
                 {
+                    CommApi.CTP_StopMsgQueue(m_pMsgQueue);
+
                     CommApi.CTP_ReleaseMsgQueue(m_pMsgQueue);
                     m_pMsgQueue = IntPtr.Zero;
                 }
@@ -481,13 +441,13 @@ namespace QuantBox.OQ.CTP
 
                 DateTime _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss);
                 DateTime _newDateTime = _dateTime.AddMilliseconds(AddMilliseconds);
-                Console.WriteLine("SetLocalTime:Return:{0},{1}",
+                tdlog.InfoFormat("SetLocalTime:Return:{0},{1}",
                     WinAPI.SetLocalTime(_newDateTime),
                     _newDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine("{0}不能解析",strNewTime);	
+                tdlog.WarnFormat("{0}不能解析成时间", strNewTime);
             }
         }
 
@@ -509,15 +469,12 @@ namespace QuantBox.OQ.CTP
                         _dd = DateTime.Now.Day;
                     }
 
-                    Console.WriteLine("MdApi:LocalTime:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
-                        DateTime.Now.ToString("HH:mm:ss.fff"), pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
+                    mdlog.InfoFormat("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
+                        pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
                 }
                 //这也有个时间，但取出的时间无效
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("MdApi:{0},{1},{2}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), result, pRspUserLogin.LoginTime);
-                }
+                mdlog.InfoFormat("{0},{1}",result, pRspUserLogin.LoginTime);
             }
             else if (m_pTdApi == pApi)//交易
             {
@@ -533,8 +490,8 @@ namespace QuantBox.OQ.CTP
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
 
-                    Console.WriteLine("TdApi:LocalTime:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
-                        DateTime.Now.ToString("HH:mm:ss.fff"), pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
+                    tdlog.InfoFormat("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
+                        pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
 
                     UpdateLocalTime(SetLocalTimeMode,pRspUserLogin);
@@ -552,10 +509,8 @@ namespace QuantBox.OQ.CTP
                     _dictInstruments.Clear();
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
                 }
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("TdApi:{0},{1},{2}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), result, pRspUserLogin.LoginTime);
-                }
+
+                tdlog.InfoFormat("{0},{1}",result, pRspUserLogin.LoginTime);
             }
 
             if (
@@ -564,7 +519,9 @@ namespace QuantBox.OQ.CTP
                 || (!_bWantTdConnect && _bMdConnected)//只用分析行情连上
                 )
             {
+                timerDisconnect.Enabled = false;//都连接上了，用不着定时断开了
                 ChangeStatus(ProviderStatus.LoggedIn);
+                isConnected = true;
                 EmitConnectedEvent();
             }
         }
@@ -573,42 +530,33 @@ namespace QuantBox.OQ.CTP
         {
             if (m_pMdApi == pApi)//行情
             {
-                Disconnect_MD();
                 if (isConnected)
                 {
-                    EmitError((int)step, pRspInfo.ErrorID, "MdApi:" + pRspInfo.ErrorMsg + " 等待定时重试连接");
+                    mdlog.ErrorFormat("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
                 else
                 {
-                    EmitError((int)step, pRspInfo.ErrorID, "MdApi:" + pRspInfo.ErrorMsg);
-                    if (OutputLogToConsole)
-                    {
-                        Console.WriteLine("MdApi:{0},{1},{2}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                    }
+                    mdlog.InfoFormat("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
             }
             else if (m_pTdApi == pApi)//交易
             {
-                Disconnect_TD();
                 if (isConnected)//如果以前连成功，表示密码没有错，只是初始化失败，可以重试
                 {
-                    EmitError((int)step, pRspInfo.ErrorID, "TdApi:" + pRspInfo.ErrorMsg + " 等待定时重试连接");
+                    tdlog.ErrorFormat("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
                 else
                 {
-                    EmitError((int)step, pRspInfo.ErrorID, "TdApi:" + pRspInfo.ErrorMsg);
-                    if (OutputLogToConsole)
-                    {
-                        Console.WriteLine("TdApi:{0},{1},{2}", Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                    }
+                    tdlog.InfoFormat("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
             }
             if (!isConnected)//从来没有连接成功过，可能是密码错误，直接退出
             {
-                _Disconnect(true);
+                _Disconnect();
             }
             else
             {
+                //以前连接过，现在断了次线，要等重连
                 ChangeStatus(ProviderStatus.Connecting);
                 EmitDisconnectedEvent();
             }
@@ -620,93 +568,91 @@ namespace QuantBox.OQ.CTP
         private void OnRtnDepthMarketData(IntPtr pApi, ref CThostFtdcDepthMarketDataField pDepthMarketData)
         {
             CThostFtdcDepthMarketDataField DepthMarket;
-            if (_dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket))
+            _dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket);
+            //将更新字典的功能提前，因为如果一开始就OnTrade中下单，涨跌停没有更新
+            _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
+
+            if (TimeMode.LocalTime == _TimeMode)
             {
-                //将更新字典的功能提前，因为如果一开始就OnTrade中下单，涨跌停没有更新
-                _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
+                //为了生成正确的Bar,使用本地时间
+                _dateTime = Clock.Now;
+            }
+            else
+            {
+                //直接按HH:mm:ss来解析，测试过这种方法目前是效率比较高的方法
+                int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
+                int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
+                int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
 
-                if (TimeMode.LocalTime == _TimeMode)
+                _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+            }
+
+            Instrument instrument = _dictAltSymbol2Instrument[pDepthMarketData.InstrumentID];
+
+            //通过测试，发现IB的Trade与Quote在行情过来时数量是不同的，在这也做到不同
+            if (DepthMarket.LastPrice == pDepthMarketData.LastPrice
+                && DepthMarket.Volume == pDepthMarketData.Volume)
+            { }
+            else
+            {
+                //行情过来时是今天累计成交量，得转换成每个tick中成交量之差
+                int volume = pDepthMarketData.Volume - DepthMarket.Volume;
+                if (0 == DepthMarket.Volume)
                 {
-                    //为了生成正确的Bar,使用本地时间
-                    _dateTime = Clock.Now;
+                    //没有接收到最开始的一条，所以这计算每个Bar的数据时肯定超大，强行设置为0
+                    volume = 0;
+                }
+                else if (volume < 0)
+                {
+                    //如果隔夜运行，会出现今早成交量0-昨收盘成交量，出现负数，所以当发现为负时要修改
+                    volume = pDepthMarketData.Volume;
+                }
+
+                Trade trade = new Trade(_dateTime,
+                    pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
+                    volume);
+
+                if (null != MarketDataFilter)
+                {
+                    Trade t = MarketDataFilter.FilterTrade(trade, instrument.Symbol);
+                    if (null != t)
+                    {
+                        EmitNewTradeEvent(instrument, t);
+                    }
                 }
                 else
                 {
-                    //直接按HH:mm:ss来解析，测试过这种方法目前是效率比较高的方法
-                    int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
-                    int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
-                    int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
-
-                    _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+                    EmitNewTradeEvent(instrument, trade);
                 }
+            }
 
-                Instrument instrument = _dictAltSymbol2Instrument[pDepthMarketData.InstrumentID];
+            if (
+                DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
+                && DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
+                && DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
+                && DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
+                )
+            { }
+            else
+            {
+                Quote quote = new Quote(_dateTime,
+                    pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
+                    pDepthMarketData.BidVolume1,
+                    pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
+                    pDepthMarketData.AskVolume1
+                );
 
-                //通过测试，发现IB的Trade与Quote在行情过来时数量是不同的，在这也做到不同
-                if (DepthMarket.LastPrice == pDepthMarketData.LastPrice
-                    && DepthMarket.Volume == pDepthMarketData.Volume)
-                { }
-                else
+                if (null != MarketDataFilter)
                 {
-                    //行情过来时是今天累计成交量，得转换成每个tick中成交量之差
-                    int volume = pDepthMarketData.Volume - DepthMarket.Volume;
-                    if (0 == DepthMarket.Volume)
+                    Quote q = MarketDataFilter.FilterQuote(quote, instrument.Symbol);
+                    if (null != q)
                     {
-                        //没有接收到最开始的一条，所以这计算每个Bar的数据时肯定超大，强行设置为0
-                        volume = 0;
-                    }
-                    else if (volume<0)
-                    {
-                        //如果隔夜运行，会出现今早成交量0-昨收盘成交量，出现负数，所以当发现为负时要修改
-                        volume = pDepthMarketData.Volume;
-                    }
-
-                    Trade trade = new Trade(_dateTime,
-                        pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
-                        volume);
-
-                    if (null != marketDataFilter)
-                    {
-                        Trade t = marketDataFilter.FilterTrade(trade, instrument.Symbol);
-                        if (null != t)
-                        {
-                            EmitNewTradeEvent(instrument, t);
-                        }
-                    }
-                    else
-                    {
-                        EmitNewTradeEvent(instrument, trade);
+                        EmitNewQuoteEvent(instrument, q);
                     }
                 }
-
-                if (
-                    DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
-                    && DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
-                    && DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
-                    && DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
-                    )
-                { }
                 else
                 {
-                    Quote quote = new Quote(_dateTime,
-                        pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
-                        pDepthMarketData.BidVolume1,
-                        pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
-                        pDepthMarketData.AskVolume1
-                    );
-
-                    if (null != marketDataFilter)
-                    {
-                        Quote q = marketDataFilter.FilterQuote(quote, instrument.Symbol);
-                        if (null != q)
-                        {
-                            EmitNewQuoteEvent(instrument, q);
-                        }
-                    }
-                    else
-                    {
-                        EmitNewQuoteEvent(instrument, quote);
-                    }                    
+                    EmitNewQuoteEvent(instrument, quote);
                 }
             }
         }
@@ -721,16 +667,16 @@ namespace QuantBox.OQ.CTP
                     //没找到此元素，保存一下
                     _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
                 }
-                Console.WriteLine("TdApi:{0},已经接收查询深度行情 {1}",
-                        Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                        pDepthMarketData.InstrumentID);
+
+                tdlog.InfoFormat("已经接收查询深度行情 {0}", pDepthMarketData.InstrumentID);
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryDepthMarketData(pDepthMarketData);
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryDepthMarketData:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryDepthMarketData:" + pRspInfo.ErrorMsg);
-
-            
+            }
         }
     
         #endregion
@@ -741,6 +687,7 @@ namespace QuantBox.OQ.CTP
             if (!_bTdConnected)
             {
                 EmitError(-1,-1,"交易服务器没有连接，无法撤单");
+                tdlog.ErrorFormat("交易服务器没有连接，无法撤单");
                 return;
             }
 
@@ -773,12 +720,13 @@ namespace QuantBox.OQ.CTP
             if (!_bTdConnected)
             {
                 EmitError(-1,-1,"交易服务器没有连接，无法报单");
+                tdlog.ErrorFormat("交易服务器没有连接，无法报单");
                 return;
             }
 
             Instrument inst = InstrumentManager.Instruments[order.Symbol];
-            string altSymbol = inst.GetSymbol(this.Name);
-            string altExchange = inst.GetSecurityExchange(this.Name);
+            string altSymbol = inst.GetSymbol(Name);
+            string altExchange = inst.GetSecurityExchange(Name);
             double tickSize = inst.TickSize;
 
             CThostFtdcInstrumentField _Instrument;
@@ -861,11 +809,8 @@ namespace QuantBox.OQ.CTP
                     TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
             }
 
-            if (OutputLogToConsole)
-            {
-                Console.WriteLine("Side:{0},OrderQty:{1},YdPosition:{2},TodayPosition:{3},Text:{4}",
+            tdlog.InfoFormat("Side:{0},OrderQty:{1},YdPosition:{2},TodayPosition:{3},Text:{4}",
                     order.Side, order.OrderQty, YdPosition, TodayPosition, order.Text);
-            }
 
             List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
             SOrderSplitItem orderSplitItem;
@@ -992,9 +937,7 @@ namespace QuantBox.OQ.CTP
 
             if (leave > 0)
             {
-                string strErr = string.Format("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
-                Console.WriteLine(strErr);
-                //EmitError(-1, -1, strErr);
+                tdlog.InfoFormat("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
             }
 
             //将第二腿也设置成一样，这样在使用组合时这地方不用再调整
@@ -1053,7 +996,7 @@ namespace QuantBox.OQ.CTP
                         }                        
                         break;
                     default:
-                        EmitError(-1, -1, string.Format("没有实现{0}", order.OrdType));
+                        tdlog.WarnFormat("没有实现{0}", order.OrdType);
                         break;
                 }
 
@@ -1068,19 +1011,16 @@ namespace QuantBox.OQ.CTP
         #region 报单回报
         private void OnRtnOrder(IntPtr pTraderApi, ref CThostFtdcOrderField pOrder)
         {
-            if (OutputLogToConsole)
-            {
-                Console.WriteLine("{0},{1},{2},开平{3},价{4},原量{5},成交{6},提交{7},状态{8},引用{9},{10}",
+            tdlog.InfoFormat("{0},{1},{2},开平{3},价{4},原量{5},成交{6},提交{7},状态{8},引用{9},报单编号{10},{11}",
                     pOrder.InsertTime, pOrder.InstrumentID, pOrder.Direction, pOrder.CombOffsetFlag, pOrder.LimitPrice,
                     pOrder.VolumeTotalOriginal, pOrder.VolumeTraded, pOrder.OrderSubmitStatus, pOrder.OrderStatus,
-                    pOrder.OrderRef,pOrder.StatusMsg);
-            }
+                    pOrder.OrderRef, pOrder.OrderSysID, pOrder.StatusMsg);
 
             SingleOrder order;
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                order.Text = string.Format("{0}|{1}", order.Text, pOrder.StatusMsg);
+                order.Text = string.Format("{0}|{1}", order.Text.Substring(0,Math.Min(order.Text.Length,64)), pOrder.StatusMsg);
 
                 //找到对应的报单回应
                 Dictionary<string, CThostFtdcOrderField> _Ref2Action;
@@ -1178,15 +1118,13 @@ namespace QuantBox.OQ.CTP
         #region 成交回报
 
         //用于计算组合成交
-        private Dictionary<SingleOrder, DbInMemTrade> _Orders4Combination = new Dictionary<SingleOrder, DbInMemTrade>();
+        private readonly Dictionary<SingleOrder, DbInMemTrade> _Orders4Combination = new Dictionary<SingleOrder, DbInMemTrade>();
 
         private void OnRtnTrade(IntPtr pTraderApi, ref CThostFtdcTradeField pTrade)
         {
-            if (OutputLogToConsole)
-            {
-                Console.WriteLine("时{0},合约{1},方向{2},开平{3},价{4},量{5},引用{6}",
-                    pTrade.TradeTime, pTrade.InstrumentID, pTrade.Direction, pTrade.OffsetFlag, pTrade.Price, pTrade.Volume, pTrade.OrderRef);
-            }
+            tdlog.InfoFormat("时{0},合约{1},方向{2},开平{3},价{4},量{5},引用{6},成交编号{7}",
+                    pTrade.TradeTime, pTrade.InstrumentID, pTrade.Direction, pTrade.OffsetFlag,
+                    pTrade.Price, pTrade.Volume, pTrade.OrderRef, pTrade.TradeID);
 
             //将仓位计算提前，防止在OnPositionOpened中下平仓时与“C|”配合出错
             if (_dbInMemInvestorPosition.UpdateByTrade(pTrade))
@@ -1241,12 +1179,10 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrderAction.OrderRef), out order))
             {
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("CTP回应：{0},价{1},变化量{2},引用{3},{4}",
-                        pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice, pInputOrderAction.VolumeChange, pInputOrderAction.OrderRef,
+                tdlog.ErrorFormat("CTP回应：{0},价{1},变化量{2},引用{3},{4}",
+                        pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice,
+                        pInputOrderAction.VolumeChange, pInputOrderAction.OrderRef,
                         pRspInfo.ErrorMsg);
-                }
 
                 order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
                 EmitCancelReject(order, order.Text);
@@ -1258,12 +1194,10 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pOrderAction.OrderRef), out order))
             {
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("交易所回应：{0},价{1},变化量{2},引用{3},{4}",
+                tdlog.ErrorFormat("交易所回应：{0},价{1},变化量{2},引用{3},{4}",
                         pOrderAction.InstrumentID, pOrderAction.LimitPrice, pOrderAction.VolumeChange, pOrderAction.OrderRef,
                         pRspInfo.ErrorMsg);
-                }
+
                 order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
                 EmitCancelReject(order,order.Text);
             }
@@ -1277,13 +1211,11 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.ErrorFormat("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorMsg);
-                }
+
                 order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
                 EmitRejected(order, order.Text);
                 //这些地方没法处理混合报单
@@ -1313,13 +1245,11 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                if (OutputLogToConsole)
-                {
-                    Console.WriteLine("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.ErrorFormat("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorMsg);
-                }
+
                 order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
                 EmitRejected(order, order.Text);
                 //没得办法，这样全撤了状态就唯一了
@@ -1349,12 +1279,14 @@ namespace QuantBox.OQ.CTP
                 _dictInstruments[pInstrument.InstrumentID] = pInstrument;
                 if (bIsLast)
                 {
-                    Console.WriteLine("TdApi:{0},合约列表已经接收完成",
-                        Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    tdlog.InfoFormat("合约列表已经接收完成,共{0}条",_dictInstruments.Count);
                 }
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrument:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrument:" + pRspInfo.ErrorMsg);
+            }
         }
         #endregion
 
@@ -1364,15 +1296,16 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictCommissionRate[pInstrumentCommissionRate.InstrumentID] = pInstrumentCommissionRate;
-                Console.WriteLine("TdApi:{0},已经接收手续费率 {1}",
-                        Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                        pInstrumentCommissionRate.InstrumentID);
+                tdlog.InfoFormat("已经接收手续费率 ", pInstrumentCommissionRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentCommissionRate(pInstrumentCommissionRate);
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentCommissionRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrumentCommissionRate:" + pRspInfo.ErrorMsg);
+            }
         }
         #endregion
 
@@ -1382,18 +1315,16 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictMarginRate[pInstrumentMarginRate.InstrumentID] = pInstrumentMarginRate;
-                Console.WriteLine("TdApi:{0},已经接收保证金率 {1}",
-                        Clock.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),
-                        pInstrumentMarginRate.InstrumentID);
-
-                Console.WriteLine("{0},{1},{2},{3}", pInstrumentMarginRate.LongMarginRatioByMoney, pInstrumentMarginRate.LongMarginRatioByVolume,
-                    pInstrumentMarginRate.ShortMarginRatioByMoney, pInstrumentMarginRate.ShortMarginRatioByVolume);
+                tdlog.InfoFormat("已经接收保证金率 ", pInstrumentMarginRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentMarginRate(pInstrumentMarginRate);
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentMarginRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrumentMarginRate:" + pRspInfo.ErrorMsg);
+            }
         }
         #endregion
 
@@ -1412,7 +1343,10 @@ namespace QuantBox.OQ.CTP
                 timerPonstion.Enabled = true;
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInvestorPosition:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInvestorPosition:" + pRspInfo.ErrorMsg);
+            }
         }
         #endregion
 
@@ -1428,13 +1362,17 @@ namespace QuantBox.OQ.CTP
                 timerAccount.Enabled = true;
             }
             else
+            {
+                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryTradingAccount:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryTradingAccount:" + pRspInfo.ErrorMsg);
+            }
         }
         #endregion
 
         #region 错误回调
         private void OnRspError(IntPtr pApi, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
+            tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspError:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
             EmitError(nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
         }
         #endregion

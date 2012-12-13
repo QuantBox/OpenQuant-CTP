@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Reflection;
 using SmartQuant;
 using SmartQuant.Providers;
-
-using QuantBox.Helper.CTP;
+using System.IO;
 
 namespace QuantBox.OQ.CTP
 {
@@ -18,11 +16,18 @@ namespace QuantBox.OQ.CTP
         public event EventHandler Disconnected;
         public event ProviderErrorEventHandler Error;
 
+        private bool disposed;
+
+        private static log4net.ILog mdlog = log4net.LogManager.GetLogger("M");
+        private static log4net.ILog tdlog = log4net.LogManager.GetLogger("T");
+
         public QBProvider()
         {
-            timerConnect.Elapsed += new System.Timers.ElapsedEventHandler(timerConnect_Elapsed);
-            timerAccount.Elapsed += new System.Timers.ElapsedEventHandler(timerAccount_Elapsed);
-            timerPonstion.Elapsed += new System.Timers.ElapsedEventHandler(timerPonstion_Elapsed);
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(new FileInfo(@"Bin/CTP.log4net.config"));
+
+            timerDisconnect.Elapsed += timerDisconnect_Elapsed;
+            timerAccount.Elapsed += timerAccount_Elapsed;
+            timerPonstion.Elapsed += timerPonstion_Elapsed;
 
             InitCallbacks();
             InitSettings();
@@ -30,6 +35,36 @@ namespace QuantBox.OQ.CTP
             BarFactory = new SmartQuant.Providers.BarFactory();
             status = ProviderStatus.Unknown;
             SmartQuant.Providers.ProviderManager.Add(this);
+        }
+
+        //Implement IDisposable.
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // Free other state (managed objects).
+                }
+                // Free your own state (unmanaged objects).
+                // Set large fields to null.
+                Shutdown();
+                disposed = true;
+            }
+            //base.Dispose(disposing);
+        }
+
+        // Use C# destructor syntax for finalization code.
+        ~QBProvider()
+        {
+            // Simply call Dispose(false).
+            Dispose(false);
         }
 
         #region IProvider
@@ -57,35 +92,11 @@ namespace QuantBox.OQ.CTP
             get { return "www.quantbox.cn"; }
         }
 
-        public void Connect(int timeout)
+        [Category(CATEGORY_INFO)]
+        [Description("插件版本信息")]
+        public static string Version
         {
-            Connect();
-            ProviderManager.WaitConnected(this, timeout);
-        }
-
-        public void Connect()
-        {
-            _Connect();
-        }
-
-        public void Disconnect()
-        {
-            _Disconnect(false);
-        }
-
-        public void Shutdown()
-        {
-            Disconnect();
-            //特殊的地方,有可能改动了配置就直接关了，还没等保存，所以这地方得保存下
-            if (timerSettingsChanged.Enabled)
-            {
-                SaveAccounts();
-                SaveServers();
-            }
-
-            timerConnect.Elapsed -= new System.Timers.ElapsedEventHandler(timerConnect_Elapsed);
-            timerAccount.Elapsed -= new System.Timers.ElapsedEventHandler(timerAccount_Elapsed);
-            timerPonstion.Elapsed -= new System.Timers.ElapsedEventHandler(timerPonstion_Elapsed);
+            get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); }
         }
 
         [Category(CATEGORY_STATUS)]
@@ -100,6 +111,37 @@ namespace QuantBox.OQ.CTP
             get { return status; }
         }
 
+        public void Connect(int timeout)
+        {
+            Connect();
+            ProviderManager.WaitConnected(this, timeout);
+        }
+
+        public void Connect()
+        {
+            _Connect();
+        }
+
+        public void Disconnect()
+        {
+            _Disconnect();
+        }
+
+        public void Shutdown()
+        {
+            Disconnect();
+            //特殊的地方,有可能改动了配置就直接关了，还没等保存，所以这地方得保存下
+            if (timerSettingsChanged.Enabled)
+            {
+                SaveAccounts();
+                SaveServers();
+            }
+
+            timerDisconnect.Elapsed -= timerDisconnect_Elapsed;
+            timerAccount.Elapsed -= timerAccount_Elapsed;
+            timerPonstion.Elapsed -= timerPonstion_Elapsed;
+        }
+        
         public event EventHandler StatusChanged;
 
         private void ChangeStatus(ProviderStatus status)
@@ -118,7 +160,6 @@ namespace QuantBox.OQ.CTP
 
         private void EmitConnectedEvent()
         {
-            isConnected = true;
             if (Connected != null)
             {
                 Connected(this, EventArgs.Empty);
@@ -127,7 +168,6 @@ namespace QuantBox.OQ.CTP
 
         private void EmitDisconnectedEvent()
         {
-            isConnected = false;
             if (Disconnected != null)
             {
                 Disconnected(this, EventArgs.Empty);
