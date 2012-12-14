@@ -12,7 +12,7 @@ using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
-using log4net;
+
 
 namespace QuantBox.OQ.CTP
 {
@@ -127,7 +127,7 @@ namespace QuantBox.OQ.CTP
             {
                 //测试平台晚上会出现交易日为明天的情况，如果现在清空会导致有行情过来，但不显示在界面上
                 //所以修改行情接收部分总是更新
-                _dictDepthMarketData.Clear();
+                //_dictDepthMarketData.Clear();
                 _dictInstruments.Clear();
                 _dictCommissionRate.Clear();
                 _dictMarginRate.Clear();
@@ -809,8 +809,8 @@ namespace QuantBox.OQ.CTP
                     TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
             }
 
-            tdlog.InfoFormat("Side:{0},OrderQty:{1},YdPosition:{2},TodayPosition:{3},Text:{4}",
-                    order.Side, order.OrderQty, YdPosition, TodayPosition, order.Text);
+            tdlog.InfoFormat("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
+                    order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
 
             List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
             SOrderSplitItem orderSplitItem;

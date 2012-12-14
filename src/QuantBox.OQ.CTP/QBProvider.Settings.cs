@@ -168,6 +168,7 @@ namespace QuantBox.OQ.CTP
             set { _bWantTdConnect = value; }
         }
 
+
         #endregion
         private void InitSettings()
         {

@@ -4,6 +4,8 @@ using System.Reflection;
 using SmartQuant;
 using SmartQuant.Providers;
 using System.IO;
+using System.Collections.Specialized;
+using log4net;
 
 namespace QuantBox.OQ.CTP
 {
@@ -18,8 +20,8 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
-        private static log4net.ILog mdlog = log4net.LogManager.GetLogger("M");
-        private static log4net.ILog tdlog = log4net.LogManager.GetLogger("T");
+        private static ILog mdlog = LogManager.GetLogger("M");
+        private static ILog tdlog = LogManager.GetLogger("T");
 
         public QBProvider()
         {
@@ -94,7 +96,7 @@ namespace QuantBox.OQ.CTP
 
         [Category(CATEGORY_INFO)]
         [Description("插件版本信息")]
-        public static string Version
+        public string Version
         {
             get { return Assembly.GetExecutingAssembly().GetName().Version.ToString(); }
         }
