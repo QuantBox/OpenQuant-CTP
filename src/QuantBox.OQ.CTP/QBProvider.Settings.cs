@@ -199,7 +199,6 @@ namespace QuantBox.OQ.CTP
             serversList.ListChanged += ServersList_ListChanged;
             accountsList.ListChanged += AccountsList_ListChanged;
 
-            LoadBrokers();
             LoadAccounts();
             LoadServers();
         }

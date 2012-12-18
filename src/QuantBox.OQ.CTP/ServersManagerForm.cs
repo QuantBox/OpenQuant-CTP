@@ -26,6 +26,8 @@ namespace QuantBox.OQ.CTP
 
         private void ServersManagerForm_Load(object sender, EventArgs e)
         {
+            provider.LoadBrokers();
+
             serverItemBindingSource.DataSource = provider.Server;
             brokerItemBindingSource.DataSource = provider.Brokers;
         }
