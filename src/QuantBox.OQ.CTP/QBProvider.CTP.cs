@@ -1296,7 +1296,7 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictCommissionRate[pInstrumentCommissionRate.InstrumentID] = pInstrumentCommissionRate;
-                tdlog.InfoFormat("已经接收手续费率 ", pInstrumentCommissionRate.InstrumentID);
+                tdlog.InfoFormat("已经接收手续费率 {0}", pInstrumentCommissionRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentCommissionRate(pInstrumentCommissionRate);
@@ -1315,7 +1315,7 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictMarginRate[pInstrumentMarginRate.InstrumentID] = pInstrumentMarginRate;
-                tdlog.InfoFormat("已经接收保证金率 ", pInstrumentMarginRate.InstrumentID);
+                tdlog.InfoFormat("已经接收保证金率 {0}", pInstrumentMarginRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentMarginRate(pInstrumentMarginRate);

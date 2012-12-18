@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
+    <Compile Include="BrokerItem.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
@@ -86,7 +87,24 @@
     <Compile Include="QBProvider.Provider.cs" />
     <Compile Include="QBProvider.Settings.cs" />
     <Compile Include="ServerItem.cs" />
+    <Compile Include="ServersManagerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ServersManagerForm.Designer.cs">
+      <DependentUpon>ServersManagerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ServersManagerTypeEditor.cs" />
     <Compile Include="WinAPI.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ServersManagerForm.resx">
+      <DependentUpon>ServersManagerForm.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <None Include="Properties\DataSources\BrokerItem.datasource" />
+    <None Include="Properties\DataSources\ServerItem.datasource" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

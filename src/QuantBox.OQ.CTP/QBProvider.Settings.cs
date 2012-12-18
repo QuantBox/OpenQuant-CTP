@@ -4,6 +4,8 @@ using System.Linq;
 using System.Xml.Linq;
 using QuantBox.CSharp2CTP;
 using SmartQuant;
+using System.Drawing.Design;
+using System.Collections.Generic;
 
 namespace QuantBox.OQ.CTP
 {
@@ -150,6 +152,15 @@ namespace QuantBox.OQ.CTP
             set { accountsList = value; }
         }
 
+        private BindingList<BrokerItem> brokersList = new BindingList<BrokerItem>();
+        [Category("Settings"), Editor(typeof(ServersManagerTypeEditor), typeof(UITypeEditor)),
+        Description("点击(...)查看经纪商列表")]
+        public BindingList<BrokerItem> Brokers
+        {
+            get { return brokersList; }
+            set { brokersList = value; }
+        }
+
         [CategoryAttribute("Settings")]
         [Description("连接到行情。此插件不连接行情时底层对不支持市价的报单不会做涨跌停修正，需策略层处理")]
         [DefaultValue(true)]
@@ -168,6 +179,7 @@ namespace QuantBox.OQ.CTP
             set { _bWantTdConnect = value; }
         }
 
+        
 
         #endregion
         private void InitSettings()
@@ -187,6 +199,7 @@ namespace QuantBox.OQ.CTP
             serversList.ListChanged += ServersList_ListChanged;
             accountsList.ListChanged += AccountsList_ListChanged;
 
+            LoadBrokers();
             LoadAccounts();
             LoadServers();
         }
@@ -234,6 +247,8 @@ namespace QuantBox.OQ.CTP
         private readonly string accountsFile = string.Format(@"{0}\CTP.Accounts.xml", Framework.Installation.IniDir);
         void LoadAccounts()
         {
+            accountsList.Clear();
+
             try
             {
                 var accounts = from c in XElement.Load(accountsFile).Elements("Account")
@@ -250,7 +265,7 @@ namespace QuantBox.OQ.CTP
             }
             catch (Exception)
             {
-            }            
+            }
         }
 
         void SaveAccounts()
@@ -270,40 +285,52 @@ namespace QuantBox.OQ.CTP
         private readonly string serversFile = string.Format(@"{0}\CTP.Servers.xml", Framework.Installation.IniDir);
         void LoadServers()
         {
+            serversList.Clear();
+
             try
             {
                 var servers = from c in XElement.Load(serversFile).Elements("Server")
                           select c;
 
-                foreach (var server in servers)
-                {
-                    ServerItem si = new ServerItem() {
-                        Label = server.Attribute("Label").Value,
-                        BrokerID = server.Attribute("BrokerID").Value,
-                        UserProductInfo = server.Attribute("UserProductInfo").Value,
-                        AuthCode = server.Attribute("AuthCode").Value
-                    };
-
-                    string[] tdarr = server.Attribute("Trading").Value.Split(';');
-                    foreach (string s in tdarr)
-                    {
-                        if (!string.IsNullOrEmpty(s))
-                            si.Trading.Add(s);
-                    }
-
-                    string[] mdarr = server.Attribute("MarketData").Value.Split(';');
-                    foreach (string s in mdarr)
-                    {
-                        if (!string.IsNullOrEmpty(s))
-                            si.MarketData.Add(s);
-                    }
-
-                    serversList.Add(si);
-                }
+                serversList = ParseServers(servers);
             }
             catch (Exception)
             {
             }
+        }
+
+        BindingList<ServerItem> ParseServers(IEnumerable<XElement> servers)
+        {
+            BindingList<ServerItem> serversList = new BindingList<ServerItem>();
+
+            foreach (var server in servers)
+            {
+                ServerItem si = new ServerItem()
+                {
+                    Label = server.Attribute("Label").Value,
+                    BrokerID = server.Attribute("BrokerID").Value,
+                    UserProductInfo = server.Attribute("UserProductInfo").Value,
+                    AuthCode = server.Attribute("AuthCode").Value
+                };
+
+                string[] tdarr = server.Attribute("Trading").Value.Split(';');
+                foreach (string s in tdarr)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        si.Trading.Add(s);
+                }
+
+                string[] mdarr = server.Attribute("MarketData").Value.Split(';');
+                foreach (string s in mdarr)
+                {
+                    if (!string.IsNullOrEmpty(s))
+                        si.MarketData.Add(s);
+                }
+
+                serversList.Add(si);
+            }
+
+            return serversList;
         }
 
         void SaveServers()
@@ -326,6 +353,34 @@ namespace QuantBox.OQ.CTP
                 root.Add(ser);
             }
             root.Save(serversFile);
+        }
+
+        
+        private readonly string brokersFile = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
+        public void LoadBrokers()
+        {
+            brokersList.Clear();
+
+            try
+            {
+                var brokers = from c in XElement.Load(brokersFile).Elements("Broker")
+                              select c;
+
+                foreach (var broker in brokers)
+                {
+                    BrokerItem bi = new BrokerItem()
+                    {
+                        Label = broker.Attribute("Label").Value
+                    };
+
+                    bi.Server = ParseServers(broker.Elements("Server"));
+
+                    brokersList.Add(bi);
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
     }
 }

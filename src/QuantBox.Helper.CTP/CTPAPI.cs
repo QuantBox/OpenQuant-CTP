@@ -73,7 +73,7 @@ namespace QuantBox.Helper.CTP
         {
             _dictMarginRate = dict;
         }
-        public void ReqQryInstrumentMarginRate(string instrument)
+        public void ReqQryInstrumentMarginRate(string instrument, TThostFtdcHedgeFlagType HedgeFlag)
         {
             if (null != _dictMarginRate)
             {
@@ -89,7 +89,7 @@ namespace QuantBox.Helper.CTP
                 && null != m_pTdApi
                 && IntPtr.Zero != m_pTdApi)
             {
-                TraderApi.TD_ReqQryInstrumentMarginRate(m_pTdApi, instrument);
+                TraderApi.TD_ReqQryInstrumentMarginRate(m_pTdApi, instrument, HedgeFlag);
             }
         }        
 
