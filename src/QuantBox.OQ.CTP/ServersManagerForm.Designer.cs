@@ -48,7 +48,7 @@
             this.listBoxBroker.FormattingEnabled = true;
             this.listBoxBroker.Location = new System.Drawing.Point(12, 50);
             this.listBoxBroker.Name = "listBoxBroker";
-            this.listBoxBroker.Size = new System.Drawing.Size(173, 264);
+            this.listBoxBroker.Size = new System.Drawing.Size(216, 264);
             this.listBoxBroker.TabIndex = 0;
             // 
             // brokerItemBindingSource
@@ -60,9 +60,9 @@
             this.listBoxServer.DataSource = this.serverItemBindingSource;
             this.listBoxServer.DisplayMember = "Label";
             this.listBoxServer.FormattingEnabled = true;
-            this.listBoxServer.Location = new System.Drawing.Point(246, 50);
+            this.listBoxServer.Location = new System.Drawing.Point(289, 50);
             this.listBoxServer.Name = "listBoxServer";
-            this.listBoxServer.Size = new System.Drawing.Size(171, 264);
+            this.listBoxServer.Size = new System.Drawing.Size(216, 264);
             this.listBoxServer.TabIndex = 0;
             // 
             // serverItemBindingSource
@@ -71,7 +71,7 @@
             // 
             // buttonAdd
             // 
-            this.buttonAdd.Location = new System.Drawing.Point(191, 50);
+            this.buttonAdd.Location = new System.Drawing.Point(234, 50);
             this.buttonAdd.Name = "buttonAdd";
             this.buttonAdd.Size = new System.Drawing.Size(49, 23);
             this.buttonAdd.TabIndex = 1;
@@ -81,7 +81,7 @@
             // 
             // buttonRemove
             // 
-            this.buttonRemove.Location = new System.Drawing.Point(191, 79);
+            this.buttonRemove.Location = new System.Drawing.Point(234, 79);
             this.buttonRemove.Name = "buttonRemove";
             this.buttonRemove.Size = new System.Drawing.Size(49, 23);
             this.buttonRemove.TabIndex = 1;
@@ -93,13 +93,13 @@
             // 
             this.textBoxUrl.Location = new System.Drawing.Point(12, 12);
             this.textBoxUrl.Name = "textBoxUrl";
-            this.textBoxUrl.Size = new System.Drawing.Size(319, 20);
+            this.textBoxUrl.Size = new System.Drawing.Size(412, 20);
             this.textBoxUrl.TabIndex = 2;
             this.textBoxUrl.Text = "https://github.com/QuantBox/OpenQuant-CTP/raw/master/CTP.Brokers.xml";
             // 
             // buttonUpdate
             // 
-            this.buttonUpdate.Location = new System.Drawing.Point(344, 10);
+            this.buttonUpdate.Location = new System.Drawing.Point(430, 9);
             this.buttonUpdate.Name = "buttonUpdate";
             this.buttonUpdate.Size = new System.Drawing.Size(75, 23);
             this.buttonUpdate.TabIndex = 3;
@@ -111,15 +111,16 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(431, 334);
+            this.ClientSize = new System.Drawing.Size(519, 334);
             this.Controls.Add(this.buttonUpdate);
             this.Controls.Add(this.textBoxUrl);
             this.Controls.Add(this.buttonRemove);
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.listBoxServer);
             this.Controls.Add(this.listBoxBroker);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "ServersManagerForm";
-            this.Text = "服务器地址列表";
+            this.Text = "经纪商 - 服务器地址 列表";
             this.Load += new System.EventHandler(this.ServersManagerForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.brokerItemBindingSource)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.serverItemBindingSource)).EndInit();

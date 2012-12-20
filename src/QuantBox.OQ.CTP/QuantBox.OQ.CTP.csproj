@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
     <Compile Include="BrokerItem.cs" />
+    <Compile Include="QBProvider.HistoricalDataProvider.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />

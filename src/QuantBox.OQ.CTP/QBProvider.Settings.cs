@@ -222,7 +222,7 @@ namespace QuantBox.OQ.CTP
         }
 
         private readonly System.Timers.Timer timerSettingsChanged = new System.Timers.Timer(10000);
-        void SettingsChanged()
+        public void SettingsChanged()
         {
             //发现会多次触发，想法减少频率才好
             if (false == timerSettingsChanged.Enabled)

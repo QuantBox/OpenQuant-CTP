@@ -762,20 +762,22 @@ namespace QuantBox.OQ.CTP
             //没有设置就直接用
             if (tickSize > 0)
             {
-                //将价格调整为最小价格的整数倍，此处是否有问题？到底应当是向上调还是向下调呢？此处先这样
-                double num = 0;
-                if (order.Side == Side.Buy)
+                decimal remainder = ((decimal)price % (decimal)tickSize);
+                if (remainder != 0)
                 {
-                    num = Math.Round(price / tickSize, 0, MidpointRounding.AwayFromZero);
+                    if (order.Side == Side.Buy)
+                    {
+                        price = Math.Ceiling(price / tickSize) * tickSize;
+                    }
+                    else
+                    {
+                        price = Math.Floor(price / tickSize) * tickSize;
+                    }
                 }
                 else
                 {
-                    num = Math.Round(price / tickSize, 0, MidpointRounding.AwayFromZero);
-                }
-
-                price = tickSize * num;
-                //string PF = string.Format("{{0:{0}}}", inst.PriceDisplay);
-                //price = Convert.ToDouble(string.Format(PF, price));                
+                    //正好能整除，不操作
+                }            
             }
 
             if (0 == DepthMarket.UpperLimitPrice

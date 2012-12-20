@@ -38,6 +38,7 @@ namespace QuantBox.OQ.CTP
             if (nSel >= 0)
             {
                 provider.Server.RemoveAt(nSel);
+                provider.SettingsChanged();
             }
         }
 
@@ -51,6 +52,7 @@ namespace QuantBox.OQ.CTP
                 {
                     provider.Server.Add(si);
                 }
+                provider.SettingsChanged();
             }
         }
         
