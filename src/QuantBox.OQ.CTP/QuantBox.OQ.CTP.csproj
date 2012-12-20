@@ -73,17 +73,16 @@
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
     <Compile Include="BrokerItem.cs" />
-    <Compile Include="QBProvider.HistoricalDataProvider.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
-    <Compile Include="QBProvider.ExecutionProvider.cs" />
-    <Compile Include="QBProvider.InstrumentProvider.cs" />
-    <Compile Include="QBProvider.MarketDataProvider.cs" />
+    <Compile Include="CTPProvider.ExecutionProvider.cs" />
+    <Compile Include="CTPProvider.InstrumentProvider.cs" />
+    <Compile Include="CTPProvider.MarketDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QBProvider.CTP.cs" />
-    <Compile Include="QBProvider.Provider.cs" />
-    <Compile Include="QBProvider.Settings.cs" />
+    <Compile Include="CTPProvider.CTP.cs" />
+    <Compile Include="CTPProvider.Provider.cs" />
+    <Compile Include="CTPProvider.Settings.cs" />
     <Compile Include="ServerItem.cs" />
     <Compile Include="ServersManagerForm.cs">
       <SubType>Form</SubType>

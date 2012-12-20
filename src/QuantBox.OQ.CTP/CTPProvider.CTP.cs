@@ -16,7 +16,7 @@ using SmartQuant.Providers;
 
 namespace QuantBox.OQ.CTP
 {
-    partial class QBProvider
+    partial class CTPProvider
     {
         private fnOnConnect                         _fnOnConnect_Holder;
         private fnOnDisconnect                      _fnOnDisconnect_Holder;

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace QuantBox.OQ.CTP
 {
-    partial class QBProvider
+    partial class CTPProvider
     {
         private const string CATEGORY_ACCOUNT = "Account";
         private const string CATEGORY_BARFACTORY = "Bar Factory";
@@ -196,16 +196,17 @@ namespace QuantBox.OQ.CTP
             _DefaultOpenClosePrefix = String.Format("{0};{1};{2};{3}", OpenPrefix, ClosePrefix, CloseTodayPrefix, CloseYesterdayPrefix);
             LastPricePlusNTicks = 10;
 
-            serversList.ListChanged += ServersList_ListChanged;
-            accountsList.ListChanged += AccountsList_ListChanged;
-
             LoadAccounts();
             LoadServers();
+
+            serversList.ListChanged += ServersList_ListChanged;
+            accountsList.ListChanged += AccountsList_ListChanged;
         }
 
         void ServersList_ListChanged(object sender, ListChangedEventArgs e)
         {
-            if (e.ListChangedType == ListChangedType.ItemAdded) {
+            if (e.ListChangedType == ListChangedType.ItemAdded)
+            {
                 serversList[e.NewIndex].Changed += ServerItem_ListChanged;
             }
             SettingsChanged();
@@ -221,26 +222,10 @@ namespace QuantBox.OQ.CTP
             SettingsChanged();
         }
 
-        private readonly System.Timers.Timer timerSettingsChanged = new System.Timers.Timer(10000);
         public void SettingsChanged()
-        {
-            //发现会多次触发，想法减少频率才好
-            if (false == timerSettingsChanged.Enabled)
-            {
-                timerSettingsChanged.Elapsed += timerSettingsChanged_Elapsed;
-                timerSettingsChanged.AutoReset = false;
-            }
-            //将上次已经开始的停掉
-            timerSettingsChanged.Enabled = false;
-            timerSettingsChanged.Enabled = true;
-        }
-
-        void timerSettingsChanged_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             SaveAccounts();
             SaveServers();
-
-            timerSettingsChanged.Elapsed -= timerSettingsChanged_Elapsed;
         }
 
         private readonly string accountsFile = string.Format(@"{0}\CTP.Accounts.xml", Framework.Installation.IniDir);

@@ -10,7 +10,7 @@ using System.Reflection;
 
 namespace QuantBox.OQ.CTP
 {
-    public partial class QBProvider : IExecutionProvider
+    public partial class CTPProvider : IExecutionProvider
     {
         private readonly Dictionary<SingleOrder, OrderRecord> orderRecords = new Dictionary<SingleOrder, OrderRecord>();
 
@@ -193,7 +193,7 @@ namespace QuantBox.OQ.CTP
             report.AvgPx = record.AvgPx;
             report.CumQty = record.CumQty;
             report.LeavesQty = record.LeavesQty;
-            report.ExecType = QBProvider.GetExecType(ordStatus);
+            report.ExecType = CTPProvider.GetExecType(ordStatus);
             report.OrdStatus = ordStatus;
             report.Text = text;
 

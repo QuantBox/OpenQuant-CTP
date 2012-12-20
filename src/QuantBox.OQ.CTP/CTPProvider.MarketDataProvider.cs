@@ -8,7 +8,7 @@ using SmartQuant.Providers;
 
 namespace QuantBox.OQ.CTP
 {
-    public partial class QBProvider:IMarketDataProvider
+    public partial class CTPProvider:IMarketDataProvider
     {
         private IBarFactory factory;
 

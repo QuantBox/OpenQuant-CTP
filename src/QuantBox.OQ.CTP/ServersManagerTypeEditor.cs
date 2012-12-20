@@ -21,7 +21,7 @@ namespace QuantBox.OQ.CTP
             if (service != null)
             {
                 ServersManagerForm dialog = new ServersManagerForm();
-                dialog.Init(context.Instance as QBProvider);
+                dialog.Init(context.Instance as CTPProvider);
                 service.ShowDialog(dialog);
             }
             return value;

@@ -9,7 +9,7 @@ using QuantBox.CSharp2CTP;
 
 namespace QuantBox.OQ.CTP
 {
-    public partial class QBProvider : IInstrumentProvider
+    public partial class CTPProvider : IInstrumentProvider
     {
         public event SecurityDefinitionEventHandler SecurityDefinition;
 

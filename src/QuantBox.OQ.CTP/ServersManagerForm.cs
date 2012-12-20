@@ -13,13 +13,13 @@ namespace QuantBox.OQ.CTP
 {
     public partial class ServersManagerForm : Form
     {
-        private QBProvider provider;
+        private CTPProvider provider;
         public ServersManagerForm()
         {
             InitializeComponent();
         }
 
-        public void Init(QBProvider provider)
+        public void Init(CTPProvider provider)
         {
             this.provider = provider;
         }
