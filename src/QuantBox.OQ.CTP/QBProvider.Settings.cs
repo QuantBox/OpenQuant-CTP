@@ -135,7 +135,7 @@ namespace QuantBox.OQ.CTP
         }
 
         private BindingList<ServerItem> serversList = new BindingList<ServerItem>();
-        [CategoryAttribute("Settings")]
+        [Category("Settings")]
         [Description("服务器信息，只选择第一条登录")]
         public BindingList<ServerItem> Server
         {
@@ -144,7 +144,7 @@ namespace QuantBox.OQ.CTP
         }
 
         private BindingList<AccountItem> accountsList = new BindingList<AccountItem>();
-        [CategoryAttribute("Settings")]
+        [Category("Settings")]
         [Description("账号信息，只选择第一条登录")]
         public BindingList<AccountItem> Account
         {
@@ -161,7 +161,7 @@ namespace QuantBox.OQ.CTP
             set { brokersList = value; }
         }
 
-        [CategoryAttribute("Settings")]
+        [Category("Settings")]
         [Description("连接到行情。此插件不连接行情时底层对不支持市价的报单不会做涨跌停修正，需策略层处理")]
         [DefaultValue(true)]
         public bool ConnectToMarketData
@@ -170,7 +170,7 @@ namespace QuantBox.OQ.CTP
             set { _bWantMdConnect = value; }
         }
 
-        [CategoryAttribute("Settings")]
+        [Category("Settings")]
         [Description("连接到交易")]
         [DefaultValue(true)]
         public bool ConnectToTrading

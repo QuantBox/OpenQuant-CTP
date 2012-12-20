@@ -108,7 +108,7 @@ namespace QuantBox.OQ.CTP
             //SingleOrder order2 = order as SingleOrder;
             //this.provider.CallReplace(order2);
             EmitError(-1,-1,"不支持改单指令");
-            tdlog.ErrorFormat("不支持改单指令");
+            tdlog.Error("不支持改单指令");
         }
 
         public void SendOrderCancelRequest(FIXOrderCancelRequest request)

@@ -441,13 +441,13 @@ namespace QuantBox.OQ.CTP
 
                 DateTime _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss);
                 DateTime _newDateTime = _dateTime.AddMilliseconds(AddMilliseconds);
-                tdlog.InfoFormat("SetLocalTime:Return:{0},{1}",
+                tdlog.Info("SetLocalTime:Return:{0},{1}",
                     WinAPI.SetLocalTime(_newDateTime),
                     _newDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
             catch (Exception ex)
             {
-                tdlog.WarnFormat("{0}不能解析成时间", strNewTime);
+                tdlog.Warn("{0}不能解析成时间", strNewTime);
             }
         }
 
@@ -469,12 +469,12 @@ namespace QuantBox.OQ.CTP
                         _dd = DateTime.Now.Day;
                     }
 
-                    mdlog.InfoFormat("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
+                    mdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
                 }
                 //这也有个时间，但取出的时间无效
-                mdlog.InfoFormat("{0},{1}",result, pRspUserLogin.LoginTime);
+                mdlog.Info("{0},{1}",result, pRspUserLogin.LoginTime);
             }
             else if (m_pTdApi == pApi)//交易
             {
@@ -490,7 +490,7 @@ namespace QuantBox.OQ.CTP
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
 
-                    tdlog.InfoFormat("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
+                    tdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
 
@@ -510,7 +510,7 @@ namespace QuantBox.OQ.CTP
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
                 }
 
-                tdlog.InfoFormat("{0},{1}",result, pRspUserLogin.LoginTime);
+                tdlog.Info("{0},{1}",result, pRspUserLogin.LoginTime);
             }
 
             if (
@@ -532,27 +532,28 @@ namespace QuantBox.OQ.CTP
             {
                 if (isConnected)
                 {
-                    mdlog.ErrorFormat("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                    mdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
                 else
                 {
-                    mdlog.InfoFormat("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                    mdlog.Info("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
             }
             else if (m_pTdApi == pApi)//交易
             {
                 if (isConnected)//如果以前连成功，表示密码没有错，只是初始化失败，可以重试
                 {
-                    tdlog.ErrorFormat("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                    tdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
                 else
                 {
-                    tdlog.InfoFormat("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                    tdlog.Info("Step:{0},ErrorID:{1},ErrorMsg:{2}", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 }
             }
             if (!isConnected)//从来没有连接成功过，可能是密码错误，直接退出
             {
-                _Disconnect();
+                //不能在线程中停止线程，这样会导致软件关闭进程不退出
+                //_Disconnect();
             }
             else
             {
@@ -668,13 +669,13 @@ namespace QuantBox.OQ.CTP
                     _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
                 }
 
-                tdlog.InfoFormat("已经接收查询深度行情 {0}", pDepthMarketData.InstrumentID);
+                tdlog.Info("已经接收查询深度行情 {0}", pDepthMarketData.InstrumentID);
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryDepthMarketData(pDepthMarketData);
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryDepthMarketData:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryDepthMarketData:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryDepthMarketData:" + pRspInfo.ErrorMsg);
             }
         }
@@ -687,7 +688,7 @@ namespace QuantBox.OQ.CTP
             if (!_bTdConnected)
             {
                 EmitError(-1,-1,"交易服务器没有连接，无法撤单");
-                tdlog.ErrorFormat("交易服务器没有连接，无法撤单");
+                tdlog.Error("交易服务器没有连接，无法撤单");
                 return;
             }
 
@@ -720,7 +721,7 @@ namespace QuantBox.OQ.CTP
             if (!_bTdConnected)
             {
                 EmitError(-1,-1,"交易服务器没有连接，无法报单");
-                tdlog.ErrorFormat("交易服务器没有连接，无法报单");
+                tdlog.Error("交易服务器没有连接，无法报单");
                 return;
             }
 
@@ -811,7 +812,7 @@ namespace QuantBox.OQ.CTP
                     TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
             }
 
-            tdlog.InfoFormat("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
+            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
                     order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
 
             List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
@@ -939,7 +940,7 @@ namespace QuantBox.OQ.CTP
 
             if (leave > 0)
             {
-                tdlog.InfoFormat("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
+                tdlog.Info("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
             }
 
             //将第二腿也设置成一样，这样在使用组合时这地方不用再调整
@@ -998,7 +999,7 @@ namespace QuantBox.OQ.CTP
                         }                        
                         break;
                     default:
-                        tdlog.WarnFormat("没有实现{0}", order.OrdType);
+                        tdlog.Warn("没有实现{0}", order.OrdType);
                         break;
                 }
 
@@ -1013,7 +1014,7 @@ namespace QuantBox.OQ.CTP
         #region 报单回报
         private void OnRtnOrder(IntPtr pTraderApi, ref CThostFtdcOrderField pOrder)
         {
-            tdlog.InfoFormat("{0},{1},{2},开平{3},价{4},原量{5},成交{6},提交{7},状态{8},引用{9},报单编号{10},{11}",
+            tdlog.Info("{0},{1},{2},开平{3},价{4},原量{5},成交{6},提交{7},状态{8},引用{9},报单编号{10},{11}",
                     pOrder.InsertTime, pOrder.InstrumentID, pOrder.Direction, pOrder.CombOffsetFlag, pOrder.LimitPrice,
                     pOrder.VolumeTotalOriginal, pOrder.VolumeTraded, pOrder.OrderSubmitStatus, pOrder.OrderStatus,
                     pOrder.OrderRef, pOrder.OrderSysID, pOrder.StatusMsg);
@@ -1124,7 +1125,7 @@ namespace QuantBox.OQ.CTP
 
         private void OnRtnTrade(IntPtr pTraderApi, ref CThostFtdcTradeField pTrade)
         {
-            tdlog.InfoFormat("时{0},合约{1},方向{2},开平{3},价{4},量{5},引用{6},成交编号{7}",
+            tdlog.Info("时{0},合约{1},方向{2},开平{3},价{4},量{5},引用{6},成交编号{7}",
                     pTrade.TradeTime, pTrade.InstrumentID, pTrade.Direction, pTrade.OffsetFlag,
                     pTrade.Price, pTrade.Volume, pTrade.OrderRef, pTrade.TradeID);
 
@@ -1181,7 +1182,7 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrderAction.OrderRef), out order))
             {
-                tdlog.ErrorFormat("CTP回应：{0},价{1},变化量{2},引用{3},{4}",
+                tdlog.Error("CTP回应：{0},价{1},变化量{2},引用{3},{4}",
                         pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice,
                         pInputOrderAction.VolumeChange, pInputOrderAction.OrderRef,
                         pRspInfo.ErrorMsg);
@@ -1196,7 +1197,7 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pOrderAction.OrderRef), out order))
             {
-                tdlog.ErrorFormat("交易所回应：{0},价{1},变化量{2},引用{3},{4}",
+                tdlog.Error("交易所回应：{0},价{1},变化量{2},引用{3},{4}",
                         pOrderAction.InstrumentID, pOrderAction.LimitPrice, pOrderAction.VolumeChange, pOrderAction.OrderRef,
                         pRspInfo.ErrorMsg);
 
@@ -1213,7 +1214,7 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                tdlog.ErrorFormat("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.Error("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorMsg);
@@ -1247,7 +1248,7 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                tdlog.ErrorFormat("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.Error("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorMsg);
@@ -1281,12 +1282,12 @@ namespace QuantBox.OQ.CTP
                 _dictInstruments[pInstrument.InstrumentID] = pInstrument;
                 if (bIsLast)
                 {
-                    tdlog.InfoFormat("合约列表已经接收完成,共{0}条",_dictInstruments.Count);
+                    tdlog.Info("合约列表已经接收完成,共{0}条",_dictInstruments.Count);
                 }
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrument:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryInstrument:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrument:" + pRspInfo.ErrorMsg);
             }
         }
@@ -1298,14 +1299,14 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictCommissionRate[pInstrumentCommissionRate.InstrumentID] = pInstrumentCommissionRate;
-                tdlog.InfoFormat("已经接收手续费率 {0}", pInstrumentCommissionRate.InstrumentID);
+                tdlog.Info("已经接收手续费率 {0}", pInstrumentCommissionRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentCommissionRate(pInstrumentCommissionRate);
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentCommissionRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentCommissionRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrumentCommissionRate:" + pRspInfo.ErrorMsg);
             }
         }
@@ -1317,14 +1318,14 @@ namespace QuantBox.OQ.CTP
             if (0 == pRspInfo.ErrorID)
             {
                 _dictMarginRate[pInstrumentMarginRate.InstrumentID] = pInstrumentMarginRate;
-                tdlog.InfoFormat("已经接收保证金率 {0}", pInstrumentMarginRate.InstrumentID);
+                tdlog.Info("已经接收保证金率 {0}", pInstrumentMarginRate.InstrumentID);
 
                 //通知单例
                 CTPAPI.GetInstance().FireOnRspQryInstrumentMarginRate(pInstrumentMarginRate);
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentMarginRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryInstrumentMarginRate:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrumentMarginRate:" + pRspInfo.ErrorMsg);
             }
         }
@@ -1346,7 +1347,7 @@ namespace QuantBox.OQ.CTP
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryInvestorPosition:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryInvestorPosition:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInvestorPosition:" + pRspInfo.ErrorMsg);
             }
         }
@@ -1365,7 +1366,7 @@ namespace QuantBox.OQ.CTP
             }
             else
             {
-                tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspQryTradingAccount:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspQryTradingAccount:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryTradingAccount:" + pRspInfo.ErrorMsg);
             }
         }
@@ -1374,7 +1375,7 @@ namespace QuantBox.OQ.CTP
         #region 错误回调
         private void OnRspError(IntPtr pApi, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
-            tdlog.ErrorFormat("nRequestID:{0},ErrorID:{1},OnRspError:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+            tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspError:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
             EmitError(nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
         }
         #endregion

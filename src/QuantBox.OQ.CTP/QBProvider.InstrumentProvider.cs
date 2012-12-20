@@ -20,7 +20,7 @@ namespace QuantBox.OQ.CTP
                 if (!_bTdConnected)
                 {
                     EmitError(-1, -1, "交易没有连接，无法获取合约列表");
-                    tdlog.ErrorFormat("交易没有连接，无法获取合约列表");
+                    tdlog.Error("交易没有连接，无法获取合约列表");
                     return;
                 }
 

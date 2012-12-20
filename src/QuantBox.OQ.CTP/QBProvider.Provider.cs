@@ -1,11 +1,13 @@
-﻿using System;
-using System.ComponentModel;
-using System.Reflection;
+﻿using NLog;
+using NLog.Config;
 using SmartQuant;
 using SmartQuant.Providers;
-using System.IO;
+using System;
 using System.Collections.Specialized;
-using log4net;
+using System.ComponentModel;
+using System.IO;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace QuantBox.OQ.CTP
 {
@@ -20,12 +22,20 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
-        private static ILog mdlog = LogManager.GetLogger("M");
-        private static ILog tdlog = LogManager.GetLogger("T");
+        private static readonly Logger mdlog = LogManager.GetLogger("M");
+        private static readonly Logger tdlog = LogManager.GetLogger("T");
 
         public QBProvider()
         {
-            log4net.Config.XmlConfigurator.ConfigureAndWatch(new FileInfo(@"Bin/CTP.log4net.config"));
+            //log4net.Config.XmlConfigurator.ConfigureAndWatch(new FileInfo(@"Bin/CTP.log4net.config"));
+            try
+            {
+                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/CTP.nlog");
+            }
+            catch(Exception ex)
+            {
+                tdlog.Warn(ex.Message);
+            }
 
             timerDisconnect.Elapsed += timerDisconnect_Elapsed;
             timerAccount.Elapsed += timerAccount_Elapsed;

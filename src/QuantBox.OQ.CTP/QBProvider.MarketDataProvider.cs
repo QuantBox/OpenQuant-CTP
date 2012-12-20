@@ -86,7 +86,7 @@ namespace QuantBox.OQ.CTP
                         if (!_bMdConnected)
                         {
                             EmitError(-1, -1, "行情服务器没有连接,无法订阅行情");
-                            mdlog.ErrorFormat("行情服务器没有连接,无法订阅行情");
+                            mdlog.Error("行情服务器没有连接,无法订阅行情");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -105,7 +105,7 @@ namespace QuantBox.OQ.CTP
                             }
 
                             _dictAltSymbol2Instrument[altSymbol] = inst;
-                            mdlog.InfoFormat("订阅合约 {0}", altSymbol);
+                            mdlog.Info("订阅合约 {0}", altSymbol);
                             MdApi.MD_Subscribe(m_pMdApi, altSymbol);
                        
                         }
@@ -120,7 +120,7 @@ namespace QuantBox.OQ.CTP
                     case DataManager.MARKET_DATA_UNSUBSCRIBE:
                         if (!_bMdConnected)
                         {
-                            mdlog.ErrorFormat("行情服务器没有连接，退订合约无效");
+                            mdlog.Error("行情服务器没有连接，退订合约无效");
                             return;
                         }
                         for (int i = 0; i < request.NoRelatedSym; ++i)
@@ -131,7 +131,7 @@ namespace QuantBox.OQ.CTP
                             string altSymbol = inst.GetSymbol(Name);
 
                             _dictDepthMarketData.Remove(altSymbol);
-                            mdlog.InfoFormat("取消订阅 {0}", altSymbol);
+                            mdlog.Info("取消订阅 {0}", altSymbol);
                             MdApi.MD_Unsubscribe(m_pMdApi, altSymbol);
                         }
                         break;
