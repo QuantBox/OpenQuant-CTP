@@ -8,4 +8,9 @@
 		<Server Label="银河期货实盘(电信)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front1.financial-trading-platform.com:41205;tcp://yhqh-front3.financial-trading-platform.com:41205;tcp://yhqh-front5.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front1.financial-trading-platform.com:41213;tcp://yhqh-front3.financial-trading-platform.com:41213;tcp://yhqh-front5.financial-trading-platform.com:41213" />
 		<Server Label="银河期货实盘(网通)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front2.financial-trading-platform.com:41219;tcp://yhqh-front4.financial-trading-platform.com:41205;tcp://yhqh-front6.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front2.financial-trading-platform.com:41207;tcp://yhqh-front4.financial-trading-platform.com:41213;tcp://yhqh-front6.financial-trading-platform.com:41213" />
 	</Broker>
+<Broker Label="海通期货">
+		<Server Label="海通期货商品模拟" BrokerID="3030" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://asp-sim2-front1.financial-trading-platform.com:26205" MarketData="tcp://180.168.212.75:41213;tcp://180.168.212.76:41213;" />
+		<Server Label="海通期货实盘(电信)" BrokerID="8000" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://180.168.212.75:41205;tcp://180.168.212.76:41205;" MarketData="tcp://180.168.212.75:41213;tcp://180.168.212.76:41213;" />
+		<Server Label="海通期货实盘(网通)" BrokerID="8000" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://27.115.78.155:41205;tcp://27.115.78.156:41207;" MarketData="tcp://27.115.78.155:41213;tcp://27.115.78.156:41219;" />
+	</Broker>
 </Brokers>
