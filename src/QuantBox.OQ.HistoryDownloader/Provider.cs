@@ -1,4 +1,6 @@
-﻿using SmartQuant;
+﻿using NLog;
+using NLog.Config;
+using SmartQuant;
 using SmartQuant.Providers;
 using System;
 using System.Collections.Specialized;
@@ -28,9 +30,19 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
+        private static readonly Logger hdlog = LogManager.GetLogger("H");
 
         public HistoryDownloader()
         {
+            try
+            {
+                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/CTP.nlog");
+            }
+            catch (Exception ex)
+            {
+                hdlog.Warn(ex.Message);
+            }
+
             status = ProviderStatus.Unknown;
             SmartQuant.Providers.ProviderManager.Add(this);
         }
