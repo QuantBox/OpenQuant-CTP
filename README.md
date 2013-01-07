@@ -14,10 +14,11 @@
 2. 复制QuantBox.OQ.CTP.dll这个SQ插件，确保此插件的版本正确
 3. 找到OpenQuant接口插件目录C:\Program Files\SmartQuant Ltd\OpenQuant\Bin\
 4. 复制thostmduserapi.dll、thosttraderapi.dll两个CTP的dll到此目录
-5. 复制QuantBox.C2CTP.dll、QuantBox.CSharp2CTP.dll、QuantBox.Helper.CTP.dll三个dll到此目录
-6. 找到软件的插件配置文件C:\Documents and Settings\Administrator\Application Data\SmartQuant Ltd\OpenQuant\Framework\ini\framework.xml
-7. 添加`<plugin enabled="True" assembly="QuantBox.OQ.CTP" type="QuantBox.OQ.CTP.QBProvider" x64="False" />`到对应位置
-8. 如何使用请查看插件的使用说明
+5. 复制QuantBox.C2CTP.dll、QuantBox.CSharp2CTP.dll、QuantBox.Helper.CTP.dll、NLog.dll到此目录
+6. 复制CTP.nlog到此目录，或自己修改此文件
+7. 找到软件的插件配置文件C:\Documents and Settings\Administrator\Application Data\SmartQuant Ltd\OpenQuant\Framework\ini\framework.xml
+8. 添加`<plugin enabled="True" assembly="QuantBox.OQ.CTP" type="QuantBox.OQ.CTP.CTPProvider" x64="False" />`到对应位置
+9. 如何使用请查看插件的使用说明
 
 ## 如何开发
 1. 确保你的C-CTP接口的dll、CSharp-CTP接口等都是最新的
