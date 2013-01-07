@@ -11,7 +11,7 @@ using System.Windows.Forms;
 
 namespace QuantBox.OQ.CTP
 {
-    public partial class CTPProvider : IProvider
+    public partial class CTPProvider : IProvider, IDisposable
     {
         private ProviderStatus status;
         private bool isConnected;
