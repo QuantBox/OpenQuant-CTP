@@ -63,7 +63,7 @@ namespace QuantBox.OQ.CTP
                 if (_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
                 {
                     bar = new Bar(args.Bar);
-                    bar.OpenInt = (int)DepthMarket.OpenInterest;
+                    bar.OpenInt = (long)DepthMarket.OpenInterest;
                 }
                 NewBar(this, new BarEventArgs(bar, args.Instrument, this));
             }
@@ -81,7 +81,7 @@ namespace QuantBox.OQ.CTP
                 if (_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
                 {
                     bar = new Bar(args.Bar);
-                    bar.OpenInt = (int)DepthMarket.OpenInterest;
+                    bar.OpenInt = (long)DepthMarket.OpenInterest;
                 }
                 NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
             }
