@@ -55,7 +55,17 @@ namespace QuantBox.OQ.CTP
         {
             if (NewBar != null)
             {
-                NewBar(this, new BarEventArgs(args.Bar, args.Instrument, this));
+                CThostFtdcDepthMarketDataField DepthMarket;
+                Instrument inst = InstrumentManager.Instruments[args.Instrument.Symbol];
+                string altSymbol = inst.GetSymbol(Name);
+
+                Bar bar = args.Bar;
+                if (_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
+                {
+                    bar = new Bar(args.Bar);
+                    bar.OpenInt = (int)DepthMarket.OpenInterest;
+                }
+                NewBar(this, new BarEventArgs(bar, args.Instrument, this));
             }
         }
 
@@ -63,7 +73,17 @@ namespace QuantBox.OQ.CTP
         {
             if (NewBarOpen != null)
             {
-                NewBarOpen(this, new BarEventArgs(args.Bar, args.Instrument, this));
+                CThostFtdcDepthMarketDataField DepthMarket;
+                Instrument inst = InstrumentManager.Instruments[args.Instrument.Symbol];
+                string altSymbol = inst.GetSymbol(Name);
+
+                Bar bar = args.Bar;
+                if (_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
+                {
+                    bar = new Bar(args.Bar);
+                    bar.OpenInt = (int)DepthMarket.OpenInterest;
+                }
+                NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
             }
         }
 
