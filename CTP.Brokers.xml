@@ -4,8 +4,15 @@
 		<Server Label="上期技术商品期货模拟" BrokerID="2030" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://asp-sim2-front1.financial-trading-platform.com:26205" MarketData="tcp://asp-sim2-md1.financial-trading-platform.com:26213" />
 	</Broker>
 	<Broker Label="银河期货">
-		<Server Label="银河期货商品模拟" BrokerID="2030" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://asp-sim2-front1.financial-trading-platform.com:26205" MarketData="tcp://asp-sim2-md1.financial-trading-platform.com:26213" />
+		<Server Label="银河期货模拟(联通)" BrokerID="1009" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://27.115.78.35:41205" MarketData="tcp://27.115.78.35:41213" />
+		<Server Label="银河期货模拟(电信)" BrokerID="1009" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://61.129.87.75:41205" MarketData="tcp://61.129.87.75:41213" />
 		<Server Label="银河期货实盘(电信)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front1.financial-trading-platform.com:41205;tcp://yhqh-front3.financial-trading-platform.com:41205;tcp://yhqh-front5.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front1.financial-trading-platform.com:41213;tcp://yhqh-front3.financial-trading-platform.com:41213;tcp://yhqh-front5.financial-trading-platform.com:41213" />
 		<Server Label="银河期货实盘(网通)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front2.financial-trading-platform.com:41219;tcp://yhqh-front4.financial-trading-platform.com:41205;tcp://yhqh-front6.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front2.financial-trading-platform.com:41207;tcp://yhqh-front4.financial-trading-platform.com:41213;tcp://yhqh-front6.financial-trading-platform.com:41213" />
+	</Broker>
+	<Broker Label="华西期货">
+		<Server Label="华西期货(模拟)" BrokerID="1001" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://180.168.102.230:26205" MarketData="tcp://180.168.102.230:26213" />
+	</Broker>
+	<Broker Label="中证期货">
+		<Server Label="中证期货(模拟)" BrokerID="1017" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://ctpmn1-front1.citicsf.com:51205;tcp://ctpmn1-front2.citicsf.com:51205" MarketData="tcp://ctpmn1-front1.citicsf.com:51213;tcp://ctpmn1-front2.citicsf.com:51213" />
 	</Broker>
 </Brokers>

@@ -92,7 +92,7 @@ namespace QuantBox.OQ.CTP
         //记录保证金率,从实盘合约名到对象的映射
         private readonly Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = new Dictionary<string, CThostFtdcInstrumentMarginRateField>();
         //记录
-        private readonly Dictionary<string, Instrument> _dictAltSymbol2Instrument = new Dictionary<string, Instrument>();
+        private readonly Dictionary<string, DataRecord> _dictAltSymbol2Instrument = new Dictionary<string, DataRecord>();
 
         //用于行情的时间，只在登录时改动，所以要求开盘时能得到更新
         private int _yyyy;
@@ -568,8 +568,17 @@ namespace QuantBox.OQ.CTP
         private DateTime _dateTime = DateTime.Now;
         private void OnRtnDepthMarketData(IntPtr pApi, ref CThostFtdcDepthMarketDataField pDepthMarketData)
         {
+            DataRecord record = _dictAltSymbol2Instrument[pDepthMarketData.InstrumentID];
+            if (record == null)
+            {
+                mdlog.Warn("合约{0}不在订阅列表中却收到了数据", pDepthMarketData.InstrumentID);
+                return;
+            }
+            Instrument instrument = record.Instrument;
+
             CThostFtdcDepthMarketDataField DepthMarket;
             _dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket);
+
             //将更新字典的功能提前，因为如果一开始就OnTrade中下单，涨跌停没有更新
             _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
 
@@ -588,73 +597,119 @@ namespace QuantBox.OQ.CTP
                 _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
             }
 
-            Instrument instrument = _dictAltSymbol2Instrument[pDepthMarketData.InstrumentID];
-
-            //通过测试，发现IB的Trade与Quote在行情过来时数量是不同的，在这也做到不同
-            if (DepthMarket.LastPrice == pDepthMarketData.LastPrice
-                && DepthMarket.Volume == pDepthMarketData.Volume)
-            { }
-            else
+            if (record.TradeRequested)
             {
-                //行情过来时是今天累计成交量，得转换成每个tick中成交量之差
-                int volume = pDepthMarketData.Volume - DepthMarket.Volume;
-                if (0 == DepthMarket.Volume)
-                {
-                    //没有接收到最开始的一条，所以这计算每个Bar的数据时肯定超大，强行设置为0
-                    volume = 0;
-                }
-                else if (volume < 0)
-                {
-                    //如果隔夜运行，会出现今早成交量0-昨收盘成交量，出现负数，所以当发现为负时要修改
-                    volume = pDepthMarketData.Volume;
-                }
-
-                Trade trade = new Trade(_dateTime,
-                    pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
-                    volume);
-
-                if (null != MarketDataFilter)
-                {
-                    Trade t = MarketDataFilter.FilterTrade(trade, instrument.Symbol);
-                    if (null != t)
-                    {
-                        EmitNewTradeEvent(instrument, t);
-                    }
-                }
+                //通过测试，发现IB的Trade与Quote在行情过来时数量是不同的，在这也做到不同
+                if (DepthMarket.LastPrice == pDepthMarketData.LastPrice
+                    && DepthMarket.Volume == pDepthMarketData.Volume)
+                { }
                 else
                 {
-                    EmitNewTradeEvent(instrument, trade);
+                    //行情过来时是今天累计成交量，得转换成每个tick中成交量之差
+                    int volume = pDepthMarketData.Volume - DepthMarket.Volume;
+                    if (0 == DepthMarket.Volume)
+                    {
+                        //没有接收到最开始的一条，所以这计算每个Bar的数据时肯定超大，强行设置为0
+                        volume = 0;
+                    }
+                    else if (volume < 0)
+                    {
+                        //如果隔夜运行，会出现今早成交量0-昨收盘成交量，出现负数，所以当发现为负时要修改
+                        volume = pDepthMarketData.Volume;
+                    }
+
+                    Trade trade = new Trade(_dateTime,
+                        pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
+                        volume);
+
+                    if (null != MarketDataFilter)
+                    {
+                        Trade t = MarketDataFilter.FilterTrade(trade, instrument.Symbol);
+                        if (null != t)
+                        {
+                            EmitNewTradeEvent(instrument, t);
+                        }
+                    }
+                    else
+                    {
+                        EmitNewTradeEvent(instrument, trade);
+                    }
                 }
             }
 
-            if (
+            if (record.QuoteRequested)
+            {
+                if (
                 DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
                 && DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
                 && DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
                 && DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
                 )
-            { }
-            else
-            {
-                Quote quote = new Quote(_dateTime,
-                    pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
-                    pDepthMarketData.BidVolume1,
-                    pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
-                    pDepthMarketData.AskVolume1
-                );
-
-                if (null != MarketDataFilter)
-                {
-                    Quote q = MarketDataFilter.FilterQuote(quote, instrument.Symbol);
-                    if (null != q)
-                    {
-                        EmitNewQuoteEvent(instrument, q);
-                    }
-                }
+                { }
                 else
                 {
-                    EmitNewQuoteEvent(instrument, quote);
+                    Quote quote = new Quote(_dateTime,
+                        pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
+                        pDepthMarketData.BidVolume1,
+                        pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
+                        pDepthMarketData.AskVolume1
+                    );
+
+                    if (null != MarketDataFilter)
+                    {
+                        Quote q = MarketDataFilter.FilterQuote(quote, instrument.Symbol);
+                        if (null != q)
+                        {
+                            EmitNewQuoteEvent(instrument, q);
+                        }
+                    }
+                    else
+                    {
+                        EmitNewQuoteEvent(instrument, quote);
+                    }
                 }
+            }
+
+            if (record.MarketDepthRequested)
+            {
+                EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Ask, pDepthMarketData.AskPrice1, pDepthMarketData.AskVolume1);
+                EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Bid, pDepthMarketData.BidPrice1, pDepthMarketData.BidVolume1);
+
+                //EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Ask, pDepthMarketData.AskPrice2, pDepthMarketData.AskVolume2);
+                //EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Bid, pDepthMarketData.BidPrice2, pDepthMarketData.BidVolume2);
+
+                //EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Ask, pDepthMarketData.AskPrice3, pDepthMarketData.AskVolume3);
+                //EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Bid, pDepthMarketData.BidPrice3, pDepthMarketData.BidVolume3);
+
+                //EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Ask, pDepthMarketData.AskPrice4, pDepthMarketData.AskVolume4);
+                //EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Bid, pDepthMarketData.BidPrice4, pDepthMarketData.BidVolume4);
+
+                //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
+                //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+            }
+        }
+
+        private void EmitNewMarketDepth(Instrument instrument, DateTime datatime, int position, MDSide ask, double price, int size)
+        {
+            MDOperation insert = MDOperation.Update;
+            if (MDSide.Ask == ask)
+            {
+                if (position >= instrument.OrderBook.Ask.Count)
+                {
+                    insert = MDOperation.Insert;
+                }
+            }
+            else
+            {
+                if (position >= instrument.OrderBook.Bid.Count)
+                {
+                    insert = MDOperation.Insert;
+                }
+            }
+
+            if (price != 0 && size != 0)
+            {
+                EmitNewMarketDepth(instrument, new MarketDepth(datatime, "", position, insert, ask, price, size));
             }
         }
 
