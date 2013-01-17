@@ -2,7 +2,7 @@
 <nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       autoReload="true">
-    <targets>
+    <targets async="true">
         <target name="c" xsi:type="Console" layout="${longdate} ${level} ${logger} ${message}"/>
 		<target name="f" xsi:type="File" fileName="${basedir}/Logs/CTP/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
     </targets>
