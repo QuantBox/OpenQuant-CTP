@@ -1238,12 +1238,12 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrderAction.OrderRef), out order))
             {
-                tdlog.Error("CTP回应：{0},价{1},变化量{2},引用{3},{4}",
+                tdlog.Error("CTP回应：{0},价{1},变化量{2},引用{3},{4}#{5}",
                         pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice,
                         pInputOrderAction.VolumeChange, pInputOrderAction.OrderRef,
-                        pRspInfo.ErrorMsg);
+                        pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
+                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitCancelReject(order, order.Text);
             }
         }
@@ -1253,11 +1253,11 @@ namespace QuantBox.OQ.CTP
             SingleOrder order;
             if (_OrderRef2Order.TryGetValue(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pOrderAction.OrderRef), out order))
             {
-                tdlog.Error("交易所回应：{0},价{1},变化量{2},引用{3},{4}",
+                tdlog.Error("交易所回应：{0},价{1},变化量{2},引用{3},{4}#{5}",
                         pOrderAction.InstrumentID, pOrderAction.LimitPrice, pOrderAction.VolumeChange, pOrderAction.OrderRef,
-                        pRspInfo.ErrorMsg);
+                        pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
+                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitCancelReject(order,order.Text);
             }
         }
@@ -1270,12 +1270,12 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                tdlog.Error("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.Error("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
-                        pInputOrder.OrderRef, pRspInfo.ErrorMsg);
+                        pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
+                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)),pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitRejected(order, order.Text);
                 //这些地方没法处理混合报单
                 //没得办法，这样全撤了状态就唯一了
@@ -1304,12 +1304,12 @@ namespace QuantBox.OQ.CTP
             string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                tdlog.Error("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}",
+                tdlog.Error("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
-                        pInputOrder.OrderRef, pRspInfo.ErrorMsg);
+                        pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}", order.Text, pRspInfo.ErrorMsg);
+                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 EmitRejected(order, order.Text);
                 //没得办法，这样全撤了状态就唯一了
                 Dictionary<string, CThostFtdcOrderField> _Ref2Action;
