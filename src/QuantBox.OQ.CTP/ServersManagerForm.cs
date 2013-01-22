@@ -58,6 +58,8 @@ namespace QuantBox.OQ.CTP
         
         private void buttonUpdate_Click(object sender, EventArgs e)
         {
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
             WebClient wc = new WebClient();
             try
             {
@@ -67,6 +69,8 @@ namespace QuantBox.OQ.CTP
                 wc.DownloadFile(textBoxUrl.Text, fileName);
 
                 provider.LoadBrokers();
+
+                MessageBox.Show("远程配置下载成功！");
             }
             catch (Exception ex)
             {

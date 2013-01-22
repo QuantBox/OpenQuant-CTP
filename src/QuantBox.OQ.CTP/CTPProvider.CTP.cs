@@ -568,12 +568,13 @@ namespace QuantBox.OQ.CTP
         private DateTime _dateTime = DateTime.Now;
         private void OnRtnDepthMarketData(IntPtr pApi, ref CThostFtdcDepthMarketDataField pDepthMarketData)
         {
-            DataRecord record = _dictAltSymbol2Instrument[pDepthMarketData.InstrumentID];
-            if (record == null)
+            DataRecord record;
+            if (!_dictAltSymbol2Instrument.TryGetValue(pDepthMarketData.InstrumentID, out record))
             {
                 mdlog.Warn("合约{0}不在订阅列表中却收到了数据", pDepthMarketData.InstrumentID);
                 return;
             }
+
             Instrument instrument = record.Instrument;
 
             CThostFtdcDepthMarketDataField DepthMarket;
