@@ -32,6 +32,7 @@ namespace QuantBox.OQ.CTP
         private fnOnRspQryInvestorPosition          _fnOnRspQryInvestorPosition_Holder;
         private fnOnRspQryTradingAccount            _fnOnRspQryTradingAccount_Holder;
         private fnOnRtnDepthMarketData              _fnOnRtnDepthMarketData_Holder;
+        private fnOnRtnInstrumentStatus             _fnOnRtnInstrumentStatus_Holder;
         private fnOnRtnOrder                        _fnOnRtnOrder_Holder;
         private fnOnRtnTrade                        _fnOnRtnTrade_Holder;
 
@@ -51,6 +52,7 @@ namespace QuantBox.OQ.CTP
             _fnOnRspQryInstrumentMarginRate_Holder      = OnRspQryInstrumentMarginRate;
             _fnOnRspQryInvestorPosition_Holder          = OnRspQryInvestorPosition;
             _fnOnRspQryTradingAccount_Holder            = OnRspQryTradingAccount;
+            _fnOnRtnInstrumentStatus_Holder             = OnRtnInstrumentStatus;
             _fnOnRtnDepthMarketData_Holder              = OnRtnDepthMarketData;
             _fnOnRtnOrder_Holder                        = OnRtnOrder;
             _fnOnRtnTrade_Holder                        = OnRtnTrade;
@@ -323,6 +325,7 @@ namespace QuantBox.OQ.CTP
                     TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
                     TraderApi.CTP_RegOnRspQryInvestorPosition(m_pMsgQueue, _fnOnRspQryInvestorPosition_Holder);
                     TraderApi.CTP_RegOnRspQryTradingAccount(m_pMsgQueue, _fnOnRspQryTradingAccount_Holder);
+                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pMsgQueue, _fnOnRtnInstrumentStatus_Holder);
                     TraderApi.CTP_RegOnRtnOrder(m_pMsgQueue, _fnOnRtnOrder_Holder);
                     TraderApi.CTP_RegOnRtnTrade(m_pMsgQueue, _fnOnRtnTrade_Holder);
                     TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
@@ -1433,6 +1436,18 @@ namespace QuantBox.OQ.CTP
         {
             tdlog.Error("nRequestID:{0},ErrorID:{1},OnRspError:{2}", nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
             EmitError(nRequestID, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+        }
+        #endregion
+
+        #region 交易所状态
+        private void OnRtnInstrumentStatus(IntPtr pTraderApi, ref CThostFtdcInstrumentStatusField pInstrumentStatus)
+        {
+            tdlog.Info("{0},{1},{2},{3}",
+                pInstrumentStatus.ExchangeID,pInstrumentStatus.InstrumentID,
+                pInstrumentStatus.InstrumentStatus,pInstrumentStatus.EnterReason);
+
+            //通知单例
+            CTPAPI.GetInstance().FireOnRtnInstrumentStatus(pInstrumentStatus);
         }
         #endregion
     }

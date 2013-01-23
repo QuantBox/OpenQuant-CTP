@@ -179,5 +179,17 @@ namespace QuantBox.Helper.CTP
             }
         }
         #endregion
+
+        #region 交易所状态
+        public delegate void RtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus);
+        public event RtnInstrumentStatus OnRtnInstrumentStatus;
+        public void FireOnRtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus)
+        {
+            if (null != OnRtnInstrumentStatus)
+            {
+                OnRtnInstrumentStatus(pInstrumentStatus);
+            }
+        }
+        #endregion
     }
 }

@@ -33,11 +33,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL" />
-    <Reference Include="QuantBox.CSharp2CTP">
-      <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
+    <Reference Include="QuantBox.CSharp2CTP, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
     </Reference>
     <Reference Include="QuantBox.Helper.CTP">
-      <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.Helper.CTP.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.Helper.CTP.dll</HintPath>
     </Reference>
     <Reference Include="SmartQuant, Version=1.0.3762.22305, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
