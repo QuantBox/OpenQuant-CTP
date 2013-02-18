@@ -65,7 +65,19 @@ namespace QuantBox.OQ.CTP
                     bar = new Bar(args.Bar);
                     bar.OpenInt = (long)DepthMarket.OpenInterest;
                 }
-                NewBar(this, new BarEventArgs(bar, args.Instrument, this));
+                
+                if (null != MarketDataFilter)
+                {
+                    Bar b = MarketDataFilter.FilterBar(bar, args.Instrument.Symbol);
+                    if (null != b)
+                    {
+                        NewBar(this, new BarEventArgs(b, args.Instrument, this));
+                    }
+                }
+                else
+                {
+                    NewBar(this, new BarEventArgs(bar, args.Instrument, this));
+                }
             }
         }
 
@@ -83,7 +95,19 @@ namespace QuantBox.OQ.CTP
                     bar = new Bar(args.Bar);
                     bar.OpenInt = (long)DepthMarket.OpenInterest;
                 }
-                NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
+
+                if (null != MarketDataFilter)
+                {
+                    Bar b = MarketDataFilter.FilterBarOpen(bar, args.Instrument.Symbol);
+                    if (null != b)
+                    {
+                        NewBarOpen(this, new BarEventArgs(b, args.Instrument, this));
+                    }
+                }
+                else
+                {
+                    NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
+                }
             }
         }
 
