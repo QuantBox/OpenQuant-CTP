@@ -252,6 +252,7 @@ namespace QuantBox.OQ.CTP
         #region OpenQuant3接口中的新方法
         public void RegisterOrder(NewOrderSingle order)
         {
+            tdlog.Info("RegisterOrder");
         }
         #endregion
     }
