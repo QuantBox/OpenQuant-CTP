@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using SmartQuant.Providers;
+﻿using QuantBox.CSharp2CTP;
 using SmartQuant.FIX;
-using SmartQuant.Instruments;
-using QuantBox.CSharp2CTP;
+using SmartQuant.Providers;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace QuantBox.OQ.CTP
 {
@@ -149,8 +147,16 @@ namespace QuantBox.OQ.CTP
                     definition.AddField(EFIXField.Currency, "CNY");//Currency.CNY
                     definition.AddField(EFIXField.TickSize, inst.PriceTick);
                     definition.AddField(EFIXField.SecurityDesc, inst.InstrumentName);
-                    definition.AddField(EFIXField.MaturityDate, DateTime.ParseExact(inst.ExpireDate, "yyyyMMdd", null));
                     definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);
+                    try
+                    {
+                        definition.AddField(EFIXField.MaturityDate, DateTime.ParseExact(inst.ExpireDate, "yyyyMMdd", CultureInfo.InvariantCulture));
+                    }
+                    catch(Exception ex)
+                    {
+                        tdlog.Warn(ex.Message);
+                    }
+                    
                     //还得补全内容
 
                     if (SecurityDefinition != null)

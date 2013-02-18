@@ -650,14 +650,14 @@ namespace QuantBox.OQ.CTP
 
             if (record.QuoteRequested)
             {
-                if (
-                DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
-                && DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
-                && DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
-                && DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
-                )
-                { }
-                else
+                //if (
+                //DepthMarket.BidVolume1 == pDepthMarketData.BidVolume1
+                //&& DepthMarket.AskVolume1 == pDepthMarketData.AskVolume1
+                //&& DepthMarket.BidPrice1 == pDepthMarketData.BidPrice1
+                //&& DepthMarket.AskPrice1 == pDepthMarketData.AskPrice1
+                //)
+                //{ }
+                //else
                 {
                     Quote quote = new Quote(_dateTime,
                         pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
