@@ -878,9 +878,6 @@ namespace QuantBox.OQ.CTP
                     TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
             }
 
-            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
-                    order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
-
             List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
             SOrderSplitItem orderSplitItem;
 
@@ -1014,6 +1011,9 @@ namespace QuantBox.OQ.CTP
             string szCombHedgeFlag = System.Text.Encoding.Default.GetString(bytes2, 0, bytes2.Length);
 
             bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
+
+            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
+                order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
 
             foreach (SOrderSplitItem it in OrderSplitList)
             {

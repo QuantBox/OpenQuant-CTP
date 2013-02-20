@@ -22,8 +22,8 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
-        private static readonly Logger mdlog = LogManager.GetLogger("M");
-        private static readonly Logger tdlog = LogManager.GetLogger("T");
+        private static readonly Logger mdlog = LogManager.GetLogger("FM");
+        private static readonly Logger tdlog = LogManager.GetLogger("FT");
 
         public CTPProvider()
         {
