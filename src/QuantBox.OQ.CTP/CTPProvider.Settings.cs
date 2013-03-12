@@ -1,11 +1,10 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
-using System.Xml.Linq;
-using QuantBox.CSharp2CTP;
+﻿using QuantBox.CSharp2CTP;
 using SmartQuant;
+using System;
+using System.ComponentModel;
 using System.Drawing.Design;
-using System.Collections.Generic;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace QuantBox.OQ.CTP
 {
@@ -233,16 +232,11 @@ namespace QuantBox.OQ.CTP
 
             try
             {
-                var accounts = from c in XElement.Load(accountsFile).Elements("Account")
-                               select c;
-                foreach (var account in accounts)
+                XmlSerializer serializer = new XmlSerializer(accountsList.GetType());
+                using (FileStream stream = new FileStream(accountsFile, FileMode.Open))
                 {
-                    AccountItem ai = new AccountItem() {
-                        Label = account.Attribute("Label").Value,
-                        InvestorId = account.Attribute("InvestorId").Value,
-                        Password = account.Attribute("Password").Value
-                    };
-                    accountsList.Add(ai);
+                    accountsList = (BindingList<AccountItem>)serializer.Deserialize(stream);
+                    stream.Close();
                 }
             }
             catch (Exception)
@@ -252,16 +246,12 @@ namespace QuantBox.OQ.CTP
 
         void SaveAccounts()
         {
-            XElement root = new XElement("Accounts");
-            foreach (var account in accountsList)
+            XmlSerializer serializer = new XmlSerializer(accountsList.GetType());
+            using (TextWriter writer = new StreamWriter(accountsFile))
             {
-                XElement acc = new XElement("Account");
-                acc.SetAttributeValue("Label", string.IsNullOrEmpty(account.Label) ? "" : account.Label);
-                acc.SetAttributeValue("InvestorId", string.IsNullOrEmpty(account.InvestorId) ? "" : account.InvestorId);
-                acc.SetAttributeValue("Password", string.IsNullOrEmpty(account.Password) ? "" : account.Password);
-                root.Add(acc);
+                serializer.Serialize(writer, accountsList);
+                writer.Close();
             }
-            root.Save(accountsFile);
         }
 
         private readonly string serversFile = string.Format(@"{0}\CTP.Servers.xml", Framework.Installation.IniDir);
@@ -271,72 +261,27 @@ namespace QuantBox.OQ.CTP
 
             try
             {
-                var servers = from c in XElement.Load(serversFile).Elements("Server")
-                          select c;
-
-                serversList = ParseServers(servers);
+                XmlSerializer serializer = new XmlSerializer(serversList.GetType());
+                using (FileStream stream = new FileStream(serversFile, FileMode.Open))
+                {
+                    serversList = (BindingList<ServerItem>)serializer.Deserialize(stream);
+                    stream.Close();
+                }
             }
             catch (Exception)
             {
             }
         }
 
-        BindingList<ServerItem> ParseServers(IEnumerable<XElement> servers)
-        {
-            BindingList<ServerItem> serversList = new BindingList<ServerItem>();
-
-            foreach (var server in servers)
-            {
-                ServerItem si = new ServerItem()
-                {
-                    Label = server.Attribute("Label").Value,
-                    BrokerID = server.Attribute("BrokerID").Value,
-                    UserProductInfo = server.Attribute("UserProductInfo").Value,
-                    AuthCode = server.Attribute("AuthCode").Value
-                };
-
-                string[] tdarr = server.Attribute("Trading").Value.Split(';');
-                foreach (string s in tdarr)
-                {
-                    if (!string.IsNullOrEmpty(s))
-                        si.Trading.Add(s);
-                }
-
-                string[] mdarr = server.Attribute("MarketData").Value.Split(';');
-                foreach (string s in mdarr)
-                {
-                    if (!string.IsNullOrEmpty(s))
-                        si.MarketData.Add(s);
-                }
-
-                serversList.Add(si);
-            }
-
-            return serversList;
-        }
-
         void SaveServers()
         {
-            XElement root = new XElement("Servers");
-            foreach (var server in serversList)
+            XmlSerializer serializer = new XmlSerializer(serversList.GetType());
+            using (TextWriter writer = new StreamWriter(serversFile))
             {
-                XElement ser = new XElement("Server");
-                ser.SetAttributeValue("Label", string.IsNullOrEmpty(server.Label) ? "" : server.Label);
-                ser.SetAttributeValue("BrokerID", string.IsNullOrEmpty(server.BrokerID) ? "" : server.BrokerID);
-                ser.SetAttributeValue("UserProductInfo", string.IsNullOrEmpty(server.UserProductInfo) ? "" : server.UserProductInfo);
-                ser.SetAttributeValue("AuthCode", string.IsNullOrEmpty(server.AuthCode) ? "" : server.AuthCode);
-
-                string tdstr = string.Join(";", server.Trading.ToArray());
-                ser.SetAttributeValue("Trading", string.IsNullOrEmpty(tdstr) ? "" : tdstr);
-
-                string mdstr = string.Join(";", server.MarketData.ToArray());
-                ser.SetAttributeValue("MarketData", string.IsNullOrEmpty(mdstr) ? "" : mdstr);
-
-                root.Add(ser);
+                serializer.Serialize(writer, serversList);
+                writer.Close();
             }
-            root.Save(serversFile);
         }
-
         
         private readonly string brokersFile = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
         public void LoadBrokers()
@@ -345,23 +290,25 @@ namespace QuantBox.OQ.CTP
 
             try
             {
-                var brokers = from c in XElement.Load(brokersFile).Elements("Broker")
-                              select c;
-
-                foreach (var broker in brokers)
+                XmlSerializer serializer = new XmlSerializer(brokersList.GetType());
+                using (FileStream stream = new FileStream(brokersFile, FileMode.Open))
                 {
-                    BrokerItem bi = new BrokerItem()
-                    {
-                        Label = broker.Attribute("Label").Value
-                    };
-
-                    bi.Server = ParseServers(broker.Elements("Server"));
-
-                    brokersList.Add(bi);
+                    brokersList = (BindingList<BrokerItem>)serializer.Deserialize(stream);
+                    stream.Close();
                 }
             }
             catch (Exception)
             {
+            }
+        }
+
+        void SaveBrokers()
+        {
+            XmlSerializer serializer = new XmlSerializer(brokersList.GetType());
+            using (TextWriter writer = new StreamWriter(brokersFile))
+            {
+                serializer.Serialize(writer, brokersList);
+                writer.Close();
             }
         }
     }

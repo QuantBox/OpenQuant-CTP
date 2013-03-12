@@ -197,7 +197,7 @@ namespace QuantBox.OQ.CTP
                     MessageBox.Show("您还没有设置 服务器 信息，目前只选择第一条进行连接");
                     break;
                 }
-                if (0 == serversList.Count)
+                if (0 == accountsList.Count)
                 {
                     MessageBox.Show("您还没有设置 账号 信息，目前只选择第一条进行连接");
                     break;

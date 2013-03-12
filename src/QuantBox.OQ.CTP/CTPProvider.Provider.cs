@@ -22,15 +22,14 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
-        private static readonly Logger mdlog = LogManager.GetLogger("FM");
-        private static readonly Logger tdlog = LogManager.GetLogger("FT");
+        private static readonly Logger mdlog = LogManager.GetLogger("CTP.M");
+        private static readonly Logger tdlog = LogManager.GetLogger("CTP.T");
 
         public CTPProvider()
         {
-            //log4net.Config.XmlConfigurator.ConfigureAndWatch(new FileInfo(@"Bin/CTP.log4net.config"));
             try
             {
-                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/CTP.nlog");
+                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/QuantBox.nlog");
             }
             catch(Exception ex)
             {
