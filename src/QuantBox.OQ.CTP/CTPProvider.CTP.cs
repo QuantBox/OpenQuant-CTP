@@ -1120,9 +1120,13 @@ namespace QuantBox.OQ.CTP
                         case TThostFtdcOrderStatusType.NoTradeQueueing:
                             if (0 == _Ref2Action.Count())
                             {
+                                _Ref2Action[strKey] = pOrder;
                                 EmitAccepted(order);
                             }
-                            _Ref2Action[strKey] = pOrder;
+                            else
+                            {
+                                _Ref2Action[strKey] = pOrder;
+                            }
                             break;
                         case TThostFtdcOrderStatusType.NoTradeNotQueueing:
                             //已经是最后状态，不能用于撤单了
@@ -1157,9 +1161,13 @@ namespace QuantBox.OQ.CTP
                                     //新单，新加入记录以便撤单
                                     if (0 == _Ref2Action.Count())
                                     {
+                                        _Ref2Action[strKey] = pOrder;
                                         EmitAccepted(order);
                                     }
-                                    _Ref2Action[strKey] = pOrder;
+                                    else
+                                    {
+                                        _Ref2Action[strKey] = pOrder;
+                                    }
                                     break;
                             }
                             break;
