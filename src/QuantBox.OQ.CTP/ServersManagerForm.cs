@@ -69,6 +69,7 @@ namespace QuantBox.OQ.CTP
                 wc.DownloadFile(textBoxUrl.Text, fileName);
 
                 provider.LoadBrokers();
+                brokerItemBindingSource.DataSource = provider.Brokers;
 
                 MessageBox.Show("远程配置下载成功！");
             }
