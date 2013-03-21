@@ -1035,7 +1035,7 @@ namespace QuantBox.OQ.CTP
                             order.StopPx);
                         break;
                     case OrdType.Market:
-                        if (bSupportMarketOrder)
+                        if (SwitchMakertOrderToLimitOrder || !bSupportMarketOrder)
                         {
                             nRet = TraderApi.TD_SendOrder(m_pTdApi,
                             altSymbol,
@@ -1043,9 +1043,9 @@ namespace QuantBox.OQ.CTP
                             it.szCombOffsetFlag,
                             szCombHedgeFlag,
                             it.qty,
-                            0,
-                            TThostFtdcOrderPriceTypeType.AnyPrice,
-                            TThostFtdcTimeConditionType.IOC,
+                            price,
+                            TThostFtdcOrderPriceTypeType.LimitPrice,
+                            TThostFtdcTimeConditionType.GFD,
                             TThostFtdcContingentConditionType.Immediately,
                             order.StopPx);
                         }
@@ -1057,9 +1057,9 @@ namespace QuantBox.OQ.CTP
                             it.szCombOffsetFlag,
                             szCombHedgeFlag,
                             it.qty,
-                            price,
-                            TThostFtdcOrderPriceTypeType.LimitPrice,
-                            TThostFtdcTimeConditionType.GFD,
+                            0,
+                            TThostFtdcOrderPriceTypeType.AnyPrice,
+                            TThostFtdcTimeConditionType.IOC,
                             TThostFtdcContingentConditionType.Immediately,
                             order.StopPx);
                         }
@@ -1090,6 +1090,7 @@ namespace QuantBox.OQ.CTP
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
                 order.Text = string.Format("{0}|{1}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pOrder.StatusMsg);
+                order.OrderID = pOrder.OrderSysID;
 
                 //找到对应的报单回应
                 Dictionary<string, CThostFtdcOrderField> _Ref2Action;

@@ -18,6 +18,8 @@ namespace QuantBox.OQ.CTP
         private const string CATEGORY_INFO = "Information";
         private const string CATEGORY_NETWORK = "Settings - Network";
         private const string CATEGORY_STATUS = "Status";
+        private const string CATEGORY_TIME = "Settings - Time";
+        private const string CATEGORY_OTHER = "Settings - Other";
 
         //交易所常量定义
         private enum ExchangID
@@ -55,13 +57,13 @@ namespace QuantBox.OQ.CTP
         private string _SupportCloseToday;
         private string _DefaultOpenClosePrefix;
 
-        [Category("Settings - Other")]
+        [Category(CATEGORY_OTHER)]
         [Description("设置API生成临时文件的目录")]
         [Editor(typeof(System.Windows.Forms.Design.FolderNameEditor), typeof(System.Drawing.Design.UITypeEditor))]
         [Browsable(false)]
         public string ApiTempPath { get; set; }
 
-        [Category("Settings - Time")]
+        [Category(CATEGORY_TIME)]
         [Description("警告！仅保存行情数据时才用交易所时间。交易时使用交易所时间将导致Bar生成错误")]
         [DefaultValue(TimeMode.LocalTime)]
         public TimeMode DateTimeMode
@@ -70,7 +72,7 @@ namespace QuantBox.OQ.CTP
             set { _TimeMode = value; }
         }
 
-        [Category("Settings - Time")]
+        [Category(CATEGORY_TIME)]
         [Description("修改本地时间。分别是：不修改、登录交易前置机时间、各大交易所时间。以管理员方式运行才有权限")]
         [DefaultValue(SetTimeMode.None)]
         public SetTimeMode SetLocalTimeMode
@@ -79,7 +81,7 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        [Category("Settings - Time")]
+        [Category(CATEGORY_TIME)]
         [DefaultValue(0)]
         [Description("修改本地时间时，在取到的时间上添加指定毫秒")]
         public int AddMilliseconds
@@ -88,12 +90,12 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        [Category("Settings - Other")]
+        [Category(CATEGORY_OTHER)]
         [Description("设置登录后是否接收完整的报单和成交记录")]
         [DefaultValue(THOST_TE_RESUME_TYPE.THOST_TERT_QUICK)]
         public THOST_TE_RESUME_TYPE ResumeType { get; set; }
 
-        [Category("Settings - Order")]
+        [Category(CATEGORY_OTHER)]
         [Description("设置投机套保标志。Speculation:投机、Arbitrage套利、Hedge套保")]
         [DefaultValue(TThostFtdcHedgeFlagType.Speculation)]
         public TThostFtdcHedgeFlagType HedgeFlagType
@@ -102,7 +104,7 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        [Category("Settings - Order")]
+        [Category(CATEGORY_OTHER)]
         [Description("支持市价单的交易所")]
         public string SupportMarketOrder
         {
@@ -110,24 +112,33 @@ namespace QuantBox.OQ.CTP
         }
 
 
-        [Category("Settings - Order")]
+        [Category(CATEGORY_OTHER)]
         [Description("区分平今与平昨的交易所")]
         public string SupportCloseToday
         {
             get { return _SupportCloseToday; }
         }
 
-        [Category("Settings - Order")]
+        [Category(CATEGORY_OTHER)]
         [Description("指定开平，利用Order的Text域开始部分指定开平，“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
         public string DefaultOpenClosePrefix
         {
             get { return _DefaultOpenClosePrefix; }
         }
 
-        [Category("Settings - Order")]
-        [Description("在最新价上调整N跳来模拟市价，超过涨跌停价按涨跌停价报")]
+        [Category(CATEGORY_OTHER)]
+        [Description("在最新价上调整N跳来模拟市价，超过涨跌停价按涨跌停价报单")]
         [DefaultValue(10)]
         public int LastPricePlusNTicks
+        {
+            get;
+            set;
+        }
+
+        [Category(CATEGORY_OTHER)]
+        [Description("True - 所有市价单都用限价单来模拟\nFalse - 仅对上期所进行模拟")]
+        [DefaultValue(false)]
+        public bool SwitchMakertOrderToLimitOrder
         {
             get;
             set;
@@ -184,6 +195,7 @@ namespace QuantBox.OQ.CTP
             ApiTempPath = Framework.Installation.TempDir.FullName;
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
+            SwitchMakertOrderToLimitOrder = false;
 
             _bWantMdConnect = true;
             _bWantTdConnect = true;
