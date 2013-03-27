@@ -123,7 +123,7 @@ namespace QuantBox.OQ.CTP
             _dd = 0;
         }
 
-        private void ChangeDay()
+        private void ChangeTradingDay()
         {
             //只在每天的1点以内更新一次
             if (_dd != DateTime.Now.Day
@@ -144,9 +144,51 @@ namespace QuantBox.OQ.CTP
         #endregion
 
         #region 定时器
+        private readonly System.Timers.Timer timerConnect = new System.Timers.Timer(1 * 60 * 1000);
         private readonly System.Timers.Timer timerDisconnect = new System.Timers.Timer(20 * 1000);
         private readonly System.Timers.Timer timerAccount = new System.Timers.Timer(3 * 60 * 1000);
         private readonly System.Timers.Timer timerPonstion = new System.Timers.Timer(5 * 60 * 1000);
+
+        void timerConnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //网络问题从来没有连上，超时直接跳出
+            if (!isConnected)
+                return;
+
+            // 换交易日了，更新部分数据
+            ChangeTradingDay();
+
+            DateTime dt = DateTime.Now;
+            int nTime = dt.Hour * 100 + dt.Minute;
+            // 9点到15点15是交易时间
+            // 夜盘晚上9点到第二天的2点30是交易时间
+            bool bTrading = false;
+            if (830<=nTime&&nTime<=1530)
+            {
+                bTrading = true;
+            }
+            if(2030<=nTime||nTime<=300)
+            {
+                bTrading = true;
+            }
+
+            if (!bTrading)
+                return;
+
+            // 交易时间断线，由C#层来销毁，然后重连
+            if (_bWantMdConnect && !_bMdConnected)
+            {
+                mdlog.Info("断开->重连");
+                Disconnect_MD();
+                Connect_MD();
+            }
+            if (_bWantTdConnect && !_bTdConnected)
+            {
+                tdlog.Info("断开->重连");
+                Disconnect_TD();
+                Connect_TD();
+            }
+        }
 
         void timerDisconnect_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -160,7 +202,6 @@ namespace QuantBox.OQ.CTP
 
         void timerPonstion_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, "");
@@ -169,7 +210,6 @@ namespace QuantBox.OQ.CTP
 
         void timerAccount_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            ChangeDay();
             if (_bTdConnected)
             {
                 TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
@@ -256,8 +296,6 @@ namespace QuantBox.OQ.CTP
             if (_bWantMdConnect || _bWantTdConnect)
             {
                 timerDisconnect.Enabled = true;
-                timerAccount.Enabled = true;
-                timerPonstion.Enabled = true;
                 Connect_MsgQueue();
             }
             if (_bWantMdConnect)
@@ -296,8 +334,6 @@ namespace QuantBox.OQ.CTP
 
                     CommApi.CTP_StartMsgQueue(m_pMdMsgQueue);
                 }
-
-                //SetEmitDirectly(_EmitDirectly);
             }
         }
 
@@ -358,6 +394,7 @@ namespace QuantBox.OQ.CTP
         #region 断开连接
         private void _Disconnect()
         {
+            timerConnect.Enabled = false;
             timerDisconnect.Enabled = false;
             timerAccount.Enabled = false;
             timerPonstion.Enabled = false;
@@ -496,6 +533,16 @@ namespace QuantBox.OQ.CTP
                     mdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
+
+                    // 如果断线重连是使用的重新新建对象的方式，则要重新订阅
+                    if (_dictAltSymbol2Instrument.Count > 0)
+                    {
+                        mdlog.Info("行情列表数{0},全部重新订阅", _dictAltSymbol2Instrument.Count);
+                        foreach (string symbol in _dictAltSymbol2Instrument.Keys)
+                        {
+                            MdApi.MD_Subscribe(m_pMdApi, symbol);
+                        }
+                    }
                 }
                 //这也有个时间，但取出的时间无效
                 mdlog.Info("{0},{1}", result, pRspUserLogin.LoginTime);
@@ -503,7 +550,6 @@ namespace QuantBox.OQ.CTP
             else if (m_pTdApi == pApi)//交易
             {
                 _bTdConnected = false;
-
                 if (ConnectionStatus.E_logined == result)
                 {
                     _RspUserLogin = pRspUserLogin;
@@ -543,6 +589,7 @@ namespace QuantBox.OQ.CTP
                 || (!_bWantTdConnect && _bMdConnected)//只用分析行情连上
                 )
             {
+                timerConnect.Enabled = true;
                 timerDisconnect.Enabled = false;//都连接上了，用不着定时断开了
                 ChangeStatus(ProviderStatus.LoggedIn);
                 isConnected = true;
@@ -554,6 +601,7 @@ namespace QuantBox.OQ.CTP
         {
             if (m_pMdApi == pApi)//行情
             {
+                _bMdConnected = false;
                 if (isConnected)
                 {
                     mdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
@@ -565,6 +613,7 @@ namespace QuantBox.OQ.CTP
             }
             else if (m_pTdApi == pApi)//交易
             {
+                _bTdConnected = false;
                 if (isConnected)//如果以前连成功，表示密码没有错，只是初始化失败，可以重试
                 {
                     tdlog.Error("Step:{0},ErrorID:{1},ErrorMsg:{2},等待定时重试连接", step, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
