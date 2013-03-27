@@ -96,7 +96,7 @@ namespace QuantBox.OQ.CTP
         public THOST_TE_RESUME_TYPE ResumeType { get; set; }
 
         [Category(CATEGORY_OTHER)]
-        [Description("设置投机套保标志。Speculation:投机、Arbitrage套利、Hedge套保")]
+        [Description("设置投机套保标志。\nSpeculation - 投机\nArbitrage - 套利\nHedge - 套保")]
         [DefaultValue(TThostFtdcHedgeFlagType.Speculation)]
         public TThostFtdcHedgeFlagType HedgeFlagType
         {
@@ -120,7 +120,7 @@ namespace QuantBox.OQ.CTP
         }
 
         [Category(CATEGORY_OTHER)]
-        [Description("指定开平，利用Order的Text域开始部分指定开平，“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
+        [Description("指定开平，利用Order的Text域开始部分指定开平\n“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
         public string DefaultOpenClosePrefix
         {
             get { return _DefaultOpenClosePrefix; }
@@ -143,6 +143,20 @@ namespace QuantBox.OQ.CTP
             get;
             set;
         }
+
+        //private bool _EmitDirectly;
+        //[Category(CATEGORY_OTHER)]
+        //[Description("True - 直接提交回调，速度更快\nFalse - 通过队列提交回调")]
+        //[DefaultValue(false)]
+        //public bool EmitDirectly
+        //{
+        //    get { return _EmitDirectly; }
+        //    set
+        //    {
+        //        _EmitDirectly = value;
+        //        SetEmitDirectly(_EmitDirectly);
+        //    }
+        //}
 
         private BindingList<ServerItem> serversList = new BindingList<ServerItem>();
         [Category("Settings")]
@@ -196,6 +210,7 @@ namespace QuantBox.OQ.CTP
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
             SwitchMakertOrderToLimitOrder = false;
+            //_EmitDirectly = false;
 
             _bWantMdConnect = true;
             _bWantTdConnect = true;
@@ -211,6 +226,18 @@ namespace QuantBox.OQ.CTP
             serversList.ListChanged += ServersList_ListChanged;
             accountsList.ListChanged += AccountsList_ListChanged;
         }
+
+        //private void SetEmitDirectly(bool bDirect)
+        //{
+        //    if (null != m_pTdMsgQueue && IntPtr.Zero != m_pTdMsgQueue)
+        //    {
+        //        CommApi.CTP_EmitDirectly(m_pTdMsgQueue, bDirect);
+        //    }
+        //    if (null != m_pMdMsgQueue && IntPtr.Zero != m_pMdMsgQueue)
+        //    {
+        //        CommApi.CTP_EmitDirectly(m_pMdMsgQueue, bDirect);
+        //    }
+        //}
 
         void ServersList_ListChanged(object sender, ListChangedEventArgs e)
         {

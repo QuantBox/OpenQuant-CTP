@@ -58,7 +58,8 @@ namespace QuantBox.OQ.CTP
             _fnOnRtnTrade_Holder = OnRtnTrade;
         }
 
-        private IntPtr m_pMsgQueue = IntPtr.Zero;   //消息队列指针
+        private IntPtr m_pMdMsgQueue = IntPtr.Zero;   //消息队列指针
+        private IntPtr m_pTdMsgQueue = IntPtr.Zero;   //消息队列指针
         private IntPtr m_pMdApi = IntPtr.Zero;      //行情对象指针
         private IntPtr m_pTdApi = IntPtr.Zero;      //交易对象指针
 
@@ -115,6 +116,7 @@ namespace QuantBox.OQ.CTP
             _dictCommissionRate.Clear();
             _dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
+            nGetBrokerInfoCount = 0;
 
             _yyyy = 0;
             _MM = 0;
@@ -274,16 +276,28 @@ namespace QuantBox.OQ.CTP
             //建立消息队列，只建一个，行情和交易复用一个
             lock (_lockMsgQueue)
             {
-                if (null == m_pMsgQueue || IntPtr.Zero == m_pMsgQueue)
+                if (null == m_pTdMsgQueue || IntPtr.Zero == m_pTdMsgQueue)
                 {
-                    m_pMsgQueue = CommApi.CTP_CreateMsgQueue();
+                    m_pTdMsgQueue = CommApi.CTP_CreateMsgQueue();
 
-                    CommApi.CTP_RegOnConnect(m_pMsgQueue, _fnOnConnect_Holder);
-                    CommApi.CTP_RegOnDisconnect(m_pMsgQueue, _fnOnDisconnect_Holder);
-                    CommApi.CTP_RegOnRspError(m_pMsgQueue, _fnOnRspError_Holder);
+                    CommApi.CTP_RegOnConnect(m_pTdMsgQueue, _fnOnConnect_Holder);
+                    CommApi.CTP_RegOnDisconnect(m_pTdMsgQueue, _fnOnDisconnect_Holder);
+                    CommApi.CTP_RegOnRspError(m_pTdMsgQueue, _fnOnRspError_Holder);
 
-                    CommApi.CTP_StartMsgQueue(m_pMsgQueue);
+                    CommApi.CTP_StartMsgQueue(m_pTdMsgQueue);
                 }
+                if (null == m_pMdMsgQueue || IntPtr.Zero == m_pMdMsgQueue)
+                {
+                    m_pMdMsgQueue = CommApi.CTP_CreateMsgQueue();
+
+                    CommApi.CTP_RegOnConnect(m_pMdMsgQueue, _fnOnConnect_Holder);
+                    CommApi.CTP_RegOnDisconnect(m_pMdMsgQueue, _fnOnDisconnect_Holder);
+                    CommApi.CTP_RegOnRspError(m_pMdMsgQueue, _fnOnRspError_Holder);
+
+                    CommApi.CTP_StartMsgQueue(m_pMdMsgQueue);
+                }
+
+                //SetEmitDirectly(_EmitDirectly);
             }
         }
 
@@ -296,8 +310,8 @@ namespace QuantBox.OQ.CTP
                    && (null == m_pMdApi || IntPtr.Zero == m_pMdApi))
                 {
                     m_pMdApi = MdApi.MD_CreateMdApi();
-                    MdApi.CTP_RegOnRtnDepthMarketData(m_pMsgQueue, _fnOnRtnDepthMarketData_Holder);
-                    MdApi.MD_RegMsgQueue2MdApi(m_pMdApi, m_pMsgQueue);
+                    MdApi.CTP_RegOnRtnDepthMarketData(m_pMdMsgQueue, _fnOnRtnDepthMarketData_Holder);
+                    MdApi.MD_RegMsgQueue2MdApi(m_pMdApi, m_pMdMsgQueue);
                     MdApi.MD_Connect(m_pMdApi, _newTempPath, string.Join(";", server.MarketData.ToArray()), server.BrokerID, account.InvestorId, account.Password);
 
                     //向单例对象中注入操作用句柄
@@ -315,20 +329,20 @@ namespace QuantBox.OQ.CTP
                 && (null == m_pTdApi || IntPtr.Zero == m_pTdApi))
                 {
                     m_pTdApi = TraderApi.TD_CreateTdApi();
-                    TraderApi.CTP_RegOnErrRtnOrderAction(m_pMsgQueue, _fnOnErrRtnOrderAction_Holder);
-                    TraderApi.CTP_RegOnErrRtnOrderInsert(m_pMsgQueue, _fnOnErrRtnOrderInsert_Holder);
-                    TraderApi.CTP_RegOnRspOrderAction(m_pMsgQueue, _fnOnRspOrderAction_Holder);
-                    TraderApi.CTP_RegOnRspOrderInsert(m_pMsgQueue, _fnOnRspOrderInsert_Holder);
-                    TraderApi.CTP_RegOnRspQryDepthMarketData(m_pMsgQueue, _fnOnRspQryDepthMarketData_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrument(m_pMsgQueue, _fnOnRspQryInstrument_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrumentCommissionRate(m_pMsgQueue, _fnOnRspQryInstrumentCommissionRate_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
-                    TraderApi.CTP_RegOnRspQryInvestorPosition(m_pMsgQueue, _fnOnRspQryInvestorPosition_Holder);
-                    TraderApi.CTP_RegOnRspQryTradingAccount(m_pMsgQueue, _fnOnRspQryTradingAccount_Holder);
-                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pMsgQueue, _fnOnRtnInstrumentStatus_Holder);
-                    TraderApi.CTP_RegOnRtnOrder(m_pMsgQueue, _fnOnRtnOrder_Holder);
-                    TraderApi.CTP_RegOnRtnTrade(m_pMsgQueue, _fnOnRtnTrade_Holder);
-                    TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
+                    TraderApi.CTP_RegOnErrRtnOrderAction(m_pTdMsgQueue, _fnOnErrRtnOrderAction_Holder);
+                    TraderApi.CTP_RegOnErrRtnOrderInsert(m_pTdMsgQueue, _fnOnErrRtnOrderInsert_Holder);
+                    TraderApi.CTP_RegOnRspOrderAction(m_pTdMsgQueue, _fnOnRspOrderAction_Holder);
+                    TraderApi.CTP_RegOnRspOrderInsert(m_pTdMsgQueue, _fnOnRspOrderInsert_Holder);
+                    TraderApi.CTP_RegOnRspQryDepthMarketData(m_pTdMsgQueue, _fnOnRspQryDepthMarketData_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrument(m_pTdMsgQueue, _fnOnRspQryInstrument_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrumentCommissionRate(m_pTdMsgQueue, _fnOnRspQryInstrumentCommissionRate_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pTdMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
+                    TraderApi.CTP_RegOnRspQryInvestorPosition(m_pTdMsgQueue, _fnOnRspQryInvestorPosition_Holder);
+                    TraderApi.CTP_RegOnRspQryTradingAccount(m_pTdMsgQueue, _fnOnRspQryTradingAccount_Holder);
+                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pTdMsgQueue, _fnOnRtnInstrumentStatus_Holder);
+                    TraderApi.CTP_RegOnRtnOrder(m_pTdMsgQueue, _fnOnRtnOrder_Holder);
+                    TraderApi.CTP_RegOnRtnTrade(m_pTdMsgQueue, _fnOnRtnTrade_Holder);
+                    TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pTdMsgQueue);
                     TraderApi.TD_Connect(m_pTdApi, _newTempPath, string.Join(";", server.Trading.ToArray()),
                         server.BrokerID, account.InvestorId, account.Password,
                         ResumeType,
@@ -367,12 +381,19 @@ namespace QuantBox.OQ.CTP
         {
             lock (_lockMsgQueue)
             {
-                if (null != m_pMsgQueue && IntPtr.Zero != m_pMsgQueue)
+                if (null != m_pTdMsgQueue && IntPtr.Zero != m_pTdMsgQueue)
                 {
-                    CommApi.CTP_StopMsgQueue(m_pMsgQueue);
+                    CommApi.CTP_StopMsgQueue(m_pTdMsgQueue);
 
-                    CommApi.CTP_ReleaseMsgQueue(m_pMsgQueue);
-                    m_pMsgQueue = IntPtr.Zero;
+                    CommApi.CTP_ReleaseMsgQueue(m_pTdMsgQueue);
+                    m_pTdMsgQueue = IntPtr.Zero;
+                }
+                if (null != m_pMdMsgQueue && IntPtr.Zero != m_pMdMsgQueue)
+                {
+                    CommApi.CTP_StopMsgQueue(m_pMdMsgQueue);
+
+                    CommApi.CTP_ReleaseMsgQueue(m_pMdMsgQueue);
+                    m_pMdMsgQueue = IntPtr.Zero;
                 }
             }
         }

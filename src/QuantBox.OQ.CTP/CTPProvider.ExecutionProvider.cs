@@ -16,6 +16,7 @@ namespace QuantBox.OQ.CTP
 
         public event ExecutionReportEventHandler ExecutionReport;
         public event OrderCancelRejectEventHandler OrderCancelReject;
+        private int nGetBrokerInfoCount;
 
         public BrokerInfo GetBrokerInfo()
         {
@@ -23,13 +24,19 @@ namespace QuantBox.OQ.CTP
 
             if (IsConnected)
             {
-                tdlog.Info("GetBrokerInfo");
-                //TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
-                //TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
-                //timerAccount.Enabled = false;
-                //timerAccount.Enabled = true;
-                //timerPonstion.Enabled = false;
-                //timerPonstion.Enabled = true;
+                if (_bTdConnected)
+                {
+                    tdlog.Info("GetBrokerInfo");
+                }
+                else
+                {
+                    if (nGetBrokerInfoCount<5)
+                    {
+                        tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
+                        ++nGetBrokerInfoCount;
+                    }
+                    return null;
+                }
 
                 BrokerAccount brokerAccount = new BrokerAccount(m_TradingAccount.AccountID) { BuyingPower = m_TradingAccount.Available };
 
