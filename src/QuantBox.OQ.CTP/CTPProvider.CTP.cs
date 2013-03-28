@@ -578,6 +578,9 @@ namespace QuantBox.OQ.CTP
                     //请求查询合约
                     _dictInstruments.Clear();
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
+
+                    timerAccount.Enabled = true;
+                    timerPonstion.Enabled = true;
                 }
 
                 tdlog.Info("{0},{1}", result, pRspUserLogin.LoginTime);
@@ -590,7 +593,7 @@ namespace QuantBox.OQ.CTP
                 )
             {
                 timerConnect.Enabled = true;
-                timerDisconnect.Enabled = false;//都连接上了，用不着定时断开了
+                timerDisconnect.Enabled = false;//都连接上了，用不着定时断
                 ChangeStatus(ProviderStatus.LoggedIn);
                 isConnected = true;
                 EmitConnectedEvent();
@@ -767,6 +770,12 @@ namespace QuantBox.OQ.CTP
 
                 //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
                 //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+            }
+
+            // 直接回报CTP的行情信息
+            if (EmitOnRtnDepthMarketData)
+            {
+                CTPAPI.GetInstance().FireOnRtnDepthMarketData(pDepthMarketData);
             }
         }
 

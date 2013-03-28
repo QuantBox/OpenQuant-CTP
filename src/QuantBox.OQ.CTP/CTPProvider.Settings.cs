@@ -144,19 +144,15 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        //private bool _EmitDirectly;
-        //[Category(CATEGORY_OTHER)]
-        //[Description("True - 直接提交回调，速度更快\nFalse - 通过队列提交回调")]
-        //[DefaultValue(false)]
-        //public bool EmitDirectly
-        //{
-        //    get { return _EmitDirectly; }
-        //    set
-        //    {
-        //        _EmitDirectly = value;
-        //        SetEmitDirectly(_EmitDirectly);
-        //    }
-        //}
+        [Category(CATEGORY_OTHER)]
+        [Description("True - 产生OnRtnDepthMarketData事件\nFalse - 不产生OnRtnDepthMarketData事件")]
+        [DefaultValue(false)]
+        //[Browsable(false)]
+        public bool EmitOnRtnDepthMarketData
+        {
+            get;
+            set;
+        }
 
         private BindingList<ServerItem> serversList = new BindingList<ServerItem>();
         [Category("Settings")]
@@ -210,7 +206,7 @@ namespace QuantBox.OQ.CTP
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
             SwitchMakertOrderToLimitOrder = false;
-            //_EmitDirectly = false;
+            EmitOnRtnDepthMarketData = false;
 
             _bWantMdConnect = true;
             _bWantTdConnect = true;

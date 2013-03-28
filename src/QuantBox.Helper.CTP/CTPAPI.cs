@@ -142,7 +142,7 @@ namespace QuantBox.Helper.CTP
         }
         #endregion
 
-        #region 深度行情
+        #region 深度行情1
         private Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = null;
         public void __RegDepthMarketDataDictionary(Dictionary<string, CThostFtdcDepthMarketDataField> dict)
         {
@@ -176,6 +176,18 @@ namespace QuantBox.Helper.CTP
             if (null != OnRspQryDepthMarketData)
             {
                 OnRspQryDepthMarketData(pDepthMarketData);
+            }
+        }
+        #endregion
+
+        #region 深度行情2
+        public delegate void RtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData);
+        public event RtnDepthMarketData OnRtnDepthMarketData;
+        public void FireOnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData)
+        {
+            if (null != OnRtnDepthMarketData)
+            {
+                OnRtnDepthMarketData(pDepthMarketData);
             }
         }
         #endregion
