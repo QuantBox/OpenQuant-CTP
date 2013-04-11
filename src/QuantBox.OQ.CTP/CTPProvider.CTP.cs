@@ -58,8 +58,7 @@ namespace QuantBox.OQ.CTP
             _fnOnRtnTrade_Holder = OnRtnTrade;
         }
 
-        private IntPtr m_pMdMsgQueue = IntPtr.Zero;   //消息队列指针
-        private IntPtr m_pTdMsgQueue = IntPtr.Zero;   //消息队列指针
+        private IntPtr m_pMsgQueue = IntPtr.Zero;   //消息队列指针
         private IntPtr m_pMdApi = IntPtr.Zero;      //行情对象指针
         private IntPtr m_pTdApi = IntPtr.Zero;      //交易对象指针
 
@@ -123,23 +122,39 @@ namespace QuantBox.OQ.CTP
             _dd = 0;
         }
 
-        private void ChangeTradingDay()
+        private void ChangeTradingDay(string tradingDay)
         {
-            //只在每天的1点以内更新一次
-            if (_dd != DateTime.Now.Day
-                && DateTime.Now.Hour < 1)
+            // 不用每次都比
+            DateTime dt = DateTime.Now;
+            int nTime = dt.Hour * 100 + dt.Minute;
+            // 考虑到时间误差，给10分钟的切换时间
+            if (2355 <= nTime || nTime <= 5)
             {
-                //测试平台晚上会出现交易日为明天的情况，如果现在清空会导致有行情过来，但不显示在界面上
-                //所以修改行情接收部分总是更新
-                //_dictDepthMarketData.Clear();
-                _dictInstruments.Clear();
-                _dictCommissionRate.Clear();
-                _dictMarginRate.Clear();
-
-                _yyyy = DateTime.Now.Year;
-                _MM = DateTime.Now.Month;
-                _dd = DateTime.Now.Day;
+                // 行情时间切换
+                // 在这个时间段内都使用传回来的时间，
+                // 因为有可能不同交易所时间有误差，有的到第二天了，有些还没到
+                try
+                {
+                    int _yyyyMMdd = int.Parse(tradingDay);
+                    _yyyy = _yyyyMMdd / 10000;
+                    _MM = (_yyyyMMdd % 10000) / 100;
+                    _dd = _yyyyMMdd % 100;
+                }
+                catch (Exception ex)
+                {
+                    _yyyy = dt.Year;
+                    _MM = dt.Month;
+                    _dd = dt.Day;
+                }
             }
+        }
+
+        private void ChangeActionDay()
+        {
+            // 换交易日，假设换交易日前肯定会登录一次，所以在登录的时候清理即可
+            //_dictInstruments.Clear();
+            //_dictCommissionRate.Clear();
+            //_dictMarginRate.Clear();
         }
         #endregion
 
@@ -156,18 +171,18 @@ namespace QuantBox.OQ.CTP
                 return;
 
             // 换交易日了，更新部分数据
-            ChangeTradingDay();
+            ChangeActionDay();
 
             DateTime dt = DateTime.Now;
             int nTime = dt.Hour * 100 + dt.Minute;
             // 9点到15点15是交易时间
             // 夜盘晚上9点到第二天的2点30是交易时间
             bool bTrading = false;
-            if (830<=nTime&&nTime<=1530)
+            if (845<=nTime&&nTime<=1530)
             {
                 bTrading = true;
             }
-            if(2030<=nTime||nTime<=300)
+            if(2045<=nTime||nTime<=300)
             {
                 bTrading = true;
             }
@@ -314,25 +329,15 @@ namespace QuantBox.OQ.CTP
             //建立消息队列，只建一个，行情和交易复用一个
             lock (_lockMsgQueue)
             {
-                if (null == m_pTdMsgQueue || IntPtr.Zero == m_pTdMsgQueue)
+                if (null == m_pMsgQueue || IntPtr.Zero == m_pMsgQueue)
                 {
-                    m_pTdMsgQueue = CommApi.CTP_CreateMsgQueue();
+                    m_pMsgQueue = CommApi.CTP_CreateMsgQueue();
 
-                    CommApi.CTP_RegOnConnect(m_pTdMsgQueue, _fnOnConnect_Holder);
-                    CommApi.CTP_RegOnDisconnect(m_pTdMsgQueue, _fnOnDisconnect_Holder);
-                    CommApi.CTP_RegOnRspError(m_pTdMsgQueue, _fnOnRspError_Holder);
+                    CommApi.CTP_RegOnConnect(m_pMsgQueue, _fnOnConnect_Holder);
+                    CommApi.CTP_RegOnDisconnect(m_pMsgQueue, _fnOnDisconnect_Holder);
+                    CommApi.CTP_RegOnRspError(m_pMsgQueue, _fnOnRspError_Holder);
 
-                    CommApi.CTP_StartMsgQueue(m_pTdMsgQueue);
-                }
-                if (null == m_pMdMsgQueue || IntPtr.Zero == m_pMdMsgQueue)
-                {
-                    m_pMdMsgQueue = CommApi.CTP_CreateMsgQueue();
-
-                    CommApi.CTP_RegOnConnect(m_pMdMsgQueue, _fnOnConnect_Holder);
-                    CommApi.CTP_RegOnDisconnect(m_pMdMsgQueue, _fnOnDisconnect_Holder);
-                    CommApi.CTP_RegOnRspError(m_pMdMsgQueue, _fnOnRspError_Holder);
-
-                    CommApi.CTP_StartMsgQueue(m_pMdMsgQueue);
+                    CommApi.CTP_StartMsgQueue(m_pMsgQueue);
                 }
             }
         }
@@ -346,8 +351,8 @@ namespace QuantBox.OQ.CTP
                    && (null == m_pMdApi || IntPtr.Zero == m_pMdApi))
                 {
                     m_pMdApi = MdApi.MD_CreateMdApi();
-                    MdApi.CTP_RegOnRtnDepthMarketData(m_pMdMsgQueue, _fnOnRtnDepthMarketData_Holder);
-                    MdApi.MD_RegMsgQueue2MdApi(m_pMdApi, m_pMdMsgQueue);
+                    MdApi.CTP_RegOnRtnDepthMarketData(m_pMsgQueue, _fnOnRtnDepthMarketData_Holder);
+                    MdApi.MD_RegMsgQueue2MdApi(m_pMdApi, m_pMsgQueue);
                     MdApi.MD_Connect(m_pMdApi, _newTempPath, string.Join(";", server.MarketData.ToArray()), server.BrokerID, account.InvestorId, account.Password);
 
                     //向单例对象中注入操作用句柄
@@ -365,20 +370,20 @@ namespace QuantBox.OQ.CTP
                 && (null == m_pTdApi || IntPtr.Zero == m_pTdApi))
                 {
                     m_pTdApi = TraderApi.TD_CreateTdApi();
-                    TraderApi.CTP_RegOnErrRtnOrderAction(m_pTdMsgQueue, _fnOnErrRtnOrderAction_Holder);
-                    TraderApi.CTP_RegOnErrRtnOrderInsert(m_pTdMsgQueue, _fnOnErrRtnOrderInsert_Holder);
-                    TraderApi.CTP_RegOnRspOrderAction(m_pTdMsgQueue, _fnOnRspOrderAction_Holder);
-                    TraderApi.CTP_RegOnRspOrderInsert(m_pTdMsgQueue, _fnOnRspOrderInsert_Holder);
-                    TraderApi.CTP_RegOnRspQryDepthMarketData(m_pTdMsgQueue, _fnOnRspQryDepthMarketData_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrument(m_pTdMsgQueue, _fnOnRspQryInstrument_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrumentCommissionRate(m_pTdMsgQueue, _fnOnRspQryInstrumentCommissionRate_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pTdMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
-                    TraderApi.CTP_RegOnRspQryInvestorPosition(m_pTdMsgQueue, _fnOnRspQryInvestorPosition_Holder);
-                    TraderApi.CTP_RegOnRspQryTradingAccount(m_pTdMsgQueue, _fnOnRspQryTradingAccount_Holder);
-                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pTdMsgQueue, _fnOnRtnInstrumentStatus_Holder);
-                    TraderApi.CTP_RegOnRtnOrder(m_pTdMsgQueue, _fnOnRtnOrder_Holder);
-                    TraderApi.CTP_RegOnRtnTrade(m_pTdMsgQueue, _fnOnRtnTrade_Holder);
-                    TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pTdMsgQueue);
+                    TraderApi.CTP_RegOnErrRtnOrderAction(m_pMsgQueue, _fnOnErrRtnOrderAction_Holder);
+                    TraderApi.CTP_RegOnErrRtnOrderInsert(m_pMsgQueue, _fnOnErrRtnOrderInsert_Holder);
+                    TraderApi.CTP_RegOnRspOrderAction(m_pMsgQueue, _fnOnRspOrderAction_Holder);
+                    TraderApi.CTP_RegOnRspOrderInsert(m_pMsgQueue, _fnOnRspOrderInsert_Holder);
+                    TraderApi.CTP_RegOnRspQryDepthMarketData(m_pMsgQueue, _fnOnRspQryDepthMarketData_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrument(m_pMsgQueue, _fnOnRspQryInstrument_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrumentCommissionRate(m_pMsgQueue, _fnOnRspQryInstrumentCommissionRate_Holder);
+                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
+                    TraderApi.CTP_RegOnRspQryInvestorPosition(m_pMsgQueue, _fnOnRspQryInvestorPosition_Holder);
+                    TraderApi.CTP_RegOnRspQryTradingAccount(m_pMsgQueue, _fnOnRspQryTradingAccount_Holder);
+                    TraderApi.CTP_RegOnRtnInstrumentStatus(m_pMsgQueue, _fnOnRtnInstrumentStatus_Holder);
+                    TraderApi.CTP_RegOnRtnOrder(m_pMsgQueue, _fnOnRtnOrder_Holder);
+                    TraderApi.CTP_RegOnRtnTrade(m_pMsgQueue, _fnOnRtnTrade_Holder);
+                    TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
                     TraderApi.TD_Connect(m_pTdApi, _newTempPath, string.Join(";", server.Trading.ToArray()),
                         server.BrokerID, account.InvestorId, account.Password,
                         ResumeType,
@@ -418,19 +423,12 @@ namespace QuantBox.OQ.CTP
         {
             lock (_lockMsgQueue)
             {
-                if (null != m_pTdMsgQueue && IntPtr.Zero != m_pTdMsgQueue)
+                if (null != m_pMsgQueue && IntPtr.Zero != m_pMsgQueue)
                 {
-                    CommApi.CTP_StopMsgQueue(m_pTdMsgQueue);
+                    CommApi.CTP_StopMsgQueue(m_pMsgQueue);
 
-                    CommApi.CTP_ReleaseMsgQueue(m_pTdMsgQueue);
-                    m_pTdMsgQueue = IntPtr.Zero;
-                }
-                if (null != m_pMdMsgQueue && IntPtr.Zero != m_pMdMsgQueue)
-                {
-                    CommApi.CTP_StopMsgQueue(m_pMdMsgQueue);
-
-                    CommApi.CTP_ReleaseMsgQueue(m_pMdMsgQueue);
-                    m_pMdMsgQueue = IntPtr.Zero;
+                    CommApi.CTP_ReleaseMsgQueue(m_pMsgQueue);
+                    m_pMsgQueue = IntPtr.Zero;
                 }
             }
         }
@@ -515,21 +513,28 @@ namespace QuantBox.OQ.CTP
         #region 连接状态回调
         private void OnConnect(IntPtr pApi, ref CThostFtdcRspUserLoginField pRspUserLogin, ConnectionStatus result)
         {
+            //用于行情记算时简化时间解码
+            try
+            {
+                int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
+                _yyyy = _yyyyMMdd / 10000;
+                _MM = (_yyyyMMdd % 10000) / 100;
+                _dd = _yyyyMMdd % 100;
+            }
+            catch (Exception ex)
+            {
+                _yyyy = DateTime.Now.Year;
+                _MM = DateTime.Now.Month;
+                _dd = DateTime.Now.Day;
+            }
+
             if (m_pMdApi == pApi)//行情
             {
                 _bMdConnected = false;
                 if (ConnectionStatus.E_logined == result)
                 {
                     _bMdConnected = true;
-
-                    //只登录行情时得得更新行情时间，但行情却可以隔夜不断，所以要定时更新
-                    if (!_bWantTdConnect)
-                    {
-                        _yyyy = DateTime.Now.Year;
-                        _MM = DateTime.Now.Month;
-                        _dd = DateTime.Now.Day;
-                    }
-
+                    
                     mdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
@@ -554,12 +559,6 @@ namespace QuantBox.OQ.CTP
                 {
                     _RspUserLogin = pRspUserLogin;
 
-                    //用于行情记算时简化时间解码
-                    int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
-                    _yyyy = _yyyyMMdd / 10000;
-                    _MM = (_yyyyMMdd % 10000) / 100;
-                    _dd = _yyyyMMdd % 100;
-
                     tdlog.Info("TradingDay:{0},LoginTime:{1},SHFETime:{2},DCETime:{3},CZCETime:{4},FFEXTime:{5}",
                         pRspUserLogin.TradingDay, pRspUserLogin.LoginTime, pRspUserLogin.SHFETime,
                         pRspUserLogin.DCETime, pRspUserLogin.CZCETime, pRspUserLogin.FFEXTime);
@@ -577,6 +576,8 @@ namespace QuantBox.OQ.CTP
 
                     //请求查询合约
                     _dictInstruments.Clear();
+                    _dictCommissionRate.Clear();
+                    _dictMarginRate.Clear();
                     TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
 
                     timerAccount.Enabled = true;
@@ -624,8 +625,9 @@ namespace QuantBox.OQ.CTP
                     if (7 == pRspInfo.ErrorID//综合交易平台：还没有初始化
                         || 8 == pRspInfo.ErrorID)//综合交易平台：前置不活跃
                     {
-                        Disconnect_TD();
-                        Connect_TD();
+                        //这个地方登录重试太快了，等定时器来处理吧！
+                        //Disconnect_TD();
+                        //Connect_TD();
                     }
                 }
                 else
@@ -674,11 +676,21 @@ namespace QuantBox.OQ.CTP
             else
             {
                 //直接按HH:mm:ss来解析，测试过这种方法目前是效率比较高的方法
-                int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
-                int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
-                int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
+                try
+                {
+                    // 只有使用交易所行情时才需要处理跨天的问题
+                    ChangeTradingDay(pDepthMarketData.TradingDay);
 
-                _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+                    int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
+                    int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
+                    int ss = int.Parse(pDepthMarketData.UpdateTime.Substring(6, 2));
+
+                    _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
+                }
+                catch (Exception ex)
+                {
+                    _dateTime = Clock.Now;
+                }
             }
 
             if (record.TradeRequested)
