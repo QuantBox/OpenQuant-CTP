@@ -71,6 +71,18 @@
         </MarketData>
         <Label>银河期货实盘(网通)</Label>
       </ServerItem>
+	  <ServerItem>
+		<BrokerID>1010</BrokerID>
+		<Trading>
+			<string>tcp://124.207.185.168:41205</string>
+			<string>tcp://124.207.185.169:41205</string>
+		</Trading>
+		<MarketData>
+			<string>tcp://124.207.185.168:41213</string>
+			<string>tcp://124.207.185.169:41213</string>
+		</MarketData>
+    <Label>银河期货中金仿真(电信)</Label>
+  </ServerItem>
     </Server>
   </BrokerItem>
   <BrokerItem>
