@@ -84,6 +84,8 @@ namespace QuantBox.OQ.CTP
             //取已经配对好的
             if (qBuy.Count > 0 && qSell.Count > 0)
             {
+                // 有网友说可能成交时不成对，这地方是否改动一下
+
                 if (qBuy[0].Volume == qSell[0].Volume)//如果不等就有问题了
                 {
                     Volume = qBuy[0].Volume;

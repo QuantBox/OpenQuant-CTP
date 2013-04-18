@@ -16,7 +16,6 @@ namespace QuantBox.OQ.CTP
 
         public event ExecutionReportEventHandler ExecutionReport;
         public event OrderCancelRejectEventHandler OrderCancelReject;
-        private int nGetBrokerInfoCount;
 
         public BrokerInfo GetBrokerInfo()
         {
@@ -26,15 +25,15 @@ namespace QuantBox.OQ.CTP
             {
                 if (_bTdConnected)
                 {
-                    tdlog.Info("GetBrokerInfo");
+                    //tdlog.Info("GetBrokerInfo");
                 }
                 else
                 {
-                    if (nGetBrokerInfoCount<5)
-                    {
-                        tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
-                        ++nGetBrokerInfoCount;
-                    }
+                    //if (nGetBrokerInfoCount < 5)
+                    //{
+                    //    tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
+                    //    ++nGetBrokerInfoCount;
+                    //}
                     return null;
                 }
 
