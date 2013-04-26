@@ -153,6 +153,56 @@ namespace QuantBox.OQ.CTP
                 //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
             }
 
+            // 价差生成功能
+            if (CTPAPI.GetInstance().SpreadMarketData !=null)
+            {
+                ISpreadMarketData SpreadMarketData = CTPAPI.GetInstance().SpreadMarketData;
+                Tick tick = SpreadMarketData.CalculateSpread(pDepthMarketData);
+                if (tick != null)
+                {
+                    Instrument inst = InstrumentManager.Instruments[tick.Symbol];
+                    if(inst != null)
+                    {
+                        if(!double.IsNaN(tick.Price))
+                        {
+                            Trade trade = new Trade(_dateTime, tick.Price, tick.Size);
+
+                            if (null != MarketDataFilter)
+                            {
+                                Trade t = MarketDataFilter.FilterTrade(trade, inst.Symbol);
+                                if (null != t)
+                                {
+                                    EmitNewTradeEvent(inst, t);
+                                }
+                            }
+                            else
+                            {
+                                EmitNewTradeEvent(inst, trade);
+                            }
+                        }
+                        if (!double.IsNaN(tick.Ask) && !double.IsNaN(tick.Bid))
+                        {
+                            Quote quote = new Quote(_dateTime,
+                                tick.Bid,tick.BidSize,
+                                tick.Ask,tick.AskSize);
+
+                            if (null != MarketDataFilter)
+                            {
+                                Quote q = MarketDataFilter.FilterQuote(quote, inst.Symbol);
+                                if (null != q)
+                                {
+                                    EmitNewQuoteEvent(inst, q);
+                                }
+                            }
+                            else
+                            {
+                                EmitNewQuoteEvent(inst, quote);
+                            }
+                        }
+                    }
+                }
+            }
+
             // 直接回报CTP的行情信息
             if (EmitOnRtnDepthMarketData)
             {

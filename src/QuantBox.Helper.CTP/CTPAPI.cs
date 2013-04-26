@@ -212,5 +212,9 @@ namespace QuantBox.Helper.CTP
                 OnLive(null, EventArgs.Empty);
         }
         #endregion
+
+        #region ISpreadMarketData
+        public ISpreadMarketData SpreadMarketData;
+        #endregion
     }
 }
