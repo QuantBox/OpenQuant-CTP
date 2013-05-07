@@ -12,7 +12,8 @@ namespace QuantBox.Helper.CTP
         }
 
         public Tick(string Symbol,
-            double Price, int Size)
+            double Price, int Size,
+            byte ProviderId = 0)
         {
             this.Symbol = Symbol;
             this.Price = Price;
@@ -20,11 +21,13 @@ namespace QuantBox.Helper.CTP
             this.BidSize = 0;
             this.Ask = double.NaN;
             this.AskSize = 0;
+            this.ProviderId = ProviderId;
         }
 
         public Tick(string Symbol,
             double Bid, int BidSize,
-            double Ask, int AskSize)
+            double Ask, int AskSize,
+            byte ProviderId = 0)
         {
             this.Symbol = Symbol;
             this.Price = double.NaN;
@@ -33,12 +36,14 @@ namespace QuantBox.Helper.CTP
             this.BidSize = BidSize;
             this.Ask = Ask;
             this.AskSize = AskSize;
+            this.ProviderId = ProviderId;
         }
 
         public Tick(string Symbol,
             double Price,int Size,
             double Bid,int BidSize,
-            double Ask,int AskSize)
+            double Ask,int AskSize,
+            byte ProviderId = 0)
         {
             this.Symbol = Symbol;
             this.Price = Price;
@@ -47,6 +52,7 @@ namespace QuantBox.Helper.CTP
             this.BidSize = BidSize;
             this.Ask = Ask;
             this.AskSize = AskSize;
+            this.ProviderId = ProviderId;
         }
 
         public string Symbol;
@@ -56,5 +62,6 @@ namespace QuantBox.Helper.CTP
         public int BidSize;
         public double Ask;
         public int AskSize;
+        public byte ProviderId;
     }
 }

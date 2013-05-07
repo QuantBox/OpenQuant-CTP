@@ -54,7 +54,7 @@ namespace QuantBox.OQ.CTP
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     _yyyy = dt.Year;
                     _MM = dt.Month;
@@ -419,7 +419,7 @@ namespace QuantBox.OQ.CTP
                     WinAPI.SetLocalTime(_newDateTime),
                     _newDateTime.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 tdlog.Warn("{0}不能解析成时间", strNewTime);
             }

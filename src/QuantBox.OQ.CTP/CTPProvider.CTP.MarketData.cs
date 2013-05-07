@@ -56,7 +56,7 @@ namespace QuantBox.OQ.CTP
 
                     _dateTime = new DateTime(_yyyy, _MM, _dd, HH, mm, ss, pDepthMarketData.UpdateMillisec);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     _dateTime = Clock.Now;
                 }
@@ -173,6 +173,7 @@ namespace QuantBox.OQ.CTP
                     if (!double.IsNaN(tick.Price))
                     {
                         Trade trade = new Trade(_dateTime, tick.Price, tick.Size);
+                        trade.ProviderId = tick.ProviderId;
 
                         if (null != MarketDataFilter)
                         {
@@ -192,6 +193,7 @@ namespace QuantBox.OQ.CTP
                         Quote quote = new Quote(_dateTime,
                             tick.Bid, tick.BidSize,
                             tick.Ask, tick.AskSize);
+                        quote.ProviderId = tick.ProviderId;
 
                         if (null != MarketDataFilter)
                         {
