@@ -8,6 +8,6 @@ namespace QuantBox.Helper.CTP
 {
     public interface ISpreadMarketData
     {
-        Tick CalculateSpread(CThostFtdcDepthMarketDataField pDepthMarketData);
+        IEnumerable<Tick> CalculateSpread(CThostFtdcDepthMarketDataField pDepthMarketData);
     }
 }

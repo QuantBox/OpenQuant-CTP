@@ -154,54 +154,60 @@ namespace QuantBox.OQ.CTP
             }
 
             // 价差生成功能
-            if (CTPAPI.GetInstance().SpreadMarketData !=null)
+            do
             {
+                if(null == CTPAPI.GetInstance().SpreadMarketData)
+                    break;
+
                 ISpreadMarketData SpreadMarketData = CTPAPI.GetInstance().SpreadMarketData;
-                Tick tick = SpreadMarketData.CalculateSpread(pDepthMarketData);
-                if (tick != null)
+                var ticks = SpreadMarketData.CalculateSpread(pDepthMarketData);
+                if (null == ticks)
+                    break;
+
+                foreach (var tick in ticks)
                 {
                     Instrument inst = InstrumentManager.Instruments[tick.Symbol];
-                    if(inst != null)
-                    {
-                        if(!double.IsNaN(tick.Price))
-                        {
-                            Trade trade = new Trade(_dateTime, tick.Price, tick.Size);
+                    if (null == inst)
+                        continue;
 
-                            if (null != MarketDataFilter)
+                    if (!double.IsNaN(tick.Price))
+                    {
+                        Trade trade = new Trade(_dateTime, tick.Price, tick.Size);
+
+                        if (null != MarketDataFilter)
+                        {
+                            Trade t = MarketDataFilter.FilterTrade(trade, inst.Symbol);
+                            if (null != t)
                             {
-                                Trade t = MarketDataFilter.FilterTrade(trade, inst.Symbol);
-                                if (null != t)
-                                {
-                                    EmitNewTradeEvent(inst, t);
-                                }
-                            }
-                            else
-                            {
-                                EmitNewTradeEvent(inst, trade);
+                                EmitNewTradeEvent(inst, t);
                             }
                         }
-                        if (!double.IsNaN(tick.Ask) && !double.IsNaN(tick.Bid))
+                        else
                         {
-                            Quote quote = new Quote(_dateTime,
-                                tick.Bid,tick.BidSize,
-                                tick.Ask,tick.AskSize);
+                            EmitNewTradeEvent(inst, trade);
+                        }
+                    }
+                    if (!double.IsNaN(tick.Ask) && !double.IsNaN(tick.Bid))
+                    {
+                        Quote quote = new Quote(_dateTime,
+                            tick.Bid, tick.BidSize,
+                            tick.Ask, tick.AskSize);
 
-                            if (null != MarketDataFilter)
+                        if (null != MarketDataFilter)
+                        {
+                            Quote q = MarketDataFilter.FilterQuote(quote, inst.Symbol);
+                            if (null != q)
                             {
-                                Quote q = MarketDataFilter.FilterQuote(quote, inst.Symbol);
-                                if (null != q)
-                                {
-                                    EmitNewQuoteEvent(inst, q);
-                                }
+                                EmitNewQuoteEvent(inst, q);
                             }
-                            else
-                            {
-                                EmitNewQuoteEvent(inst, quote);
-                            }
+                        }
+                        else
+                        {
+                            EmitNewQuoteEvent(inst, quote);
                         }
                     }
                 }
-            }
+            } while (false);
 
             // 直接回报CTP的行情信息
             if (EmitOnRtnDepthMarketData)
