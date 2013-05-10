@@ -21,6 +21,9 @@ namespace QuantBox.OQ.CTP
         #region 撤单
         private void Cancel(SingleOrder order)
         {
+            if (null == order)
+                return;
+
             if (!_bTdConnected)
             {
                 EmitError(-1, -1, "交易服务器没有连接，无法撤单");
@@ -285,6 +288,26 @@ namespace QuantBox.OQ.CTP
             tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
                 order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
 
+            TThostFtdcDirectionType Direction = order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell;
+            TThostFtdcOrderPriceTypeType OrderPriceType = TThostFtdcOrderPriceTypeType.LimitPrice;
+            TThostFtdcTimeConditionType TimeCondition = TThostFtdcTimeConditionType.GFD;
+            TThostFtdcContingentConditionType ContingentCondition = TThostFtdcContingentConditionType.Immediately;
+            TThostFtdcVolumeConditionType VolumeCondition = TThostFtdcVolumeConditionType.AV;
+            
+            switch(order.TimeInForce)
+            {
+                case TimeInForce.IOC:
+                    TimeCondition = TThostFtdcTimeConditionType.IOC;
+                    VolumeCondition = TThostFtdcVolumeConditionType.AV;
+                    break;
+                case TimeInForce.FOK:
+                    TimeCondition = TThostFtdcTimeConditionType.IOC;
+                    VolumeCondition = TThostFtdcVolumeConditionType.CV;
+                    break;
+                default:
+                    break;
+            }
+
             foreach (SOrderSplitItem it in OrderSplitList)
             {
                 int nRet = 0;
@@ -292,52 +315,35 @@ namespace QuantBox.OQ.CTP
                 switch (order.OrdType)
                 {
                     case OrdType.Limit:
-                        nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
-                            order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell,
-                            it.szCombOffsetFlag,
-                            szCombHedgeFlag,
-                            it.qty,
-                            price,
-                            TThostFtdcOrderPriceTypeType.LimitPrice,
-                            TThostFtdcTimeConditionType.GFD,
-                            TThostFtdcContingentConditionType.Immediately,
-                            order.StopPx);
                         break;
                     case OrdType.Market:
                         if (SwitchMakertOrderToLimitOrder || !bSupportMarketOrder)
                         {
-                            nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
-                            order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell,
-                            it.szCombOffsetFlag,
-                            szCombHedgeFlag,
-                            it.qty,
-                            price,
-                            TThostFtdcOrderPriceTypeType.LimitPrice,
-                            TThostFtdcTimeConditionType.GFD,
-                            TThostFtdcContingentConditionType.Immediately,
-                            order.StopPx);
                         }
                         else
                         {
-                            nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
-                            order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell,
-                            it.szCombOffsetFlag,
-                            szCombHedgeFlag,
-                            it.qty,
-                            0,
-                            TThostFtdcOrderPriceTypeType.AnyPrice,
-                            TThostFtdcTimeConditionType.IOC,
-                            TThostFtdcContingentConditionType.Immediately,
-                            order.StopPx);
+                            price = 0;
+                            OrderPriceType = TThostFtdcOrderPriceTypeType.AnyPrice;
+                            //TimeCondition = TThostFtdcTimeConditionType.IOC;
                         }
                         break;
                     default:
                         tdlog.Warn("没有实现{0}", order.OrdType);
-                        break;
+                        return;
                 }
+
+                nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                            altSymbol,
+                            Direction,
+                            it.szCombOffsetFlag,
+                            szCombHedgeFlag,
+                            it.qty,
+                            price,
+                            OrderPriceType,
+                            TimeCondition,
+                            ContingentCondition,
+                            order.StopPx,
+                            VolumeCondition);
 
                 if (nRet > 0)
                 {
@@ -568,7 +574,8 @@ namespace QuantBox.OQ.CTP
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitCancelReject(order, order.Text);
+                
+                EmitCancelReject(order,order.OrdStatus,order.Text);
             }
         }
 
@@ -585,7 +592,7 @@ namespace QuantBox.OQ.CTP
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitCancelReject(order, order.Text);
+                EmitCancelReject(order, order.OrdStatus, order.Text);
             }
         }
         #endregion

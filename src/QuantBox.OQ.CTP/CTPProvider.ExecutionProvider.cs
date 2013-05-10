@@ -138,11 +138,11 @@ namespace QuantBox.OQ.CTP
             }
         }
 
-        private void EmitOrderCancelReject()
+        private void EmitOrderCancelReject(OrderCancelReject reject)
         {
             if (OrderCancelReject != null)
             {
-                OrderCancelReject(this, new OrderCancelRejectEventArgs(null));
+                OrderCancelReject(this, new OrderCancelRejectEventArgs(reject));
             }
         }
 
@@ -216,9 +216,21 @@ namespace QuantBox.OQ.CTP
             EmitExecutionReport(order, OrdStatus.Cancelled);
         }
 
-        protected void EmitCancelReject(SingleOrder order, string message)
+        protected void EmitCancelReject(SingleOrder order, OrdStatus status, string message)
         {
-            //EmitCancelReject(order, message);
+            OrderCancelReject reject  = new OrderCancelReject
+            {
+                TransactTime = Clock.Now,
+                ClOrdID = order.ClOrdID,
+                OrigClOrdID = order.ClOrdID,
+                OrderID = order.OrderID,
+
+                CxlRejReason = CxlRejReason.BrokerOption,
+                CxlRejResponseTo = CxlRejResponseTo.CancelRequest,
+                OrdStatus = status
+            };
+
+            EmitOrderCancelReject(reject);
         }
 
         protected void EmitFilled(SingleOrder order, double price, int quantity)

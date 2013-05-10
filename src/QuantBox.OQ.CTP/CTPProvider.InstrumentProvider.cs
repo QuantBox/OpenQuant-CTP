@@ -148,13 +148,17 @@ namespace QuantBox.OQ.CTP
                     definition.AddField(EFIXField.TickSize, inst.PriceTick);
                     definition.AddField(EFIXField.SecurityDesc, inst.InstrumentName);
                     definition.AddField(EFIXField.Factor, (double)inst.VolumeMultiple);
-                    try
+
+                    if(inst.ProductClass == TThostFtdcProductClassType.Futures||inst.ProductClass == TThostFtdcProductClassType.Options)
                     {
-                        definition.AddField(EFIXField.MaturityDate, DateTime.ParseExact(inst.ExpireDate, "yyyyMMdd", CultureInfo.InvariantCulture));
-                    }
-                    catch(Exception ex)
-                    {
-                        tdlog.Warn(ex.Message);
+                        try
+                        {
+                            definition.AddField(EFIXField.MaturityDate, DateTime.ParseExact(inst.ExpireDate, "yyyyMMdd", CultureInfo.InvariantCulture));
+                        }
+                        catch (Exception ex)
+                        {
+                            tdlog.Warn("合约:{0},字段内容:{1},{2}", inst.InstrumentID, inst.ExpireDate, ex.Message);
+                        }
                     }
                     
                     //还得补全内容
