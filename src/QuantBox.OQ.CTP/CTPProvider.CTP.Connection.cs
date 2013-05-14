@@ -437,7 +437,7 @@ namespace QuantBox.OQ.CTP
                 _MM = (_yyyyMMdd % 10000) / 100;
                 _dd = _yyyyMMdd % 100;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _yyyy = DateTime.Now.Year;
                 _MM = DateTime.Now.Month;

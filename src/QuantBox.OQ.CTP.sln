@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP", "QuantBox.OQ.CTP\QuantBox.OQ.CTP.csproj", "{72BE4BFC-E0F6-436F-8206-C6009932D620}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTP.Net40", "QuantBox.Helper.CTP\QuantBox.Helper.CTP.Net40.csproj", "{97AE93EC-5897-43C8-8D84-D92B73FE1434}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTP", "QuantBox.Helper.CTP\QuantBox.Helper.CTP.csproj", "{97AE93EC-5897-43C8-8D84-D92B73FE1434}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTP.Net35", "QuantBox.Helper.CTP\QuantBox.Helper.CTP.Net35.csproj", "{2C5C5377-E34C-4515-9404-3461AAE70A8A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP.OQ3", "QuantBox.OQ.CTP\QuantBox.OQ.CTP.OQ3.csproj", "{72BE4BFC-E0F6-436F-8206-C6009932D620}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP.QD", "QuantBox.OQ.CTP\QuantBox.OQ.CTP.QD.csproj", "{C29F1F5E-C773-4EF1-AD60-2312760276CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,14 +15,22 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Release|Any CPU.Build.0 = Release|Any CPU
 		{97AE93EC-5897-43C8-8D84-D92B73FE1434}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{97AE93EC-5897-43C8-8D84-D92B73FE1434}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{97AE93EC-5897-43C8-8D84-D92B73FE1434}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{97AE93EC-5897-43C8-8D84-D92B73FE1434}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2C5C5377-E34C-4515-9404-3461AAE70A8A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C5C5377-E34C-4515-9404-3461AAE70A8A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C5C5377-E34C-4515-9404-3461AAE70A8A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2C5C5377-E34C-4515-9404-3461AAE70A8A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72BE4BFC-E0F6-436F-8206-C6009932D620}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -90,23 +90,6 @@ namespace QuantBox.OQ.CTP
             Send(key);
         }
 
-        #region OpenQuant下的接口
-        public void SendOrderCancelReplaceRequest(OrderCancelReplaceRequest request)
-        {
-            SendOrderCancelReplaceRequest(request as FIXOrderCancelReplaceRequest);
-        }
-
-        public void SendOrderCancelRequest(OrderCancelRequest request)
-        {
-            SendOrderCancelRequest(request as FIXOrderCancelRequest);
-        }
-
-        public void SendOrderStatusRequest(OrderStatusRequest request)
-        {
-            SendOrderStatusRequest(request as FIXOrderStatusRequest);
-        }
-        #endregion
-
         #region QuantDeveloper下的接口
         public void SendOrderCancelReplaceRequest(FIXOrderCancelReplaceRequest request)
         {

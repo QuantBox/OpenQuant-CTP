@@ -72,8 +72,11 @@
     <Compile Include="AccountItem.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="CTPProvider.CTP.Connection.cs" />
+    <Compile Include="CTPProvider.CTP.MarketData.OQ3.cs" />
     <Compile Include="CTPProvider.CTP.Order.cs" />
     <Compile Include="CTPProvider.CTP.MarketData.cs" />
+    <Compile Include="CTPProvider.ExecutionProvider.OQ.cs" />
+    <Compile Include="CTPProvider.MarketDataProvider.OQ3.cs" />
     <Compile Include="DataRecord.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
@@ -101,14 +104,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTP.csproj">
-      <Project>{97ae93ec-5897-43c8-8d84-d92b73fe1434}</Project>
-      <Name>QuantBox.Helper.CTP</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Properties\DataSources\BrokerItem.datasource" />
     <None Include="Properties\DataSources\ServerItem.datasource" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTP.Net40.csproj">
+      <Project>{97ae93ec-5897-43c8-8d84-d92b73fe1434}</Project>
+      <Name>QuantBox.Helper.CTP.Net40</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
