@@ -31,6 +31,7 @@ namespace QuantBox.OQ.CTP
             _dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
 
+
             _yyyy = 0;
             _MM = 0;
             _dd = 0;
@@ -490,6 +491,7 @@ namespace QuantBox.OQ.CTP
                     TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
 
                     //请求查询全部持仓
+                    _dbInMemInvestorPosition.Clear();
                     TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
 
                     //请求查询合约
