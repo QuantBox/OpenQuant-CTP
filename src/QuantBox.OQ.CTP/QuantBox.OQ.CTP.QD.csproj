@@ -72,7 +72,6 @@
     <Compile Include="AccountItem.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="CTPProvider.CTP.Connection.cs" />
-    <Compile Include="CTPProvider.CTP.MarketData.QD.cs" />
     <Compile Include="CTPProvider.CTP.Order.cs" />
     <Compile Include="CTPProvider.CTP.MarketData.cs" />
     <Compile Include="CTPProvider.MarketDataProvider.QD.cs" />

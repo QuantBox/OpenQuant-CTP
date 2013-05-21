@@ -48,6 +48,30 @@ namespace QuantBox.OQ.CTP
                 NewBarOpen(this, new BarEventArgs(bar, args.Instrument, this));
             }
         }
+
+        private void EmitNewQuoteEvent(IFIXInstrument instrument, Quote quote)
+        {
+            if (NewQuote != null)
+            {
+                NewQuote(this, new QuoteEventArgs(quote, instrument, this));
+            }
+            if (factory != null)
+            {
+                factory.OnNewQuote(instrument, quote);
+            }
+        }
+
+        private void EmitNewTradeEvent(IFIXInstrument instrument, Trade trade)
+        {
+            if (NewTrade != null)
+            {
+                NewTrade(this, new TradeEventArgs(trade, instrument, this));
+            }
+            if (factory != null)
+            {
+                factory.OnNewTrade(instrument, trade);
+            }
+        }
         #endregion
     }
 }

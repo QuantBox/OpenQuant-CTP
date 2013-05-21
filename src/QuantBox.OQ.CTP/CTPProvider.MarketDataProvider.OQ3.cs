@@ -70,6 +70,40 @@ namespace QuantBox.OQ.CTP
             }
         }
 
+        private void EmitNewQuoteEvent(IFIXInstrument instrument, Quote quote)
+        {
+            if (this.MarketDataFilter != null)
+            {
+                quote = this.MarketDataFilter.FilterQuote(quote, instrument.Symbol);
+            }
+
+            if (NewQuote != null)
+            {
+                NewQuote(this, new QuoteEventArgs(quote, instrument, this));
+            }
+            if (factory != null)
+            {
+                factory.OnNewQuote(instrument, quote);
+            }
+        }
+
+        private void EmitNewTradeEvent(IFIXInstrument instrument, Trade trade)
+        {
+            if (this.MarketDataFilter != null)
+            {
+                trade = this.MarketDataFilter.FilterTrade(trade, instrument.Symbol);
+            }
+
+            if (NewTrade != null)
+            {
+                NewTrade(this, new TradeEventArgs(trade, instrument, this));
+            }
+            if (factory != null)
+            {
+                factory.OnNewTrade(instrument, trade);
+            }
+        }
+
         #region OpenQuant3接口的新方法
         public IMarketDataFilter MarketDataFilter { get; set; }
         #endregion
