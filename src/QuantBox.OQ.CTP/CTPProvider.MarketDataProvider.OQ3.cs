@@ -77,13 +77,16 @@ namespace QuantBox.OQ.CTP
                 quote = this.MarketDataFilter.FilterQuote(quote, instrument.Symbol);
             }
 
-            if (NewQuote != null)
+            if (quote != null)
             {
-                NewQuote(this, new QuoteEventArgs(quote, instrument, this));
-            }
-            if (factory != null)
-            {
-                factory.OnNewQuote(instrument, quote);
+                if (NewQuote != null)
+                {
+                    NewQuote(this, new QuoteEventArgs(quote, instrument, this));
+                }
+                if (factory != null)
+                {
+                    factory.OnNewQuote(instrument, quote);
+                }
             }
         }
 
@@ -94,13 +97,16 @@ namespace QuantBox.OQ.CTP
                 trade = this.MarketDataFilter.FilterTrade(trade, instrument.Symbol);
             }
 
-            if (NewTrade != null)
+            if (trade != null)
             {
-                NewTrade(this, new TradeEventArgs(trade, instrument, this));
-            }
-            if (factory != null)
-            {
-                factory.OnNewTrade(instrument, trade);
+                if (NewTrade != null)
+                {
+                    NewTrade(this, new TradeEventArgs(trade, instrument, this));
+                }
+                if (factory != null)
+                {
+                    factory.OnNewTrade(instrument, trade);
+                }
             }
         }
 
