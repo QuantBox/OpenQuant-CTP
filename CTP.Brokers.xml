@@ -69,20 +69,69 @@
           <string>tcp://yhqh-front4.financial-trading-platform.com:41213</string>
           <string>tcp://yhqh-front6.financial-trading-platform.com:41213</string>
         </MarketData>
-        <Label>银河期货实盘(网通)</Label>
+        <Label>银河期货实盘(联通)</Label>
       </ServerItem>
-	  <ServerItem>
-		<BrokerID>1010</BrokerID>
-		<Trading>
-			<string>tcp://124.207.185.168:41205</string>
-			<string>tcp://124.207.185.169:41205</string>
-		</Trading>
-		<MarketData>
-			<string>tcp://124.207.185.168:41213</string>
-			<string>tcp://124.207.185.169:41213</string>
-		</MarketData>
-    <Label>银河期货中金仿真(电信)</Label>
-  </ServerItem>
+      <ServerItem>
+        <BrokerID>1010</BrokerID>
+        <Trading>
+          <string>tcp://124.207.185.168:41205</string>
+          <string>tcp://124.207.185.169:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://124.207.185.168:41213</string>
+          <string>tcp://124.207.185.169:41213</string>
+        </MarketData>
+        <Label>银河期货中金仿真(电信)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>中信新际</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1013</BrokerID>
+        <Trading>
+          <string>tcp://218.1.96.8:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://218.1.96.8:41213</string>
+        </MarketData>
+        <Label>中信新际(模拟)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4000</BrokerID>
+        <Trading>
+          <string>tcp://203.110.179.220:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://203.110.179.220:41213</string>
+        </MarketData>
+        <Label>中信新际实盘(电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4000</BrokerID>
+        <Trading>
+          <string>tcp://211.144.195.157:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://211.144.195.157:41213</string>
+        </MarketData>
+        <Label>中信新际实盘(联通)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4000</BrokerID>
+        <Trading>
+          <string>tcp://203.110.179.221:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://203.110.179.221:41213</string>
+        </MarketData>
+        <Label>中信新际盘后(电信)</Label>
+      </ServerItem>
     </Server>
   </BrokerItem>
   <BrokerItem>
