@@ -111,7 +111,8 @@ namespace QuantBox.OQ.CTP
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
                         mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
-                        MdApi.MD_Subscribe(m_pMdApi, altSymbol);
+                        // 将只订阅一次的地方挪到外面,多次订阅也没关系
+                        //MdApi.MD_Subscribe(m_pMdApi, altSymbol);
 
                         if (_bTdConnected)
                         {
@@ -125,8 +126,11 @@ namespace QuantBox.OQ.CTP
                     CThostFtdcDepthMarketDataField DepthMarket;
                     if (!_dictDepthMarketData.TryGetValue(altSymbol, out DepthMarket))
                     {
-                        _dictDepthMarketData.Add(altSymbol, DepthMarket);
+                        _dictDepthMarketData[altSymbol] = DepthMarket;
                     }
+
+                    // 多次订阅也无所谓
+                    MdApi.MD_Subscribe(m_pMdApi, altSymbol);
 
                     if (bTrade)
                         record.TradeRequested = true;
@@ -171,6 +175,11 @@ namespace QuantBox.OQ.CTP
                         _dictAltSymbol2Instrument.Remove(altSymbol);
                         mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
                         MdApi.MD_Unsubscribe(m_pMdApi, altSymbol);
+                    }
+                    else
+                    {
+                        // 只要有一种类型说要订阅，就给订上
+                        MdApi.MD_Subscribe(m_pMdApi, altSymbol);
                     }
                 }
             }
