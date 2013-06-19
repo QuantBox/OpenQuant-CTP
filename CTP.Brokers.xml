@@ -71,6 +71,19 @@
         </MarketData>
         <Label>银河期货实盘(联通)</Label>
       </ServerItem>
+	  <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
+          <string>tcp://192.168.106.51:41219</string>
+          <string>tcp://192.168.106.52:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://192.168.106.51:41207</string>
+          <string>tcp://192.168.106.52:41213</string>
+        </MarketData>
+        <Label>银河期货实盘(张江机房内网)</Label>
+      </ServerItem>
       <ServerItem>
         <BrokerID>1010</BrokerID>
         <Trading>

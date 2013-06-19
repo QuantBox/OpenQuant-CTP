@@ -48,7 +48,7 @@ namespace QuantBox.OQ.CTP
                 try
                 {
                     // 只有使用交易所行情时才需要处理跨天的问题
-                    ChangeTradingDay(pDepthMarketData.TradingDay);
+                    ChangeActionDay(pDepthMarketData.ActionDay);
 
                     int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
                     int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));

@@ -37,7 +37,7 @@ namespace QuantBox.OQ.CTP
             _dd = 0;
         }
 
-        private void ChangeTradingDay(string tradingDay)
+        private void ChangeActionDay(string day)
         {
             // 不用每次都比
             DateTime dt = DateTime.Now;
@@ -50,7 +50,7 @@ namespace QuantBox.OQ.CTP
                 // 因为有可能不同交易所时间有误差，有的到第二天了，有些还没到
                 try
                 {
-                    int _yyyyMMdd = int.Parse(tradingDay);
+                    int _yyyyMMdd = int.Parse(day);
                     _yyyy = _yyyyMMdd / 10000;
                     _MM = (_yyyyMMdd % 10000) / 100;
                     _dd = _yyyyMMdd % 100;
@@ -64,7 +64,7 @@ namespace QuantBox.OQ.CTP
             }
         }
 
-        private void ChangeActionDay()
+        private void ChangeTradingDay()
         {
             // 换交易日，假设换交易日前肯定会登录一次，所以在登录的时候清理即可
             //_dictInstruments.Clear();
@@ -86,7 +86,7 @@ namespace QuantBox.OQ.CTP
                 return;
 
             // 换交易日了，更新部分数据
-            ChangeActionDay();
+            ChangeTradingDay();
 
             DateTime dt = DateTime.Now;
             int nTime = dt.Hour * 100 + dt.Minute;
@@ -431,14 +431,15 @@ namespace QuantBox.OQ.CTP
         private void OnConnect(IntPtr pApi, ref CThostFtdcRspUserLoginField pRspUserLogin, ConnectionStatus result)
         {
             //用于行情记算时简化时间解码
-            try
-            {
-                int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
-                _yyyy = _yyyyMMdd / 10000;
-                _MM = (_yyyyMMdd % 10000) / 100;
-                _dd = _yyyyMMdd % 100;
-            }
-            catch (Exception)
+            // 在夜盘，这个TradingDay就不靠谱了，所以不用了
+            //try
+            //{
+            //    int _yyyyMMdd = int.Parse(pRspUserLogin.TradingDay);
+            //    _yyyy = _yyyyMMdd / 10000;
+            //    _MM = (_yyyyMMdd % 10000) / 100;
+            //    _dd = _yyyyMMdd % 100;
+            //}
+            //catch (Exception)
             {
                 _yyyy = DateTime.Now.Year;
                 _MM = DateTime.Now.Month;
@@ -496,9 +497,10 @@ namespace QuantBox.OQ.CTP
 
                     //请求查询合约
                     _dictInstruments.Clear();
+                    TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
+
                     _dictCommissionRate.Clear();
                     _dictMarginRate.Clear();
-                    TraderApi.TD_ReqQryInstrument(m_pTdApi, null);
 
                     timerAccount.Enabled = true;
                     timerPonstion.Enabled = true;
