@@ -223,6 +223,24 @@ namespace QuantBox.OQ.CTP
 
             //通知单例
             CTPAPI.GetInstance().FireOnRtnInstrumentStatus(pInstrumentStatus);
+
+            // 过期判断
+            DateTime dt = DateTime.Now;
+            int nTime = dt.Hour * 100 + dt.Minute;
+            if (1450 <= nTime && nTime < 1525)
+            {
+            }
+            else
+            {
+                return;
+            }
+            // 到IF的交割日，是否会收到两个有关IF的记录？如果在此进行清理是否会有问题？
+            // 遍历是否过期
+            if (pInstrumentStatus.InstrumentStatus == TThostFtdcInstrumentStatusType.NoTrading
+                || pInstrumentStatus.InstrumentStatus == TThostFtdcInstrumentStatusType.Closed)
+            {
+                //_Orders4Cancel
+            }
         }
         #endregion
     }

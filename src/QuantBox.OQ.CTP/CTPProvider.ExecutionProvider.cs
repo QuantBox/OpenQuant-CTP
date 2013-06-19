@@ -199,6 +199,11 @@ namespace QuantBox.OQ.CTP
             EmitExecutionReport(order, OrdStatus.Cancelled);
         }
 
+        protected void EmitExpired(SingleOrder order)
+        {
+            EmitExecutionReport(order, OrdStatus.Expired);
+        }
+
         protected void EmitCancelReject(SingleOrder order, OrdStatus status, string message)
         {
             OrderCancelReject reject  = new OrderCancelReject
@@ -246,6 +251,8 @@ namespace QuantBox.OQ.CTP
                     return ExecType.Rejected;
                 case OrdStatus.PendingReplace:
                     return ExecType.PendingReplace;
+                case OrdStatus.Expired:
+                    return ExecType.Expired;
             }
             throw new ArgumentException(string.Format("Cannot find exec type for ord status - {0}", status));
         }
