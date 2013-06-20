@@ -204,6 +204,11 @@ namespace QuantBox.OQ.CTP
             EmitExecutionReport(order, OrdStatus.Expired);
         }
 
+        protected void EmitPendingCancel(SingleOrder order)
+        {
+            EmitExecutionReport(order, OrdStatus.PendingCancel);
+        }
+
         protected void EmitCancelReject(SingleOrder order, OrdStatus status, string message)
         {
             OrderCancelReject reject  = new OrderCancelReject

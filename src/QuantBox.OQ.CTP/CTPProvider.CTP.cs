@@ -217,9 +217,10 @@ namespace QuantBox.OQ.CTP
         #region 交易所状态
         private void OnRtnInstrumentStatus(IntPtr pTraderApi, ref CThostFtdcInstrumentStatusField pInstrumentStatus)
         {
-            tdlog.Info("{0},{1},{2},{3}",
+            tdlog.Info("{0},{1},{2},{3},{4},{5}",
                 pInstrumentStatus.ExchangeID, pInstrumentStatus.InstrumentID,
-                pInstrumentStatus.InstrumentStatus, pInstrumentStatus.EnterReason);
+                pInstrumentStatus.InstrumentStatus, pInstrumentStatus.EnterReason,
+                pInstrumentStatus.EnterTime,pInstrumentStatus.TradingSegmentSN);
 
             //通知单例
             CTPAPI.GetInstance().FireOnRtnInstrumentStatus(pInstrumentStatus);
