@@ -71,23 +71,6 @@ namespace QuantBox.OQ.CTP
             //_dictCommissionRate.Clear();
             //_dictMarginRate.Clear();
         }
-
-        private void EndOfDay()
-        {
-            // 这种方法在模拟行情下会比较复杂
-            // 模拟可能15点30又新开服务
-            // 模拟可能23点30又关服务
-            DateTime dt = DateTime.Now;
-            int nTime = dt.Hour * 100 + dt.Minute;
-            if (1520 <= nTime && nTime < 1525)
-            {
-                foreach (var order in _Orders4Cancel.Keys)
-                {
-                    EmitExpired(order);
-                }
-                _Orders4Cancel.Clear();
-            }
-        }
         #endregion
 
         #region 定时器
@@ -104,7 +87,6 @@ namespace QuantBox.OQ.CTP
 
             // 换交易日了，更新部分数据
             ChangeTradingDay();
-            EndOfDay();
 
             DateTime dt = DateTime.Now;
             int nTime = dt.Hour * 100 + dt.Minute;
