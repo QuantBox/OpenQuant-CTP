@@ -137,16 +137,22 @@ namespace QuantBox.OQ.CTP
         public void EmitExecutionReport(SingleOrder order, OrdStatus status, string text)
         {
             OrderRecord record = orderRecords[order];
-            EmitExecutionReport(record, status, 0.0, 0, text);
+            EmitExecutionReport(record, status, 0.0, 0, text, CommType.Absolute, 0);
         }
 
         public void EmitExecutionReport(SingleOrder order, double price, int quantity)
         {
             OrderRecord record = orderRecords[order];
-            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "");
+            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "", CommType.Absolute, 0);
         }
 
-        private void EmitExecutionReport(OrderRecord record, OrdStatus ordStatus, double lastPx, int lastQty, string text)
+        public void EmitExecutionReport(SingleOrder order, double price, int quantity, CommType commType, double commission)
+        {
+            OrderRecord record = orderRecords[order];
+            EmitExecutionReport(record, OrdStatus.Undefined, price, quantity, "", commType, commission);
+        }
+
+        private void EmitExecutionReport(OrderRecord record, OrdStatus ordStatus, double lastPx, int lastQty, string text, CommType commType, double commission)
         {
             ExecutionReport report = new ExecutionReport
             {
@@ -158,7 +164,10 @@ namespace QuantBox.OQ.CTP
                 SecurityType = record.Order.SecurityType,
                 SecurityExchange = record.Order.SecurityExchange,
                 Currency = record.Order.Currency,
+                CommType = commType,
+                Commission = commission,
                 Side = record.Order.Side,
+
                 OrdType = record.Order.OrdType,
                 TimeInForce = record.Order.TimeInForce,
                 OrderQty = record.Order.OrderQty,
@@ -167,6 +176,26 @@ namespace QuantBox.OQ.CTP
                 LastPx = lastPx,
                 LastQty = lastQty
             };
+
+            if (ordStatus == OrdStatus.Replaced)
+            {
+                report.OrdType = record.Order.ReplaceOrder.ContainsField(EFIXField.OrdType) ? record.Order.ReplaceOrder.OrdType : record.Order.OrdType;
+                report.TimeInForce = record.Order.ReplaceOrder.ContainsField(EFIXField.TimeInForce) ? record.Order.ReplaceOrder.TimeInForce : record.Order.TimeInForce;
+                report.OrderQty = record.Order.ReplaceOrder.ContainsField(EFIXField.OrderQty) ? record.Order.ReplaceOrder.OrderQty : record.Order.OrderQty;
+                report.Price = record.Order.ReplaceOrder.ContainsField(EFIXField.Price) ? record.Order.ReplaceOrder.Price : record.Order.Price;
+                report.StopPx = record.Order.ReplaceOrder.ContainsField(EFIXField.StopPx) ? record.Order.ReplaceOrder.StopPx : record.Order.StopPx;
+                record.LeavesQty = ((int)report.OrderQty) - record.CumQty;
+            }
+            else
+            {
+                report.OrdType = record.Order.OrdType;
+                report.TimeInForce = record.Order.TimeInForce;
+                report.OrderQty = record.Order.OrderQty;
+                report.Price = record.Order.Price;
+                report.StopPx = record.Order.StopPx;
+            }
+
+
             if (ordStatus == OrdStatus.Undefined)
             {
                 record.AddFill(lastPx, lastQty);
@@ -226,9 +255,9 @@ namespace QuantBox.OQ.CTP
             EmitOrderCancelReject(reject);
         }
 
-        protected void EmitFilled(SingleOrder order, double price, int quantity)
+        protected void EmitFilled(SingleOrder order, double price, int quantity, CommType commType, double commission)
         {
-            EmitExecutionReport(order, price, quantity);
+            EmitExecutionReport(order, price, quantity,commType,commission);
         }
 
         protected void EmitRejected(SingleOrder order, string message)

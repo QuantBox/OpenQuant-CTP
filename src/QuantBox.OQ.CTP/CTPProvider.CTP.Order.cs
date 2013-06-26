@@ -564,7 +564,7 @@ namespace QuantBox.OQ.CTP
                 }
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
-                EmitFilled(order, Price, Volume);
+                EmitFilled(order, Price, Volume,CommType.Absolute,0);
 
                 //成交完全，清理
                 if (LeavesQty <= 0)

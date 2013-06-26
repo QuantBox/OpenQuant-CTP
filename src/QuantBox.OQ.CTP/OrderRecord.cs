@@ -49,6 +49,10 @@ namespace QuantBox.OQ.CTP
             {
                 return this.leavesQty;
             }
+            internal set
+            {
+                this.leavesQty = value;
+            }
         }
 
         public SingleOrder Order
