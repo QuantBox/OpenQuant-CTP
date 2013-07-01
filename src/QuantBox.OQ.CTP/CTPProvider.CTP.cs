@@ -231,8 +231,18 @@ namespace QuantBox.OQ.CTP
             // 遍历是否过期
             if (pInstrumentStatus.InstrumentStatus == TThostFtdcInstrumentStatusType.Closed)
             {
+                List<SingleOrder> tmpList = new List<SingleOrder>();
+                string symbol = null;
                 foreach(var order in _Orders4Cancel.Keys)
                 {
+                    // 如果与上次处理的是同一合约，就立即处理
+                    if (symbol == order.Symbol)
+                    {
+                        EmitExpired(order);
+                        tmpList.Add(order);
+                        continue;
+                    }
+
                     string altSymbol = order.Instrument.GetSymbol(Name);
                     string altExchange = order.Instrument.GetSecurityExchange(Name);
 
@@ -240,15 +250,22 @@ namespace QuantBox.OQ.CTP
                     if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
                     {
                         altExchange = _Instrument.ExchangeID;
+                        symbol = order.Symbol;
                     }
 
                     if (altExchange == pInstrumentStatus.ExchangeID)
                     {
                         EmitExpired(order);
-                        // 不知道这个地方会不会出问题
-                        _Orders4Cancel.Remove(order);
+                        tmpList.Add(order);
                     }
                 }
+
+                // 只能用一个临时列表来清理
+                foreach (var o in tmpList)
+                {
+                    _Orders4Cancel.Remove(o);
+                }
+                tmpList.Clear();
             }
         }
         #endregion
