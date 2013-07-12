@@ -144,15 +144,15 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        [Category(CATEGORY_OTHER)]
-        [Description("True - 产生OnRtnDepthMarketData事件\nFalse - 不产生OnRtnDepthMarketData事件")]
-        [DefaultValue(false)]
-        //[Browsable(false)]
-        public bool EmitOnRtnDepthMarketData
-        {
-            get;
-            set;
-        }
+        //[Category(CATEGORY_OTHER)]
+        //[Description("True - 产生OnRtnDepthMarketData事件\nFalse - 不产生OnRtnDepthMarketData事件")]
+        //[DefaultValue(false)]
+        ////[Browsable(false)]
+        //public bool EmitOnRtnDepthMarketData
+        //{
+        //    get;
+        //    set;
+        //}
 
         private BindingList<ServerItem> serversList = new BindingList<ServerItem>();
         [Category("Settings")]
@@ -206,7 +206,7 @@ namespace QuantBox.OQ.CTP
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
             SwitchMakertOrderToLimitOrder = false;
-            EmitOnRtnDepthMarketData = false;
+            //EmitOnRtnDepthMarketData = false;
 
             _bWantMdConnect = true;
             _bWantTdConnect = true;

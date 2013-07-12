@@ -6,8 +6,8 @@ using QuantBox.CSharp2CTP;
 
 namespace QuantBox.Helper.CTP
 {
-    public interface ISpreadMarketData
-    {
-        IEnumerable<Tick> CalculateSpread(CThostFtdcDepthMarketDataField pDepthMarketData);
-    }
+    //public interface ISpreadMarketData
+    //{
+    //    IEnumerable<Tick> CalculateSpread(CThostFtdcDepthMarketDataField pDepthMarketData);
+    //}
 }

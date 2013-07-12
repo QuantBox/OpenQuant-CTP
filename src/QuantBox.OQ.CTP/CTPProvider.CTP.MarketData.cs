@@ -83,9 +83,13 @@ namespace QuantBox.OQ.CTP
                         volume = pDepthMarketData.Volume;
                     }
 
-                    Trade trade = new Trade(_dateTime,
+                    // 使用新的类,保存更多信息
+                    CTPTrade trade = new CTPTrade(_dateTime,
                         pDepthMarketData.LastPrice == double.MaxValue ? 0 : pDepthMarketData.LastPrice,
                         volume);
+
+                    // 记录深度数据
+                    trade.DepthMarketData = pDepthMarketData;
 
                     EmitNewTradeEvent(instrument, trade);
                 }
@@ -132,6 +136,7 @@ namespace QuantBox.OQ.CTP
             }
 
             // 价差生成功能
+            /* 已经使用了反射的价差生成功能了
             do
             {
                 if (null == CTPAPI.GetInstance().SpreadMarketData)
@@ -166,12 +171,15 @@ namespace QuantBox.OQ.CTP
                     }
                 }
             } while (false);
+            */
 
             // 直接回报CTP的行情信息
+            /* 使用新的反射方式替代
             if (EmitOnRtnDepthMarketData)
             {
                 CTPAPI.GetInstance().FireOnRtnDepthMarketData(pDepthMarketData);
             }
+            */
         }
 
 

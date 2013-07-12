@@ -180,17 +180,17 @@ namespace QuantBox.Helper.CTP
         }
         #endregion
 
-        #region 深度行情2
-        public delegate void RtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData);
-        public event RtnDepthMarketData OnRtnDepthMarketData;
-        public void FireOnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData)
-        {
-            if (null != OnRtnDepthMarketData)
-            {
-                OnRtnDepthMarketData(pDepthMarketData);
-            }
-        }
-        #endregion
+        //#region 深度行情2
+        //public delegate void RtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData);
+        //public event RtnDepthMarketData OnRtnDepthMarketData;
+        //public void FireOnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData)
+        //{
+        //    if (null != OnRtnDepthMarketData)
+        //    {
+        //        OnRtnDepthMarketData(pDepthMarketData);
+        //    }
+        //}
+        //#endregion
 
         #region 交易所状态
         public delegate void RtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus);
@@ -213,8 +213,8 @@ namespace QuantBox.Helper.CTP
         }
         #endregion
 
-        #region ISpreadMarketData
-        public ISpreadMarketData SpreadMarketData;
-        #endregion
+        //#region ISpreadMarketData
+        //public ISpreadMarketData SpreadMarketData;
+        //#endregion
     }
 }
