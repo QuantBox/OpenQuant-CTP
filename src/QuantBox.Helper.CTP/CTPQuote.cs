@@ -10,18 +10,18 @@ using System.Reflection;
 
 namespace QuantBox.Helper.CTP
 {
-    public class CTPTrade:Trade
+    public class CTPQuote:Quote
     {
-        public CTPTrade():base()
+        public CTPQuote():base()
         {
         }
 
-        public CTPTrade(Trade trade):base(trade)
+        public CTPQuote(Quote quote): base(quote)
         {
         }
 
-        public CTPTrade(DateTime datetime, double price, int size)
-            : base(datetime, price, size)
+        public CTPQuote(DateTime datetime, double bid, int bidSize, double ask, int askSize)
+            : base(datetime, bid, bidSize, ask, askSize)
         {
         }
 

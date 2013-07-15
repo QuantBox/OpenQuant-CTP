@@ -106,12 +106,14 @@ namespace QuantBox.OQ.CTP
                 //{ }
                 //else
                 {
-                    Quote quote = new Quote(_dateTime,
+                    CTPQuote quote = new CTPQuote(_dateTime,
                         pDepthMarketData.BidPrice1 == double.MaxValue ? 0 : pDepthMarketData.BidPrice1,
                         pDepthMarketData.BidVolume1,
                         pDepthMarketData.AskPrice1 == double.MaxValue ? 0 : pDepthMarketData.AskPrice1,
                         pDepthMarketData.AskVolume1
                     );
+
+                    quote.DepthMarketData = pDepthMarketData;
 
                     EmitNewQuoteEvent(instrument, quote);
                 }
