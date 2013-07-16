@@ -34,7 +34,7 @@ namespace QuantBox.OQ.CTP
                     //    tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
                     //    ++nGetBrokerInfoCount;
                     //}
-                    return null;
+                    return brokerInfo;
                 }
 
                 BrokerAccount brokerAccount = new BrokerAccount(m_TradingAccount.AccountID) { BuyingPower = m_TradingAccount.Available };
