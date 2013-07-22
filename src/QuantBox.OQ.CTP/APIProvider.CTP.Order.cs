@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using QuantBox.CSharp2CTP;
-using QuantBox.Helper.CTP;
+
 using SmartQuant;
 using SmartQuant.Data;
 using SmartQuant.Execution;
@@ -14,9 +13,19 @@ using SmartQuant.Instruments;
 using SmartQuant.Providers;
 
 
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
+
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    partial class CTPProvider
+    partial class APIProvider
     {
         #region 撤单
         private readonly Dictionary<SingleOrder, OrdStatus> _PendingCancelFlags = new Dictionary<SingleOrder, OrdStatus>();
@@ -72,12 +81,15 @@ namespace QuantBox.OQ.CTP
             string altSymbol = inst.GetSymbol(Name);
             string altExchange = inst.GetSecurityExchange(Name);
             double tickSize = inst.TickSize;
+            
+            string apiSymbol = GetApiSymbol(altSymbol);
 
             CThostFtdcInstrumentField _Instrument;
             if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
             {
                 //从合约列表中取交易所名与tickSize，不再依赖用户手工设置的参数了
                 tickSize = _Instrument.PriceTick;
+                apiSymbol = _Instrument.InstrumentID;
                 altExchange = _Instrument.ExchangeID;
             }
 
@@ -179,6 +191,7 @@ namespace QuantBox.OQ.CTP
 
             int leave = (int)order.OrderQty;
 
+#if CTP
             //是否上海？上海先平今，然后平昨，最后开仓
             //使用do主要是想利用break功能
             //平仓部分
@@ -283,11 +296,27 @@ namespace QuantBox.OQ.CTP
                 tdlog.Info("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
             }
 
+            bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
+#elif CTPZQ
+            if (leave > 0)
+            {
+                //开平已经没有意义了
+                byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
+                szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
+
+                orderSplitItem.qty = leave;
+                orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
+                OrderSplitList.Add(orderSplitItem);
+
+                leave = 0;
+            }
+
+            bool bSupportMarketOrder = true;
+#endif
+
             //将第二腿也设置成一样，这样在使用组合时这地方不用再调整
             byte[] bytes2 = { (byte)HedgeFlagType, (byte)HedgeFlagType };
             string szCombHedgeFlag = System.Text.Encoding.Default.GetString(bytes2, 0, bytes2.Length);
-
-            bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
 
             tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
                 order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
@@ -336,6 +365,7 @@ namespace QuantBox.OQ.CTP
                         return;
                 }
 
+#if CTP
                 nRet = TraderApi.TD_SendOrder(m_pTdApi,
                             altSymbol,
                             Direction,
@@ -348,6 +378,20 @@ namespace QuantBox.OQ.CTP
                             ContingentCondition,
                             order.StopPx,
                             VolumeCondition);
+#elif CTPZQ
+                nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                            apiSymbol,
+                            altExchange,
+                            Direction,
+                            it.szCombOffsetFlag,
+                            szCombHedgeFlag,
+                            it.qty,
+                            string.Format("{0}", price),
+                            OrderPriceType,
+                            TimeCondition,
+                            ContingentCondition,
+                            order.StopPx);
+#endif
 
                 if (nRet > 0)
                 {
@@ -535,7 +579,7 @@ namespace QuantBox.OQ.CTP
             {
                 double Price = 0;
                 int Volume = 0;
-
+#if CTP
                 if (TThostFtdcTradeTypeType.CombinationDerived == pTrade.TradeType)
                 {
                     //组合，得特别处理
@@ -562,6 +606,12 @@ namespace QuantBox.OQ.CTP
                     Price = pTrade.Price;
                     Volume = pTrade.Volume;
                 }
+#elif CTPZQ
+                {
+                    Price = Convert.ToDouble(pTrade.Price);
+                    Volume = pTrade.Volume;
+                }
+#endif
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
                 EmitFilled(order, Price, Volume,CommType.Absolute,0);

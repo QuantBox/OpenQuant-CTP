@@ -9,9 +9,19 @@ using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
+
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    public partial class CTPProvider : IProvider, IDisposable
+    public partial class APIProvider : IProvider, IDisposable
     {
         private ProviderStatus status;
         private bool isConnected;
@@ -22,10 +32,21 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
+#if CTP
         private static readonly Logger mdlog = LogManager.GetLogger("CTP.M");
         private static readonly Logger tdlog = LogManager.GetLogger("CTP.T");
+#elif CTPZQ
+        private static readonly Logger mdlog = LogManager.GetLogger("CTPZQ.M");
+        private static readonly Logger tdlog = LogManager.GetLogger("CTPZQ.T");
+#endif        
+        // Use C# destructor syntax for finalization code.
+        ~APIProvider()
+        {
+            // Simply call Dispose(false).
+            Dispose(false);
+        }
 
-        public CTPProvider()
+        public APIProvider()
         {
             try
             {
@@ -72,30 +93,37 @@ namespace QuantBox.OQ.CTP
             //base.Dispose(disposing);
         }
 
-        // Use C# destructor syntax for finalization code.
-        ~CTPProvider()
-        {
-            // Simply call Dispose(false).
-            Dispose(false);
-        }
+        
 
         #region IProvider
         [Category(CATEGORY_INFO)]
-        public byte Id
+        public byte Id//不能与已经安装的插件ID重复
         {
-            get { return 55; }//不能与已经安装的插件ID重复
+#if CTP
+            get { return 55; }
+#elif CTPZQ
+            get { return 56; }
+#endif
         }
 
         [Category(CATEGORY_INFO)]
         public string Name
         {
+#if CTP
             get { return "CTP"; }//不能与已经安装的插件Name重复
+#elif CTPZQ
+            get { return "CTPZQ"; }//不能与已经安装的插件Name重复
+#endif
         }
 
         [Category(CATEGORY_INFO)]
         public string Title
         {
+#if CTP
             get { return "QuantBox CTP Provider"; }
+#elif CTPZQ
+            get { return "QuantBox CTPZQ Provider"; }
+#endif
         }
 
         [Category(CATEGORY_INFO)]

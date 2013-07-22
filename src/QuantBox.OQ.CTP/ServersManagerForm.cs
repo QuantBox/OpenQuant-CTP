@@ -8,20 +8,30 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
+using QuantBox.OQ.CTP;
 
+#if CTP
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     public partial class ServersManagerForm : Form
     {
-        private CTPProvider provider;
+        private APIProvider provider;
+        public void Init(APIProvider provider)     
+        {
+            this.provider = provider;
+        }
+
         public ServersManagerForm()
         {
             InitializeComponent();
-        }
-
-        public void Init(CTPProvider provider)
-        {
-            this.provider = provider;
+#if CTP
+            textBoxUrl.Text = @"https://raw.github.com/QuantBox/OpenQuant-CTP/master/CTP.Brokers.xml";
+#elif CTPZQ
+            textBoxUrl.Text = @"https://raw.github.com/QuantBox/OpenQuant-CTP/master/CTPZQ.Brokers.xml";
+#endif
         }
 
         private void ServersManagerForm_Load(object sender, EventArgs e)
@@ -65,8 +75,7 @@ namespace QuantBox.OQ.CTP
             {
                 buttonUpdate.Enabled = false;
 
-                string fileName = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
-                wc.DownloadFile(textBoxUrl.Text, fileName);
+                wc.DownloadFile(textBoxUrl.Text, provider.brokersFile);
 
                 provider.LoadBrokers();
                 brokerItemBindingSource.DataSource = provider.Brokers;

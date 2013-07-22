@@ -1,4 +1,8 @@
-﻿namespace QuantBox.OQ.CTP
+﻿#if CTP
+namespace QuantBox.OQ.CTP
+#elif CTPZQ
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     partial class ServersManagerForm
     {

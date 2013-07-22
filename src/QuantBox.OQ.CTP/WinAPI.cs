@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
+#if CTP
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     class WinAPI
     {

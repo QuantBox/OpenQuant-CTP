@@ -5,11 +5,11 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{72BE4BFC-E0F6-436F-8206-C6009932D620}</ProjectGuid>
+    <ProjectGuid>{38331CDE-8393-490E-B56B-CA5A2E6DE01B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantBox.OQ.CTP</RootNamespace>
-    <AssemblyName>QuantBox.OQ.CTP</AssemblyName>
+    <RootNamespace>QuantBox.OQ.CTPZQ</RootNamespace>
+    <AssemblyName>QuantBox.OQ.CTPZQ</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -27,15 +27,14 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\</OutputPath>
-    <DefineConstants>TRACE;CTP</DefineConstants>
+    <DefineConstants>TRACE;CTPZQ</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL" />
-    <Reference Include="QuantBox.CSharp2CTP, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
+    <Reference Include="QuantBox.CSharp2CTPZQ">
+      <HintPath>..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTPZQ.dll</HintPath>
     </Reference>
     <Reference Include="SmartQuant, Version=1.0.3762.22305, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -107,9 +106,9 @@
     <None Include="Properties\DataSources\ServerItem.datasource" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTP.Net40.csproj">
-      <Project>{97ae93ec-5897-43c8-8d84-d92b73fe1434}</Project>
-      <Name>QuantBox.Helper.CTP.Net40</Name>
+    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.csproj">
+      <Project>{5caeb588-ba0f-4313-8b78-5101e97d695a}</Project>
+      <Name>QuantBox.Helper.CTPZQ</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP.OQ3", "Quan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP.QD", "QuantBox.OQ.CTP\QuantBox.OQ.CTP.QD.csproj", "{C29F1F5E-C773-4EF1-AD60-2312760276CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTPZQ.OQ3", "QuantBox.OQ.CTP\QuantBox.OQ.CTPZQ.OQ3.csproj", "{38331CDE-8393-490E-B56B-CA5A2E6DE01B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTPZQ", "QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.csproj", "{5CAEB588-BA0F-4313-8B78-5101E97D695A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,14 @@ Global
 		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C29F1F5E-C773-4EF1-AD60-2312760276CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{38331CDE-8393-490E-B56B-CA5A2E6DE01B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38331CDE-8393-490E-B56B-CA5A2E6DE01B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38331CDE-8393-490E-B56B-CA5A2E6DE01B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38331CDE-8393-490E-B56B-CA5A2E6DE01B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5CAEB588-BA0F-4313-8B78-5101E97D695A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CAEB588-BA0F-4313-8B78-5101E97D695A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CAEB588-BA0F-4313-8B78-5101E97D695A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CAEB588-BA0F-4313-8B78-5101E97D695A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

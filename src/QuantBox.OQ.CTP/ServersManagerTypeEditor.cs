@@ -6,7 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms.Design;
 
+#if CTP
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     class ServersManagerTypeEditor : UITypeEditor
     {
@@ -21,7 +25,7 @@ namespace QuantBox.OQ.CTP
             if (service != null)
             {
                 ServersManagerForm dialog = new ServersManagerForm();
-                dialog.Init(context.Instance as CTPProvider);
+                dialog.Init(context.Instance as APIProvider);
                 service.ShowDialog(dialog);
             }
             return value;

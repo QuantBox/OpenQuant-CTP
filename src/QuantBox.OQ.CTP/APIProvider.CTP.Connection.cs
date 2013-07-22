@@ -1,22 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
+using SmartQuant.Providers;
+using QuantBox.OQ.CTP;
+
+#if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
-using SmartQuant;
-using SmartQuant.Data;
-using SmartQuant.Execution;
-using SmartQuant.FIX;
-using SmartQuant.Instruments;
-using SmartQuant.Providers;
-
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    partial class CTPProvider
+    partial class APIProvider
     {
         #region 清除数据
         private void Clear()
@@ -27,6 +28,7 @@ namespace QuantBox.OQ.CTP
             _dbInMemInvestorPosition.Clear();
             _dictDepthMarketData.Clear();
             _dictInstruments.Clear();
+            _dictInstruments2.Clear();
             _dictCommissionRate.Clear();
             _dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
@@ -97,10 +99,12 @@ namespace QuantBox.OQ.CTP
             {
                 bTrading = true;
             }
+#if CTP
             if(2045<=nTime||nTime<=300)
             {
                 bTrading = true;
             }
+#endif
 
             if (!bTrading)
                 return;
@@ -154,8 +158,10 @@ namespace QuantBox.OQ.CTP
         {
             CTPAPI.GetInstance().__RegInstrumentDictionary(_dictInstruments);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(_dictCommissionRate);
-            CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(_dictMarginRate);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(_dictDepthMarketData);
+#if CTP
+            CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(_dictMarginRate);
+#endif
 
             server = null;
             account = null;
@@ -292,12 +298,14 @@ namespace QuantBox.OQ.CTP
                     TraderApi.CTP_RegOnRspQryDepthMarketData(m_pMsgQueue, _fnOnRspQryDepthMarketData_Holder);
                     TraderApi.CTP_RegOnRspQryInstrument(m_pMsgQueue, _fnOnRspQryInstrument_Holder);
                     TraderApi.CTP_RegOnRspQryInstrumentCommissionRate(m_pMsgQueue, _fnOnRspQryInstrumentCommissionRate_Holder);
-                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
                     TraderApi.CTP_RegOnRspQryInvestorPosition(m_pMsgQueue, _fnOnRspQryInvestorPosition_Holder);
                     TraderApi.CTP_RegOnRspQryTradingAccount(m_pMsgQueue, _fnOnRspQryTradingAccount_Holder);
                     TraderApi.CTP_RegOnRtnInstrumentStatus(m_pMsgQueue, _fnOnRtnInstrumentStatus_Holder);
                     TraderApi.CTP_RegOnRtnOrder(m_pMsgQueue, _fnOnRtnOrder_Holder);
                     TraderApi.CTP_RegOnRtnTrade(m_pMsgQueue, _fnOnRtnTrade_Holder);
+#if CTP
+                    TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
+#endif
                     TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
                     TraderApi.TD_Connect(m_pTdApi, _newTempPath, string.Join(";", server.Trading.ToArray()),
                         server.BrokerID, account.InvestorId, account.Password,
@@ -321,9 +329,10 @@ namespace QuantBox.OQ.CTP
 
             CTPAPI.GetInstance().__RegInstrumentDictionary(null);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(null);
-            CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(null);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(null);
-
+#if CTP
+            CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(null);
+#endif
             Disconnect_MD();
             Disconnect_TD();
             Disconnect_MsgQueue();
@@ -462,9 +471,9 @@ namespace QuantBox.OQ.CTP
                     if (_dictAltSymbol2Instrument.Count > 0)
                     {
                         mdlog.Info("行情列表数{0},全部重新订阅", _dictAltSymbol2Instrument.Count);
-                        foreach (string symbol in _dictAltSymbol2Instrument.Keys)
+                        foreach (DataRecord record in _dictAltSymbol2Instrument.Values)
                         {
-                            MdApi.MD_Subscribe(m_pMdApi, symbol);
+                            MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
                         }
                     }
                 }
@@ -484,9 +493,11 @@ namespace QuantBox.OQ.CTP
                         pRspUserLogin.FrontID, pRspUserLogin.SessionID);
 
                     UpdateLocalTime(SetLocalTimeMode, pRspUserLogin);
+#if CTP
                 }
                 else if (ConnectionStatus.E_confirmed == result)
                 {
+#endif
                     _bTdConnected = true;
                     //请求查询资金
                     TraderApi.TD_ReqQryTradingAccount(m_pTdApi);

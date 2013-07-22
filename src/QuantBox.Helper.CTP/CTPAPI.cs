@@ -1,8 +1,15 @@
 ﻿using System;
-using QuantBox.CSharp2CTP;
 using System.Collections.Generic;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+
 namespace QuantBox.Helper.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.Helper.CTPZQ
+#endif
 {
     public sealed class CTPAPI
     {
@@ -68,6 +75,7 @@ namespace QuantBox.Helper.CTP
         #endregion
 
         #region 保证金率
+#if CTP
         private Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = null;
         public void __RegInstrumentMarginRateDictionary(Dictionary<string, CThostFtdcInstrumentMarginRateField> dict)
         {
@@ -102,6 +110,7 @@ namespace QuantBox.Helper.CTP
                 OnRspQryInstrumentMarginRate(pInstrumentMarginRate);
             }
         }
+#endif
         #endregion
 
         #region 手续费率
@@ -213,8 +222,6 @@ namespace QuantBox.Helper.CTP
         }
         #endregion
 
-        //#region ISpreadMarketData
-        //public ISpreadMarketData SpreadMarketData;
-        //#endregion
+
     }
 }

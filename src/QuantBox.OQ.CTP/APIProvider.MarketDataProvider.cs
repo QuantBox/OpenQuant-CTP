@@ -1,14 +1,24 @@
 ﻿using System;
 using System.ComponentModel;
-using QuantBox.CSharp2CTP;
 using SmartQuant.Data;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
+using QuantBox.OQ.CTP;
+
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    public partial class CTPProvider:IMarketDataProvider
+    public partial class APIProvider:IMarketDataProvider
     {
         private IBarFactory factory;
 
@@ -76,8 +86,8 @@ namespace QuantBox.OQ.CTP
             {
                 switch (request.GetMDEntryTypesGroup(0).MDEntryType)
                 {
-                    case '0':
-                    case '1':
+                    case FIXMDEntryType.Bid:
+                    case FIXMDEntryType.Offer:
                         if (request.MarketDepth != 1)
                         {
                             bMarketDepth = true;
@@ -85,7 +95,7 @@ namespace QuantBox.OQ.CTP
                         }
                         bQuote = true;
                         break;
-                    case '2':
+                    case FIXMDEntryType.Trade:
                         bTrade = true;
                         break;
                 }
@@ -102,17 +112,24 @@ namespace QuantBox.OQ.CTP
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
+                    string _altSymbol = GetApiSymbol(altSymbol);
+                    CThostFtdcInstrumentField _Instrument;
+                    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
+                    {
+                        _altSymbol = _Instrument.InstrumentID;
+                        altExchange = _Instrument.ExchangeID;
+                    }
 
                     DataRecord record;
                     if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
                     {
                         record = new DataRecord();
                         record.Instrument = inst;
+                        record.Symbol = _altSymbol;
+                        record.Exchange = altExchange;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
-                        mdlog.Info("订阅合约 {0} {1}", altSymbol, altExchange);
-                        // 将只订阅一次的地方挪到外面,多次订阅也没关系
-                        //MdApi.MD_Subscribe(m_pMdApi, altSymbol);
+                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
 
                         if (_bTdConnected)
                         {
@@ -130,7 +147,7 @@ namespace QuantBox.OQ.CTP
                     }
 
                     // 多次订阅也无所谓
-                    MdApi.MD_Subscribe(m_pMdApi, altSymbol);
+                    MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
 
                     if (bTrade)
                         record.TradeRequested = true;
@@ -173,13 +190,13 @@ namespace QuantBox.OQ.CTP
                     {
                         _dictDepthMarketData.Remove(altSymbol);
                         _dictAltSymbol2Instrument.Remove(altSymbol);
-                        mdlog.Info("取消订阅 {0} {1}", altSymbol, altExchange);
-                        MdApi.MD_Unsubscribe(m_pMdApi, altSymbol);
+                        mdlog.Info("取消合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
+                        MdApi.MD_Unsubscribe(m_pMdApi, record.Symbol, record.Exchange);
                     }
                     else
                     {
                         // 只要有一种类型说要订阅，就给订上
-                        MdApi.MD_Subscribe(m_pMdApi, altSymbol);
+                        MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
                     }
                 }
             }

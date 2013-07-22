@@ -1,9 +1,18 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
+
+#if CTP
 using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     class DbInMemInvestorPosition : IDisposable
     {
@@ -326,6 +335,63 @@ namespace QuantBox.OQ.CTP
                         return false;
                     }
                 }
+            }
+        }
+
+        //只收到成交信息时调用
+        public bool InsertOrReplaceForTrade(
+            string InstrumentID,
+            TThostFtdcPosiDirectionType PosiDirection,
+            TThostFtdcDirectionType Direction,
+            TThostFtdcHedgeFlagType HedgeFlag,
+            TThostFtdcPositionDateType PositionDate,
+            int volume)
+        {
+            lock (this)
+            {
+                // 今天的买入要先冻结
+                //冲突的可能性大一些，所以要先Update后Insert
+                DataRow[] rows = Select(InstrumentID, PosiDirection, HedgeFlag, PositionDate);
+
+                if (rows.Count() == 1)
+                {
+                    int vol = (int)rows[0][Position];
+                    rows[0][Position] = vol - volume;
+                }
+                else
+                {
+                    //假设是新添数据
+                    try
+                    {
+                        if (Direction == TThostFtdcDirectionType.Buy)
+                        {
+                            dtInvestorPosition.Rows.Add(
+                                        InstrumentID,
+                                        PosiDirection,
+                                        HedgeFlag,
+                                        PositionDate,
+                                        0,
+                                        volume,
+                                        0);
+                        }
+                        else
+                        {
+                            dtInvestorPosition.Rows.Add(
+                                        InstrumentID,
+                                        PosiDirection,
+                                        HedgeFlag,
+                                        PositionDate,
+                                        0,
+                                        0,
+                                        volume);
+                        }
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
         }
 

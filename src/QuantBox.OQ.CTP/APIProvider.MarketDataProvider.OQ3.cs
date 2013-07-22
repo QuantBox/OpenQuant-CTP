@@ -1,14 +1,24 @@
 ﻿using System;
 using System.ComponentModel;
-using QuantBox.CSharp2CTP;
+
 using SmartQuant.Data;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
+
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    public partial class CTPProvider:IMarketDataProvider
+    public partial class APIProvider : IMarketDataProvider
     {
         private void OnNewBar(object sender, BarEventArgs args)
         {

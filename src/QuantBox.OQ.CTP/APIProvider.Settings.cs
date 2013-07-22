@@ -1,14 +1,24 @@
-﻿using QuantBox.CSharp2CTP;
-using SmartQuant;
+﻿using SmartQuant;
 using System;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
 using System.Xml.Serialization;
+using QuantBox.OQ.CTP;
+
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    partial class CTPProvider
+    partial class APIProvider
     {
         private const string CATEGORY_ACCOUNT = "Account";
         private const string CATEGORY_BARFACTORY = "Bar Factory";
@@ -21,6 +31,11 @@ namespace QuantBox.OQ.CTP
         private const string CATEGORY_TIME = "Settings - Time";
         private const string CATEGORY_OTHER = "Settings - Other";
 
+#if CTP
+        public readonly string accountsFile = string.Format(@"{0}\CTP.Accounts.xml", Framework.Installation.IniDir);
+        public readonly string serversFile = string.Format(@"{0}\CTP.Servers.xml", Framework.Installation.IniDir);
+        public readonly string brokersFile = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
+
         //交易所常量定义
         private enum ExchangID
         {
@@ -29,6 +44,44 @@ namespace QuantBox.OQ.CTP
             CZCE,
             CFFEX
         }
+
+        private string _SupportMarketOrder;
+        private string _SupportCloseToday;
+        private string _DefaultOpenClosePrefix;
+
+        [Category(CATEGORY_OTHER)]
+        [Description("支持市价单的交易所")]
+        public string SupportMarketOrder
+        {
+            get { return _SupportMarketOrder; }
+        }
+
+
+        [Category(CATEGORY_OTHER)]
+        [Description("区分平今与平昨的交易所")]
+        public string SupportCloseToday
+        {
+            get { return _SupportCloseToday; }
+        }
+
+        [Category(CATEGORY_OTHER)]
+        [Description("指定开平，利用Order的Text域开始部分指定开平\n“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
+        public string DefaultOpenClosePrefix
+        {
+            get { return _DefaultOpenClosePrefix; }
+        }
+
+#elif CTPZQ
+        public readonly string accountsFile = string.Format(@"{0}\CTPZQ.Accounts.xml", Framework.Installation.IniDir);
+        public readonly string serversFile = string.Format(@"{0}\CTPZQ.Servers.xml", Framework.Installation.IniDir);
+        public readonly string brokersFile = string.Format(@"{0}\CTPZQ.Brokers.xml", Framework.Installation.IniDir);
+
+        private enum ExchangID
+        {
+            SSE,
+            SZE
+        }
+#endif
 
         public enum TimeMode
         {
@@ -53,9 +106,6 @@ namespace QuantBox.OQ.CTP
 
         #region 参数设置
         private TimeMode _TimeMode;
-        private string _SupportMarketOrder;
-        private string _SupportCloseToday;
-        private string _DefaultOpenClosePrefix;
 
         [Category(CATEGORY_OTHER)]
         [Description("设置API生成临时文件的目录")]
@@ -104,27 +154,7 @@ namespace QuantBox.OQ.CTP
             set;
         }
 
-        [Category(CATEGORY_OTHER)]
-        [Description("支持市价单的交易所")]
-        public string SupportMarketOrder
-        {
-            get { return _SupportMarketOrder; }
-        }
-
-
-        [Category(CATEGORY_OTHER)]
-        [Description("区分平今与平昨的交易所")]
-        public string SupportCloseToday
-        {
-            get { return _SupportCloseToday; }
-        }
-
-        [Category(CATEGORY_OTHER)]
-        [Description("指定开平，利用Order的Text域开始部分指定开平\n“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
-        public string DefaultOpenClosePrefix
-        {
-            get { return _DefaultOpenClosePrefix; }
-        }
+        
 
         [Category(CATEGORY_OTHER)]
         [Description("在最新价上调整N跳来模拟市价，超过涨跌停价按涨跌停价报单")]
@@ -143,16 +173,6 @@ namespace QuantBox.OQ.CTP
             get;
             set;
         }
-
-        //[Category(CATEGORY_OTHER)]
-        //[Description("True - 产生OnRtnDepthMarketData事件\nFalse - 不产生OnRtnDepthMarketData事件")]
-        //[DefaultValue(false)]
-        ////[Browsable(false)]
-        //public bool EmitOnRtnDepthMarketData
-        //{
-        //    get;
-        //    set;
-        //}
 
         private BindingList<ServerItem> serversList = new BindingList<ServerItem>();
         [Category("Settings")]
@@ -206,14 +226,17 @@ namespace QuantBox.OQ.CTP
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
             SwitchMakertOrderToLimitOrder = false;
-            //EmitOnRtnDepthMarketData = false;
 
             _bWantMdConnect = true;
             _bWantTdConnect = true;
 
+#if CTP
             _SupportMarketOrder = String.Format("{0};{1};{2};", ExchangID.DCE, ExchangID.CZCE, ExchangID.CFFEX);
             _SupportCloseToday = ExchangID.SHFE + ";";
             _DefaultOpenClosePrefix = String.Format("{0};{1};{2};{3}", OpenPrefix, ClosePrefix, CloseTodayPrefix, CloseYesterdayPrefix);
+#elif CTPZQ
+
+#endif
             LastPricePlusNTicks = 10;
 
             LoadAccounts();
@@ -222,18 +245,6 @@ namespace QuantBox.OQ.CTP
             serversList.ListChanged += ServersList_ListChanged;
             accountsList.ListChanged += AccountsList_ListChanged;
         }
-
-        //private void SetEmitDirectly(bool bDirect)
-        //{
-        //    if (null != m_pTdMsgQueue && IntPtr.Zero != m_pTdMsgQueue)
-        //    {
-        //        CommApi.CTP_EmitDirectly(m_pTdMsgQueue, bDirect);
-        //    }
-        //    if (null != m_pMdMsgQueue && IntPtr.Zero != m_pMdMsgQueue)
-        //    {
-        //        CommApi.CTP_EmitDirectly(m_pMdMsgQueue, bDirect);
-        //    }
-        //}
 
         void ServersList_ListChanged(object sender, ListChangedEventArgs e)
         {
@@ -260,7 +271,7 @@ namespace QuantBox.OQ.CTP
             SaveServers();
         }
 
-        private readonly string accountsFile = string.Format(@"{0}\CTP.Accounts.xml", Framework.Installation.IniDir);
+
         void LoadAccounts()
         {
             accountsList.Clear();
@@ -288,8 +299,7 @@ namespace QuantBox.OQ.CTP
                 writer.Close();
             }
         }
-
-        private readonly string serversFile = string.Format(@"{0}\CTP.Servers.xml", Framework.Installation.IniDir);
+                
         void LoadServers()
         {
             serversList.Clear();
@@ -317,8 +327,7 @@ namespace QuantBox.OQ.CTP
                 writer.Close();
             }
         }
-        
-        private readonly string brokersFile = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
+                
         public void LoadBrokers()
         {
             brokersList.Clear();

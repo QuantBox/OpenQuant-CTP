@@ -4,19 +4,28 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using QuantBox.CSharp2CTP;
-using QuantBox.Helper.CTP;
 using SmartQuant;
 using SmartQuant.Data;
 using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
+using QuantBox.OQ.CTP;
 
+
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    partial class CTPProvider
+    partial class APIProvider
     {
         private fnOnConnect _fnOnConnect_Holder;
         private fnOnDisconnect _fnOnDisconnect_Holder;
@@ -28,13 +37,16 @@ namespace QuantBox.OQ.CTP
         private fnOnRspQryDepthMarketData _fnOnRspQryDepthMarketData_Holder;
         private fnOnRspQryInstrument _fnOnRspQryInstrument_Holder;
         private fnOnRspQryInstrumentCommissionRate _fnOnRspQryInstrumentCommissionRate_Holder;
-        private fnOnRspQryInstrumentMarginRate _fnOnRspQryInstrumentMarginRate_Holder;
         private fnOnRspQryInvestorPosition _fnOnRspQryInvestorPosition_Holder;
         private fnOnRspQryTradingAccount _fnOnRspQryTradingAccount_Holder;
         private fnOnRtnDepthMarketData _fnOnRtnDepthMarketData_Holder;
         private fnOnRtnInstrumentStatus _fnOnRtnInstrumentStatus_Holder;
         private fnOnRtnOrder _fnOnRtnOrder_Holder;
         private fnOnRtnTrade _fnOnRtnTrade_Holder;
+
+#if CTP
+        private fnOnRspQryInstrumentMarginRate _fnOnRspQryInstrumentMarginRate_Holder;
+#endif
 
         #region 回调
         private void InitCallbacks()
@@ -50,13 +62,16 @@ namespace QuantBox.OQ.CTP
             _fnOnRspQryDepthMarketData_Holder = OnRspQryDepthMarketData;
             _fnOnRspQryInstrument_Holder = OnRspQryInstrument;
             _fnOnRspQryInstrumentCommissionRate_Holder = OnRspQryInstrumentCommissionRate;
-            _fnOnRspQryInstrumentMarginRate_Holder = OnRspQryInstrumentMarginRate;
             _fnOnRspQryInvestorPosition_Holder = OnRspQryInvestorPosition;
             _fnOnRspQryTradingAccount_Holder = OnRspQryTradingAccount;
             _fnOnRtnInstrumentStatus_Holder = OnRtnInstrumentStatus;
             _fnOnRtnDepthMarketData_Holder = OnRtnDepthMarketData;
             _fnOnRtnOrder_Holder = OnRtnOrder;
             _fnOnRtnTrade_Holder = OnRtnTrade;
+
+#if CTP
+            _fnOnRspQryInstrumentMarginRate_Holder = OnRspQryInstrumentMarginRate;
+#endif
         }
         #endregion
 
@@ -93,6 +108,7 @@ namespace QuantBox.OQ.CTP
         private readonly Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = new Dictionary<string, CThostFtdcDepthMarketDataField>();
         //记录合约列表,从实盘合约名到对象的映射
         private readonly Dictionary<string, CThostFtdcInstrumentField> _dictInstruments = new Dictionary<string, CThostFtdcInstrumentField>();
+        private Dictionary<string, string> _dictInstruments2 = new Dictionary<string, string>();
         //记录手续费率,从实盘合约名到对象的映射
         private readonly Dictionary<string, CThostFtdcInstrumentCommissionRateField> _dictCommissionRate = new Dictionary<string, CThostFtdcInstrumentCommissionRateField>();
         //记录保证金率,从实盘合约名到对象的映射
@@ -113,7 +129,20 @@ namespace QuantBox.OQ.CTP
         {
             if (0 == pRspInfo.ErrorID)
             {
+#if CTP
                 _dictInstruments[pInstrument.InstrumentID] = pInstrument;
+#else
+                //比较无语，测试平台上会显示很多无效数据，有关期货的还会把正确的数据给覆盖，所以临时这样处理
+                if (pInstrument.ProductClass != TThostFtdcProductClassType.Futures)
+                {
+                    string symbol = GetYahooSymbol(pInstrument.InstrumentID, pInstrument.ExchangeID);
+                    _dictInstruments[symbol] = pInstrument;
+
+                    // 行情中可能没有交易所信息，这个容器用于容错处理
+                    _dictInstruments2[pInstrument.InstrumentID] = symbol;
+                }
+#endif
+
                 if (bIsLast)
                 {
                     tdlog.Info("合约列表已经接收完成,共{0}条", _dictInstruments.Count);
@@ -147,6 +176,7 @@ namespace QuantBox.OQ.CTP
         #endregion
 
         #region 保证金率列表
+#if CTP
         private void OnRspQryInstrumentMarginRate(IntPtr pTraderApi, ref CThostFtdcInstrumentMarginRateField pInstrumentMarginRate, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
             if (0 == pRspInfo.ErrorID)
@@ -163,6 +193,7 @@ namespace QuantBox.OQ.CTP
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryInstrumentMarginRate:" + pRspInfo.ErrorMsg);
             }
         }
+#endif
         #endregion
 
         #region 持仓回报

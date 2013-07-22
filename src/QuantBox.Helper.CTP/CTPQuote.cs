@@ -1,14 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using SmartQuant.Data;
 
+#if CTP
 using QuantBox.CSharp2CTP;
-using System.Reflection;
 
 namespace QuantBox.Helper.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.Helper.CTPZQ
+#endif
 {
     public class CTPQuote:Quote
     {

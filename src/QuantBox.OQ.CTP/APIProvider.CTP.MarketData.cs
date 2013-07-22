@@ -1,41 +1,46 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
-using QuantBox.CSharp2CTP;
-using QuantBox.Helper.CTP;
 using SmartQuant;
 using SmartQuant.Data;
-using SmartQuant.Execution;
-using SmartQuant.FIX;
 using SmartQuant.Instruments;
-using SmartQuant.Providers;
+using QuantBox.OQ.CTP;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    partial class CTPProvider
+    partial class APIProvider
     {
         #region 深度行情回调
         private DateTime _dateTime = DateTime.Now;
         private void OnRtnDepthMarketData(IntPtr pApi, ref CThostFtdcDepthMarketDataField pDepthMarketData)
         {
+#if CTP
+            string symbol = pDepthMarketData.InstrumentID;
+#elif CTPZQ
+            string symbol = GetYahooSymbol(pDepthMarketData.InstrumentID, pDepthMarketData.ExchangeID);
+#endif
             DataRecord record;
-            if (!_dictAltSymbol2Instrument.TryGetValue(pDepthMarketData.InstrumentID, out record))
+            if (!_dictAltSymbol2Instrument.TryGetValue(symbol, out record))
             {
-                mdlog.Warn("合约{0}不在订阅列表中却收到了数据", pDepthMarketData.InstrumentID);
+                mdlog.Warn("合约{0}不在订阅列表中却收到了数据", symbol);
                 return;
             }
 
             Instrument instrument = record.Instrument;
 
             CThostFtdcDepthMarketDataField DepthMarket;
-            _dictDepthMarketData.TryGetValue(pDepthMarketData.InstrumentID, out DepthMarket);
+            _dictDepthMarketData.TryGetValue(symbol, out DepthMarket);
 
             //将更新字典的功能提前，因为如果一开始就OnTrade中下单，涨跌停没有更新
-            _dictDepthMarketData[pDepthMarketData.InstrumentID] = pDepthMarketData;
+            _dictDepthMarketData[symbol] = pDepthMarketData;
 
             if (TimeMode.LocalTime == _TimeMode)
             {
@@ -48,7 +53,11 @@ namespace QuantBox.OQ.CTP
                 try
                 {
                     // 只有使用交易所行情时才需要处理跨天的问题
+#if CTP
                     ChangeActionDay(pDepthMarketData.ActionDay);
+#else
+                    ChangeActionDay(pDepthMarketData.TradingDay);
+#endif
 
                     int HH = int.Parse(pDepthMarketData.UpdateTime.Substring(0, 2));
                     int mm = int.Parse(pDepthMarketData.UpdateTime.Substring(3, 2));
@@ -123,65 +132,20 @@ namespace QuantBox.OQ.CTP
             {
                 EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Ask, pDepthMarketData.AskPrice1, pDepthMarketData.AskVolume1);
                 EmitNewMarketDepth(instrument, _dateTime, 0, MDSide.Bid, pDepthMarketData.BidPrice1, pDepthMarketData.BidVolume1);
+#if CTPZQ
+                EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Ask, pDepthMarketData.AskPrice2, pDepthMarketData.AskVolume2);
+                EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Bid, pDepthMarketData.BidPrice2, pDepthMarketData.BidVolume2);
 
-                //EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Ask, pDepthMarketData.AskPrice2, pDepthMarketData.AskVolume2);
-                //EmitNewMarketDepth(instrument, _dateTime, 1, MDSide.Bid, pDepthMarketData.BidPrice2, pDepthMarketData.BidVolume2);
+                EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Ask, pDepthMarketData.AskPrice3, pDepthMarketData.AskVolume3);
+                EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Bid, pDepthMarketData.BidPrice3, pDepthMarketData.BidVolume3);
 
-                //EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Ask, pDepthMarketData.AskPrice3, pDepthMarketData.AskVolume3);
-                //EmitNewMarketDepth(instrument, _dateTime, 2, MDSide.Bid, pDepthMarketData.BidPrice3, pDepthMarketData.BidVolume3);
+                EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Ask, pDepthMarketData.AskPrice4, pDepthMarketData.AskVolume4);
+                EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Bid, pDepthMarketData.BidPrice4, pDepthMarketData.BidVolume4);
 
-                //EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Ask, pDepthMarketData.AskPrice4, pDepthMarketData.AskVolume4);
-                //EmitNewMarketDepth(instrument, _dateTime, 3, MDSide.Bid, pDepthMarketData.BidPrice4, pDepthMarketData.BidVolume4);
-
-                //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
-                //EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+                EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Ask, pDepthMarketData.AskPrice5, pDepthMarketData.AskVolume5);
+                EmitNewMarketDepth(instrument, _dateTime, 4, MDSide.Bid, pDepthMarketData.BidPrice5, pDepthMarketData.BidVolume5);
+#endif
             }
-
-            // 价差生成功能
-            /* 已经使用了反射的价差生成功能了
-            do
-            {
-                if (null == CTPAPI.GetInstance().SpreadMarketData)
-                    break;
-
-                ISpreadMarketData SpreadMarketData = CTPAPI.GetInstance().SpreadMarketData;
-                var ticks = SpreadMarketData.CalculateSpread(pDepthMarketData);
-                if (null == ticks)
-                    break;
-
-                foreach (var tick in ticks)
-                {
-                    Instrument inst = InstrumentManager.Instruments[tick.Symbol];
-                    if (null == inst)
-                        continue;
-
-                    if (!double.IsNaN(tick.Price))
-                    {
-                        Trade trade = new Trade(_dateTime, tick.Price, tick.Size);
-                        trade.ProviderId = tick.ProviderId;
-
-                        EmitNewTradeEvent(inst, trade);
-                    }
-                    if (!double.IsNaN(tick.Ask) && !double.IsNaN(tick.Bid))
-                    {
-                        Quote quote = new Quote(_dateTime,
-                            tick.Bid, tick.BidSize,
-                            tick.Ask, tick.AskSize);
-                        quote.ProviderId = tick.ProviderId;
-
-                        EmitNewQuoteEvent(inst, quote);
-                    }
-                }
-            } while (false);
-            */
-
-            // 直接回报CTP的行情信息
-            /* 使用新的反射方式替代
-            if (EmitOnRtnDepthMarketData)
-            {
-                CTPAPI.GetInstance().FireOnRtnDepthMarketData(pDepthMarketData);
-            }
-            */
         }
 
 

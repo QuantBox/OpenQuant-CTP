@@ -1,7 +1,14 @@
-﻿using QuantBox.CSharp2CTP;
-using System.Reflection;
+﻿using System.Reflection;
+
+#if CTP
+using QuantBox.CSharp2CTP;
 
 namespace QuantBox.Helper.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.Helper.CTPZQ
+#endif
 {
     public class DataConvert
     {
