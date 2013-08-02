@@ -131,26 +131,7 @@
           <string>tcp://zjzx-md4.ctp.shcifco.com:41213</string>
           <string>tcp://zjzx-md5.ctp.shcifco.com:41213</string>
         </MarketData>
-        <Label>上海中期(张江电信)</Label>
-      </ServerItem>
-      <ServerItem>
-        <AuthCode />
-        <BrokerID>8070</BrokerID>
-        <Trading>
-          <string>tcp://zjzx-front1.ctp.shcifco.com:41205</string>
-          <string>tcp://zjzx-front2.ctp.shcifco.com:41205</string>
-          <string>tcp://zjzx-front3.ctp.shcifco.com:41205</string>
-          <string>tcp://zjzx-front4.ctp.shcifco.com:41205</string>
-          <string>tcp://zjzx-front5.ctp.shcifco.com:41205</string>
-        </Trading>
-        <MarketData>
-          <string>tcp://zjzx-md1.ctp.shcifco.com:41213</string>
-          <string>tcp://zjzx-md2.ctp.shcifco.com:41213</string>
-          <string>tcp://zjzx-md3.ctp.shcifco.com:41213</string>
-          <string>tcp://zjzx-md4.ctp.shcifco.com:41213</string>
-          <string>tcp://zjzx-md5.ctp.shcifco.com:41213</string>
-        </MarketData>
-        <Label>上海中期(张江电信)</Label>
+        <Label>上海中期实盘(张江电信)</Label>
       </ServerItem>
       <ServerItem>
         <AuthCode />
@@ -169,7 +150,7 @@
           <string>tcp://zjzx-md14.ctp.shcifco.com:41213</string>
           <string>tcp://zjzx-md15.ctp.shcifco.com:41213</string>
         </MarketData>
-        <Label>上海中期(张江联通)</Label>
+        <Label>上海中期实盘(张江联通)</Label>
       </ServerItem>
     </Server>
   </BrokerItem>
