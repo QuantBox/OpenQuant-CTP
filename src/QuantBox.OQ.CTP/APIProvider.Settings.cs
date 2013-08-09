@@ -31,11 +31,12 @@ namespace QuantBox.OQ.CTPZQ
         private const string CATEGORY_TIME = "Settings - Time";
         private const string CATEGORY_OTHER = "Settings - Other";
 
-#if CTP
-        public readonly string accountsFile = string.Format(@"{0}\CTP.Accounts.xml", Framework.Installation.IniDir);
-        public readonly string serversFile = string.Format(@"{0}\CTP.Servers.xml", Framework.Installation.IniDir);
-        public readonly string brokersFile = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
 
+        public string accountsFile;
+        public string serversFile;
+        public string brokersFile;
+
+#if CTP
         //交易所常量定义
         private enum ExchangID
         {
@@ -72,10 +73,6 @@ namespace QuantBox.OQ.CTPZQ
         }
 
 #elif CTPZQ
-        public readonly string accountsFile = string.Format(@"{0}\CTPZQ.Accounts.xml", Framework.Installation.IniDir);
-        public readonly string serversFile = string.Format(@"{0}\CTPZQ.Servers.xml", Framework.Installation.IniDir);
-        public readonly string brokersFile = string.Format(@"{0}\CTPZQ.Brokers.xml", Framework.Installation.IniDir);
-
         private enum ExchangID
         {
             SSE,
@@ -222,6 +219,10 @@ namespace QuantBox.OQ.CTPZQ
         #endregion
         private void InitSettings()
         {
+            accountsFile = string.Format(@"{0}\{1}.Accounts.xml", Framework.Installation.IniDir,this.Name);
+            serversFile = string.Format(@"{0}\{1}.Servers.xml", Framework.Installation.IniDir, this.Name);
+            brokersFile = string.Format(@"{0}\{1}.Brokers.xml", Framework.Installation.IniDir, this.Name);
+
             ApiTempPath = Framework.Installation.TempDir.FullName;
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;

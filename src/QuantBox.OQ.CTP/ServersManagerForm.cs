@@ -22,16 +22,13 @@ namespace QuantBox.OQ.CTPZQ
         public void Init(APIProvider provider)     
         {
             this.provider = provider;
+
+            textBoxUrl.Text = string.Format(@"https://raw.github.com/QuantBox/OpenQuant-CTP/master/{0}.Brokers.xml", provider.Name);
         }
 
         public ServersManagerForm()
         {
-            InitializeComponent();
-#if CTP
-            textBoxUrl.Text = @"https://raw.github.com/QuantBox/OpenQuant-CTP/master/CTP.Brokers.xml";
-#elif CTPZQ
-            textBoxUrl.Text = @"https://raw.github.com/QuantBox/OpenQuant-CTP/master/CTPZQ.Brokers.xml";
-#endif
+            InitializeComponent();           
         }
 
         private void ServersManagerForm_Load(object sender, EventArgs e)

@@ -32,13 +32,9 @@ namespace QuantBox.OQ.CTPZQ
 
         private bool disposed;
 
-#if CTP
-        private static readonly Logger mdlog = LogManager.GetLogger("CTP.M");
-        private static readonly Logger tdlog = LogManager.GetLogger("CTP.T");
-#elif CTPZQ
-        private static readonly Logger mdlog = LogManager.GetLogger("CTPZQ.M");
-        private static readonly Logger tdlog = LogManager.GetLogger("CTPZQ.T");
-#endif        
+        private static Logger mdlog;
+        private static Logger tdlog;
+        
         // Use C# destructor syntax for finalization code.
         ~APIProvider()
         {
@@ -48,6 +44,9 @@ namespace QuantBox.OQ.CTPZQ
 
         public APIProvider()
         {
+            mdlog = LogManager.GetLogger(Name + ".M");
+            tdlog = LogManager.GetLogger(Name + ".T");
+
             try
             {
                 LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/QuantBox.nlog");
@@ -119,11 +118,7 @@ namespace QuantBox.OQ.CTPZQ
         [Category(CATEGORY_INFO)]
         public string Title
         {
-#if CTP
-            get { return "QuantBox CTP Provider"; }
-#elif CTPZQ
-            get { return "QuantBox CTPZQ Provider"; }
-#endif
+            get { return  string.Format("QuantBox {0} Provider",this.Name); }
         }
 
         [Category(CATEGORY_INFO)]
