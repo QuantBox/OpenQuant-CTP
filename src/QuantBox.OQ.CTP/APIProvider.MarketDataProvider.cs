@@ -202,6 +202,33 @@ namespace QuantBox.OQ.CTPZQ
             }
         }
 
+        private bool EmitNewMarketDepth(Instrument instrument, DateTime datatime, int position, MDSide ask, double price, int size)
+        {
+            bool bRet = false;
+            MDOperation insert = MDOperation.Update;
+            if (MDSide.Ask == ask)
+            {
+                if (position >= instrument.OrderBook.Ask.Count)
+                {
+                    insert = MDOperation.Insert;
+                }
+            }
+            else
+            {
+                if (position >= instrument.OrderBook.Bid.Count)
+                {
+                    insert = MDOperation.Insert;
+                }
+            }
+
+            if (price != 0 && size != 0)
+            {
+                EmitNewMarketDepth(instrument, new MarketDepth(datatime, "", position, insert, ask, price, size));
+                bRet = true;
+            }
+            return bRet;
+        }
+
         private void EmitNewMarketDepth(IFIXInstrument instrument, MarketDepth marketDepth)
         {
             if (NewMarketDepth != null)
