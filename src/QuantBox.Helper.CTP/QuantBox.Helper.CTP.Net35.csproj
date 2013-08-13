@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="CTPAPI.cs" />
     <Compile Include="CTPTrade.cs" />
+    <Compile Include="ParseErrorType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
