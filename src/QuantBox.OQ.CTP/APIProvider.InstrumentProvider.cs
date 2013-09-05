@@ -112,7 +112,7 @@ namespace QuantBox.OQ.CTPZQ
                     }
                     {
                         double x = inst.PriceTick;
-                        if (x > 0.0001)
+                        if (x > 0.00001)
                         {
                             int i = 0;
                             for (; x - (int)x != 0; ++i)
@@ -321,7 +321,7 @@ namespace QuantBox.OQ.CTPZQ
         {
             if (ExchangeID.Length >= 2)
             {
-                return string.Format("{0}.{1}", InstrumentID, ExchangeID.Substring(0, 2));
+                return string.Format("{0}.{1}", InstrumentID.Substring(0,6), ExchangeID.Substring(0, 2));
             }
             else
             {

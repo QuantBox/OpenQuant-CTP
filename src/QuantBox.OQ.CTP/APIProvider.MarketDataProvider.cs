@@ -112,21 +112,28 @@ namespace QuantBox.OQ.CTPZQ
                     //将用户合约转成交易所合约
                     string altSymbol = inst.GetSymbol(this.Name);
                     string altExchange = inst.GetSecurityExchange(this.Name);
-                    string _altSymbol = GetApiSymbol(altSymbol);
+                    string apiSymbol = GetApiSymbol(altSymbol);
+                    string apiExchange = altExchange;
+#if CTPZQ
+                    altSymbol = GetYahooSymbol(apiSymbol, apiExchange);
+#endif
                     CThostFtdcInstrumentField _Instrument;
                     if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
                     {
-                        _altSymbol = _Instrument.InstrumentID;
-                        altExchange = _Instrument.ExchangeID;
+                        apiSymbol = _Instrument.InstrumentID;
+                        apiExchange = _Instrument.ExchangeID;
                     }
 
+#if CTPZQ
+                    altSymbol = GetYahooSymbol(apiSymbol, apiExchange);
+#endif
                     DataRecord record;
                     if (!_dictAltSymbol2Instrument.TryGetValue(altSymbol, out record))
                     {
                         record = new DataRecord();
                         record.Instrument = inst;
-                        record.Symbol = _altSymbol;
-                        record.Exchange = altExchange;
+                        record.Symbol = apiSymbol;
+                        record.Exchange = apiExchange;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
                         mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);

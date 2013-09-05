@@ -490,7 +490,10 @@ namespace QuantBox.OQ.CTPZQ
                                 case TThostFtdcOrderSubmitStatusType.InsertRejected:
                                     //如果是最后一个的状态，同意发出消息
                                     if (0 == _Ref2Action.Count())
+                                    {
+                                        //唯一的从OnRtnOrder中就返回拒绝
                                         EmitRejected(order, pOrder.StatusMsg);
+                                    }
                                     else
                                         Cancel(order);
                                     break;
