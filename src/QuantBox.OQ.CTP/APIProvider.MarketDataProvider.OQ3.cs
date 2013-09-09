@@ -18,7 +18,7 @@ using QuantBox.Helper.CTPZQ;
 namespace QuantBox.OQ.CTPZQ
 #endif
 {
-    public partial class APIProvider : IMarketDataProvider
+    public partial class APIProvider : IMarketDataProvider, ISimulationMarketDataProvider
     {
         private void OnNewBar(object sender, BarEventArgs args)
         {
@@ -122,6 +122,17 @@ namespace QuantBox.OQ.CTPZQ
 
         #region OpenQuant3接口的新方法
         public IMarketDataFilter MarketDataFilter { get; set; }
+        
+
+        public void EmitQuote(IFIXInstrument instrument, Quote quote)
+        {
+            EmitNewQuoteEvent(instrument, quote);
+        }
+
+        public void EmitTrade(IFIXInstrument instrument, Trade trade)
+        {
+            EmitNewTradeEvent(instrument, trade);
+        }
         #endregion
     }
 }
