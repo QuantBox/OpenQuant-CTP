@@ -1,8 +1,15 @@
 ﻿using System;
-using QuantBox.CSharp2CTP;
 using System.Collections.Generic;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+
 namespace QuantBox.Helper.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.Helper.CTPZQ
+#endif
 {
     public sealed class CTPAPI
     {
@@ -68,6 +75,7 @@ namespace QuantBox.Helper.CTP
         #endregion
 
         #region 保证金率
+#if CTP
         private Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = null;
         public void __RegInstrumentMarginRateDictionary(Dictionary<string, CThostFtdcInstrumentMarginRateField> dict)
         {
@@ -102,6 +110,7 @@ namespace QuantBox.Helper.CTP
                 OnRspQryInstrumentMarginRate(pInstrumentMarginRate);
             }
         }
+#endif
         #endregion
 
         #region 手续费率
@@ -142,7 +151,7 @@ namespace QuantBox.Helper.CTP
         }
         #endregion
 
-        #region 深度行情
+        #region 深度行情1
         private Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = null;
         public void __RegDepthMarketDataDictionary(Dictionary<string, CThostFtdcDepthMarketDataField> dict)
         {
@@ -179,5 +188,40 @@ namespace QuantBox.Helper.CTP
             }
         }
         #endregion
+
+        //#region 深度行情2
+        //public delegate void RtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData);
+        //public event RtnDepthMarketData OnRtnDepthMarketData;
+        //public void FireOnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData)
+        //{
+        //    if (null != OnRtnDepthMarketData)
+        //    {
+        //        OnRtnDepthMarketData(pDepthMarketData);
+        //    }
+        //}
+        //#endregion
+
+        #region 交易所状态
+        public delegate void RtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus);
+        public event RtnInstrumentStatus OnRtnInstrumentStatus;
+        public void FireOnRtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus)
+        {
+            if (null != OnRtnInstrumentStatus)
+            {
+                OnRtnInstrumentStatus(pInstrumentStatus);
+            }
+        }
+        #endregion
+
+        #region OnStrategyStart
+        public EventHandler OnLive;
+        public void EmitOnLive()
+        {
+            if (OnLive != null)
+                OnLive(null, EventArgs.Empty);
+        }
+        #endregion
+
+
     }
 }

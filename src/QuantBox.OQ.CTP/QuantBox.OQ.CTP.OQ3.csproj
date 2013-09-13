@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\..\..\Program Files %28x86%29\SmartQuant Ltd\OpenQuant\Framework\bin\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CTP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -27,17 +27,15 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;CTP</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NLog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL" />
-    <Reference Include="QuantBox.CSharp2CTP">
-      <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
-    </Reference>
-    <Reference Include="QuantBox.Helper.CTP">
-      <HintPath>E:\Program Files\SmartQuant Ltd\OpenQuant\Bin\QuantBox.Helper.CTP.dll</HintPath>
+    <Reference Include="QuantBox.CSharp2CTP, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
     </Reference>
     <Reference Include="SmartQuant, Version=1.0.3762.22305, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -72,18 +70,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccountItem.cs" />
+    <Compile Include="ApiContainer.cs" />
+    <Compile Include="APIProvider.CTP.Connection.cs" />
+    <Compile Include="APIProvider.CTP.cs" />
+    <Compile Include="APIProvider.CTP.MarketData.cs" />
+    <Compile Include="APIProvider.CTP.Order.cs" />
+    <Compile Include="APIProvider.ExecutionProvider.cs" />
+    <Compile Include="APIProvider.ExecutionProvider.OQ.cs" />
+    <Compile Include="APIProvider.InstrumentProvider.cs" />
+    <Compile Include="APIProvider.MarketDataProvider.cs" />
+    <Compile Include="APIProvider.MarketDataProvider.OQ3.cs" />
+    <Compile Include="APIProvider.Provider.cs" />
+    <Compile Include="APIProvider.Settings.cs" />
+    <Compile Include="ApiWrapper.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="DataRecord.cs" />
     <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
-    <Compile Include="CTPProvider.ExecutionProvider.cs" />
-    <Compile Include="CTPProvider.InstrumentProvider.cs" />
-    <Compile Include="CTPProvider.MarketDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CTPProvider.CTP.cs" />
-    <Compile Include="CTPProvider.Provider.cs" />
-    <Compile Include="CTPProvider.Settings.cs" />
+    <Compile Include="QuoteApiWrapper.cs" />
     <Compile Include="ServerItem.cs" />
     <Compile Include="ServersManagerForm.cs">
       <SubType>Form</SubType>
@@ -92,6 +98,7 @@
       <DependentUpon>ServersManagerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ServersManagerTypeEditor.cs" />
+    <Compile Include="TraderApiWrapper.cs" />
     <Compile Include="WinAPI.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -99,10 +106,15 @@
       <DependentUpon>ServersManagerForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="Properties\DataSources\BrokerItem.datasource" />
     <None Include="Properties\DataSources\ServerItem.datasource" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTP.Net40.csproj">
+      <Project>{97ae93ec-5897-43c8-8d84-d92b73fe1434}</Project>
+      <Name>QuantBox.Helper.CTP.Net40</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

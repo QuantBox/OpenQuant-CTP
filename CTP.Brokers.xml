@@ -1,18 +1,191 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Brokers>
-	<Broker Label="上期技术">
-		<Server Label="上期技术商品期货模拟" BrokerID="2030" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://asp-sim2-front1.financial-trading-platform.com:26205" MarketData="tcp://asp-sim2-md1.financial-trading-platform.com:26213" />
-	</Broker>
-	<Broker Label="银河期货">
-		<Server Label="银河期货模拟(联通)" BrokerID="1009" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://27.115.78.35:41205" MarketData="tcp://27.115.78.35:41213" />
-		<Server Label="银河期货模拟(电信)" BrokerID="1009" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://61.129.87.75:41205" MarketData="tcp://61.129.87.75:41213" />
-		<Server Label="银河期货实盘(电信)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front1.financial-trading-platform.com:41205;tcp://yhqh-front3.financial-trading-platform.com:41205;tcp://yhqh-front5.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front1.financial-trading-platform.com:41213;tcp://yhqh-front3.financial-trading-platform.com:41213;tcp://yhqh-front5.financial-trading-platform.com:41213" />
-		<Server Label="银河期货实盘(网通)" BrokerID="4040" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://yhqh-front2.financial-trading-platform.com:41219;tcp://yhqh-front4.financial-trading-platform.com:41205;tcp://yhqh-front6.financial-trading-platform.com:41205" MarketData="tcp://yhqh-front2.financial-trading-platform.com:41207;tcp://yhqh-front4.financial-trading-platform.com:41213;tcp://yhqh-front6.financial-trading-platform.com:41213" />
-	</Broker>
-	<Broker Label="华西期货">
-		<Server Label="华西期货(模拟)" BrokerID="1001" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://180.168.102.230:26205" MarketData="tcp://180.168.102.230:26213" />
-	</Broker>
-	<Broker Label="中证期货">
-		<Server Label="中证期货(模拟)" BrokerID="1017" UserProductInfo="OpenQuant" AuthCode="" Trading="tcp://ctpmn1-front1.citicsf.com:51205;tcp://ctpmn1-front2.citicsf.com:51205" MarketData="tcp://ctpmn1-front1.citicsf.com:51213;tcp://ctpmn1-front2.citicsf.com:51213" />
-	</Broker>
-</Brokers>
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfBrokerItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BrokerItem>
+    <Label>银河期货</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
+          <string>tcp://yhqh-front1.financial-trading-platform.com:41205</string>
+          <string>tcp://yhqh-front3.financial-trading-platform.com:41205</string>
+          <string>tcp://yhqh-front5.financial-trading-platform.com:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://yhqh-front1.financial-trading-platform.com:41213</string>
+          <string>tcp://yhqh-front3.financial-trading-platform.com:41213</string>
+          <string>tcp://yhqh-front5.financial-trading-platform.com:41213</string>
+        </MarketData>
+        <Label>银河期货实盘(电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
+          <string>tcp://yhqh-front2.financial-trading-platform.com:41219</string>
+          <string>tcp://yhqh-front4.financial-trading-platform.com:41205</string>
+          <string>tcp://yhqh-front6.financial-trading-platform.com:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://yhqh-front2.financial-trading-platform.com:41207</string>
+          <string>tcp://yhqh-front4.financial-trading-platform.com:41213</string>
+          <string>tcp://yhqh-front6.financial-trading-platform.com:41213</string>
+        </MarketData>
+        <Label>银河期货实盘(联通)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
+          <string>tcp://192.168.106.51:41219</string>
+          <string>tcp://192.168.106.52:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://192.168.106.51:41207</string>
+          <string>tcp://192.168.106.52:41213</string>
+        </MarketData>
+        <Label>银河期货实盘(张江内网)</Label>
+      </ServerItem>
+      <ServerItem>
+        <BrokerID>1010</BrokerID>
+        <Trading>
+          <string>tcp://124.207.185.168:41205</string>
+          <string>tcp://124.207.185.169:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://124.207.185.168:41213</string>
+          <string>tcp://124.207.185.169:41213</string>
+        </MarketData>
+        <Label>银河期货中金仿真(电信)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>中信新际</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1013</BrokerID>
+        <Trading>
+          <string>tcp://218.1.96.8:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://218.1.96.8:41213</string>
+        </MarketData>
+        <Label>中信新际(模拟)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4000</BrokerID>
+        <Trading>
+          <string>tcp://203.110.179.220:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://203.110.179.220:41213</string>
+        </MarketData>
+        <Label>中信新际实盘(电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4000</BrokerID>
+        <Trading>
+          <string>tcp://211.144.195.157:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://211.144.195.157:41213</string>
+        </MarketData>
+        <Label>中信新际实盘(联通)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>上海中期</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1002</BrokerID>
+        <Trading>
+          <string>tcp://sim-front1.ctp.shcifco.com:31205</string>
+          <string>tcp://sim-front2.ctp.shcifco.com:31205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://sim-md1.ctp.shcifco.com:31213</string>
+          <string>tcp://sim-md2.ctp.shcifco.com:31213</string>
+        </MarketData>
+        <Label>上海中期(模拟)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>8070</BrokerID>
+        <Trading>
+          <string>tcp://zjzx-front1.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front2.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front3.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front4.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front5.ctp.shcifco.com:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://zjzx-md1.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md2.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md3.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md4.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md5.ctp.shcifco.com:41213</string>
+        </MarketData>
+        <Label>上海中期实盘(张江电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>8070</BrokerID>
+        <Trading>
+          <string>tcp://zjzx-front11.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front12.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front13.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front14.ctp.shcifco.com:41205</string>
+          <string>tcp://zjzx-front15.ctp.shcifco.com:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://zjzx-md11.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md12.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md13.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md14.ctp.shcifco.com:41213</string>
+          <string>tcp://zjzx-md15.ctp.shcifco.com:41213</string>
+        </MarketData>
+        <Label>上海中期实盘(张江联通)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>华西期货</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1001</BrokerID>
+        <Trading>
+          <string>tcp://180.168.102.230:26205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://180.168.102.230:26213</string>
+        </MarketData>
+        <Label>华西期货(模拟)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>中证期货</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1017</BrokerID>
+        <Trading>
+          <string>tcp://ctpmn1-front1.citicsf.com:51205</string>
+          <string>tcp://ctpmn1-front2.citicsf.com:51205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://ctpmn1-front1.citicsf.com:51213</string>
+          <string>tcp://ctpmn1-front2.citicsf.com:51213</string>
+        </MarketData>
+        <Label>中证期货(模拟)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+</ArrayOfBrokerItem>

@@ -7,20 +7,22 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
+using System.Windows.Forms;
+
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
 
 namespace QuantBox.OQ.CTP
-{
-    public partial class HistoryDownloader : IProvider
-    {
-        private const string CATEGORY_ACCOUNT = "Account";
-        //private const string CATEGORY_BARFACTORY = "Bar Factory";
-        //private const string CATEGORY_DEBUG = "Debug";
-        //private const string CATEGORY_EXECUTION = "Settings - Execution";
-        private const string CATEGORY_HISTORICAL = "Settings - Historical Data";
-        private const string CATEGORY_INFO = "Information";
-        //private const string CATEGORY_NETWORK = "Settings - Network";
-        private const string CATEGORY_STATUS = "Status";
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
 
+namespace QuantBox.OQ.CTPZQ
+#endif
+{
+    public partial class APIProvider : IProvider, IDisposable
+    {
         private ProviderStatus status;
         private bool isConnected;
 
@@ -30,19 +32,39 @@ namespace QuantBox.OQ.CTP
 
         private bool disposed;
 
-        private static readonly Logger hdlog = LogManager.GetLogger("H");
-
-        public HistoryDownloader()
+        private static Logger mdlog;
+        private static Logger tdlog;
+        
+        // Use C# destructor syntax for finalization code.
+        ~APIProvider()
         {
+            // Simply call Dispose(false).
+            Dispose(false);
+        }
+
+        public APIProvider()
+        {
+            mdlog = LogManager.GetLogger(Name + ".M");
+            tdlog = LogManager.GetLogger(Name + ".T");
+
             try
             {
-                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/CTP.nlog");
+                LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/QuantBox.nlog");
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                hdlog.Warn(ex.Message);
+                tdlog.Warn(ex.Message);
             }
 
+            timerConnect.Elapsed += timerConnect_Elapsed;
+            timerDisconnect.Elapsed += timerDisconnect_Elapsed;
+            timerAccount.Elapsed += timerAccount_Elapsed;
+            timerPonstion.Elapsed += timerPonstion_Elapsed;
+
+            InitCallbacks();
+            InitSettings();
+
+            BarFactory = new SmartQuant.Providers.BarFactory();
             status = ProviderStatus.Unknown;
             SmartQuant.Providers.ProviderManager.Add(this);
         }
@@ -70,30 +92,33 @@ namespace QuantBox.OQ.CTP
             //base.Dispose(disposing);
         }
 
-        // Use C# destructor syntax for finalization code.
-        ~HistoryDownloader()
-        {
-            // Simply call Dispose(false).
-            Dispose(false);
-        }
+        
 
         #region IProvider
         [Category(CATEGORY_INFO)]
-        public byte Id
+        public byte Id//不能与已经安装的插件ID重复
         {
-            get { return 57; }//不能与已经安装的插件ID重复
+#if CTP
+            get { return 55; }
+#elif CTPZQ
+            get { return 56; }
+#endif
         }
 
         [Category(CATEGORY_INFO)]
         public string Name
         {
-            get { return "QBHD"; }//不能与已经安装的插件Name重复
+#if CTP
+            get { return "CTP"; }//不能与已经安装的插件Name重复
+#elif CTPZQ
+            get { return "CTPZQ"; }//不能与已经安装的插件Name重复
+#endif
         }
 
         [Category(CATEGORY_INFO)]
         public string Title
         {
-            get { return "QuantBox HistoryDownloader"; }
+            get { return  string.Format("QuantBox {0} Provider",this.Name); }
         }
 
         [Category(CATEGORY_INFO)]
@@ -129,19 +154,24 @@ namespace QuantBox.OQ.CTP
 
         public void Connect()
         {
-            //_Connect();
-            isConnected = true;
+            _Connect();
         }
 
         public void Disconnect()
         {
-            //_Disconnect();
-            isConnected = false;
+            _Disconnect();
         }
 
         public void Shutdown()
         {
             Disconnect();
+
+            SettingsChanged();
+
+            timerConnect.Elapsed -= timerConnect_Elapsed;
+            timerDisconnect.Elapsed -= timerDisconnect_Elapsed;
+            timerAccount.Elapsed -= timerAccount_Elapsed;
+            timerPonstion.Elapsed -= timerPonstion_Elapsed;
         }
         
         public event EventHandler StatusChanged;

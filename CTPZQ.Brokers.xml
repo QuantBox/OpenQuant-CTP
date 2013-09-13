@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfBrokerItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <BrokerItem>
+    <Label>华宝证券</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>2011</BrokerID>
+        <Trading>
+          <string>tcp://116.228.234.67:41205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://116.228.234.67:41213</string>
+        </MarketData>
+        <Label>华宝证券模拟</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+</ArrayOfBrokerItem>

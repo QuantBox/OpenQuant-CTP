@@ -8,20 +8,27 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
+using QuantBox.OQ.CTP;
 
+#if CTP
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     public partial class ServersManagerForm : Form
     {
-        private CTPProvider provider;
-        public ServersManagerForm()
-        {
-            InitializeComponent();
-        }
-
-        public void Init(CTPProvider provider)
+        private APIProvider provider;
+        public void Init(APIProvider provider)     
         {
             this.provider = provider;
+
+            textBoxUrl.Text = string.Format(@"https://raw.github.com/QuantBox/OpenQuant-CTP/master/{0}.Brokers.xml", provider.Name);
+        }
+
+        public ServersManagerForm()
+        {
+            InitializeComponent();           
         }
 
         private void ServersManagerForm_Load(object sender, EventArgs e)
@@ -58,15 +65,19 @@ namespace QuantBox.OQ.CTP
         
         private void buttonUpdate_Click(object sender, EventArgs e)
         {
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
+
             WebClient wc = new WebClient();
             try
             {
                 buttonUpdate.Enabled = false;
 
-                string fileName = string.Format(@"{0}\CTP.Brokers.xml", Framework.Installation.IniDir);
-                wc.DownloadFile(textBoxUrl.Text, fileName);
+                wc.DownloadFile(textBoxUrl.Text, provider.brokersFile);
 
                 provider.LoadBrokers();
+                brokerItemBindingSource.DataSource = provider.Brokers;
+
+                MessageBox.Show("远程配置下载成功！");
             }
             catch (Exception ex)
             {

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<nlog xmlns="http://www.nlog-project.org/schemas/NLog.xsd"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      autoReload="true">
+    <targets async="true">
+        <target name="c" xsi:type="Console" layout="${longdate} ${level} ${logger} ${message}"/>
+		<target name="f1" xsi:type="File" fileName="${basedir}/Logs/CTP/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
+		<target name="f2" xsi:type="File" fileName="${basedir}/Logs/CTPZQ/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
+		<target name="f3" xsi:type="File" fileName="${basedir}/Logs/Esunny/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
+		<target name="f4" xsi:type="File" fileName="${basedir}/Logs/XSpeed/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
+		<target name="f5" xsi:type="File" fileName="${basedir}/Logs/KSFT/${date:format=yyyyMMdd}.log" layout="${longdate} ${level} ${logger} ${message}"/>
+    </targets>
+    <rules>
+        <logger name="*" minlevel="Trace" writeTo="c" />
+		<logger name="CTP.*" minlevel="Trace" writeTo="f1" />
+		<logger name="CTPZQ.*" minlevel="Trace" writeTo="f2" />
+		<logger name="Esunny.*" minlevel="Trace" writeTo="f3" />
+		<logger name="XSpeed.*" minlevel="Trace" writeTo="f4" />
+		<logger name="KSFT.*" minlevel="Trace" writeTo="f5" />
+    </rules>
+</nlog>

@@ -1,9 +1,18 @@
 ﻿using System.Collections.Generic;
-using QuantBox.CSharp2CTP;
 using SmartQuant.Execution;
 using SmartQuant.FIX;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+using QuantBox.Helper.CTP;
+
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+using QuantBox.Helper.CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     class DbInMemTrade
     {
@@ -69,6 +78,7 @@ namespace QuantBox.OQ.CTP
 
         public bool OnTrade(ref SingleOrder order, ref CThostFtdcTradeField pTrade, ref double Price, ref int Volume)
         {
+#if CTP
             //先保存到两个队例，排序是为了配对
             if (TThostFtdcDirectionType.Buy == pTrade.Direction)
             {
@@ -84,6 +94,8 @@ namespace QuantBox.OQ.CTP
             //取已经配对好的
             if (qBuy.Count > 0 && qSell.Count > 0)
             {
+                // 有网友说可能成交时不成对，这地方是否改动一下
+
                 if (qBuy[0].Volume == qSell[0].Volume)//如果不等就有问题了
                 {
                     Volume = qBuy[0].Volume;
@@ -101,6 +113,7 @@ namespace QuantBox.OQ.CTP
                     return true;
                 }
             }
+#endif
             return false;
         }
 
