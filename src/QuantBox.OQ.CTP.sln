@@ -11,9 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTP.QD", "Quant
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTPZQ.QD", "QuantBox.OQ.CTP\QuantBox.OQ.CTPZQ.QD.csproj", "{38331CDE-8393-490E-B56B-CA5A2E6DE01B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTPZQ", "QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.csproj", "{5CAEB588-BA0F-4313-8B78-5101E97D695A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTPZQ.Net35", "QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.Net35.csproj", "{5CAEB588-BA0F-4313-8B78-5101E97D695A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.OQ.CTPZQ.OQ3", "QuantBox.OQ.CTP\QuantBox.OQ.CTPZQ.OQ3.csproj", "{49F99E4A-F8D0-4CB8-84B2-39B4F6AC3576}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuantBox.Helper.CTPZQ.Net40", "QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.Net40.csproj", "{C177A75F-86E1-44EE-8B9E-C2425AD04437}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +51,10 @@ Global
 		{49F99E4A-F8D0-4CB8-84B2-39B4F6AC3576}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49F99E4A-F8D0-4CB8-84B2-39B4F6AC3576}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49F99E4A-F8D0-4CB8-84B2-39B4F6AC3576}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C177A75F-86E1-44EE-8B9E-C2425AD04437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C177A75F-86E1-44EE-8B9E-C2425AD04437}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C177A75F-86E1-44EE-8B9E-C2425AD04437}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C177A75F-86E1-44EE-8B9E-C2425AD04437}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
