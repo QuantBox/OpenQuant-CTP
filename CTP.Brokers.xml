@@ -188,4 +188,99 @@
       </ServerItem>
     </Server>
   </BrokerItem>
+  <BrokerItem>
+    <Label>广发期货</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>1004</BrokerID>
+        <Trading>
+          <string>tcp://ctpsim-front01.gfqh.cn:43205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://ctpsim-front01.gfqh.cn:43213</string>
+        </MarketData>
+        <Label>广发期货(模拟)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
+  <BrokerItem>
+    <Label>兴证期货</Label>
+    <Server>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://180.166.11.33:41205</string>
+	  <string>tcp://180.168.173.2:41205</string>
+	  <string>tcp://180.169.40.98:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://180.166.11.33:41213</string>
+	  <string>tcp://180.168.173.2:41213</string>
+	  <string>tcp://180.169.40.98:41213</string>
+        </MarketData>
+        <Label>兴证期货(上海电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://27.115.78.102:41205</string>
+	  <string>tcp://27.115.78.100:41205</string>
+	  <string>tcp://58.247.2.83:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://27.115.78.102:41213</string>
+	  <string>tcp://27.115.78.100:41213</string>
+	  <string>tcp://58.247.2.83:41213</string>
+        </MarketData>
+        <Label>兴证期货(上海联通)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://120.35.26.181:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://120.35.26.181:41213</string>
+        </MarketData>
+        <Label>兴证期货(福州电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://218.106.151.22:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://218.106.151.22:41213</string>
+        </MarketData>
+        <Label>兴证期货(福州联通)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://59.46.178.26:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://59.46.178.26:41213</string>
+        </MarketData>
+        <Label>兴证期货(大连电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4200</BrokerID>
+        <Trading>
+          <string>tcp://124.93.224.26:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://124.93.224.26:41213</string>
+        </MarketData>
+        <Label>兴证期货(大连联通)</Label>
+      </ServerItem>
+    </Server>
+  </BrokerItem>
 </ArrayOfBrokerItem>

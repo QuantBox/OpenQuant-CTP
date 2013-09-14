@@ -64,6 +64,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish
+bin
 
 # Others
 [Oo]bj

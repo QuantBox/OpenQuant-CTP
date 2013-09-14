@@ -1,14 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
-using QuantBox.CSharp2CTP;
 using SmartQuant.Data;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
 
+#if CTP
+using QuantBox.CSharp2CTP;
+
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
-    public partial class CTPProvider:IMarketDataProvider
+    public partial class APIProvider:IMarketDataProvider
     {
         #region QD的Bar事件
         private void OnNewBar(object sender, BarEventArgs args)

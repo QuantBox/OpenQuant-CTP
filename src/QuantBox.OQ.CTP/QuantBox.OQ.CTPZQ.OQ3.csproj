@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{38331CDE-8393-490E-B56B-CA5A2E6DE01B}</ProjectGuid>
+    <ProjectGuid>{49F99E4A-F8D0-4CB8-84B2-39B4F6AC3576}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>QuantBox.OQ.CTPZQ</RootNamespace>
@@ -106,9 +106,9 @@
     <None Include="Properties\DataSources\ServerItem.datasource" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.csproj">
+    <ProjectReference Include="..\QuantBox.Helper.CTP\QuantBox.Helper.CTPZQ.Net35.csproj">
       <Project>{5caeb588-ba0f-4313-8b78-5101e97d695a}</Project>
-      <Name>QuantBox.Helper.CTPZQ</Name>
+      <Name>QuantBox.Helper.CTPZQ.Net35</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
