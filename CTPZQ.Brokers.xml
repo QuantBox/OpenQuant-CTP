@@ -14,6 +14,32 @@
         </MarketData>
         <Label>华宝证券模拟</Label>
       </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>2011</BrokerID>
+        <Trading>
+          <string>tcp://222.66.55.163:41205</string>
+          <string>tcp://222.66.55.164:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://222.66.55.163:41213</string>
+          <string>tcp://222.66.55.164:41213</string>
+        </MarketData>
+        <Label>华宝证券(实盘)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>2011</BrokerID>
+        <Trading>
+          <string>tcp://222.66.55.163:41205</string>
+          <string>tcp://222.66.55.164:41205</string>
+	</Trading>
+        <MarketData>
+          <string>tcp://222.66.55.163:8205</string>
+          <string>tcp://222.66.55.164:8205</string>
+        </MarketData>
+        <Label>华宝证券(实盘Level2)</Label>
+      </ServerItem>
     </Server>
   </BrokerItem>
 </ArrayOfBrokerItem>
