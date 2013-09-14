@@ -38,7 +38,7 @@
     </Reference>
     <Reference Include="SmartQuant.Data, Version=1.0.0.0, Culture=neutral, PublicKeyToken=844f265c18b031f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Program Files (x86)\SmartQuant Ltd\QuantDeveloper .NET\bin\SmartQuant.Data.dll</HintPath>
+      <HintPath>..\..\bin\SmartQuant.Data.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CTPAPI.cs" />
+    <Compile Include="CTPQuote.cs" />
     <Compile Include="CTPTrade.cs" />
     <Compile Include="ParseErrorType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
