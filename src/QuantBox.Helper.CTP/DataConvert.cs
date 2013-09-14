@@ -15,11 +15,11 @@ namespace QuantBox.Helper.CTPZQ
         static FieldInfo tradeField;
         static FieldInfo quoteField;
 
-        public static bool TryConvert(OpenQuant.API.Trade trade, ref CThostFtdcDepthMarketDataField DepthMarketData)
+        public static bool TryConvert(SmartQuant.Data.Trade trade, ref CThostFtdcDepthMarketDataField DepthMarketData)
         {
             if (tradeField == null)
             {
-                tradeField = typeof(OpenQuant.API.Trade).GetField("trade", BindingFlags.NonPublic | BindingFlags.Instance);
+                tradeField = typeof(SmartQuant.Data.Trade).GetField("trade", BindingFlags.NonPublic | BindingFlags.Instance);
             }
 
             CTPTrade t = tradeField.GetValue(trade) as CTPTrade;
@@ -31,11 +31,11 @@ namespace QuantBox.Helper.CTPZQ
             return false;
         }
 
-        public static bool TryConvert(OpenQuant.API.Quote quote, ref CThostFtdcDepthMarketDataField DepthMarketData)
+        public static bool TryConvert(SmartQuant.Data.Quote quote, ref CThostFtdcDepthMarketDataField DepthMarketData)
         {
             if (quoteField == null)
             {
-                quoteField = typeof(OpenQuant.API.Quote).GetField("quote", BindingFlags.NonPublic | BindingFlags.Instance);
+                quoteField = typeof(SmartQuant.Data.Quote).GetField("quote", BindingFlags.NonPublic | BindingFlags.Instance);
             }
 
             CTPQuote q = quoteField.GetValue(quote) as CTPQuote;
