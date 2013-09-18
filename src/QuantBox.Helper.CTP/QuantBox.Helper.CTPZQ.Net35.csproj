@@ -5,20 +5,21 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{97AE93EC-5897-43C8-8D84-D92B73FE1434}</ProjectGuid>
+    <ProjectGuid>{4A6B6C0F-D169-4358-B42F-FAE8743DE897}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QuantBox.Helper.CTP</RootNamespace>
-    <AssemblyName>QuantBox.Helper.CTP</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <RootNamespace>QuantBox.Helper.CTPZQ</RootNamespace>
+    <AssemblyName>QuantBox.Helper.CTPZQ</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\..\..\Program Files %28x86%29\SmartQuant Ltd\OpenQuant\Bin\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CTP,OQ</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CTPZQ,QD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -26,18 +27,13 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>..\..\bin\</OutputPath>
-    <DefineConstants>TRACE;CTP,OQ</DefineConstants>
+    <DefineConstants>TRACE;CTPZQ,QD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="OpenQuant.API, Version=1.0.4912.29729, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\OpenQuant.API.dll</HintPath>
-    </Reference>
-    <Reference Include="QuantBox.CSharp2CTP, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
+    <Reference Include="QuantBox.CSharp2CTPZQ">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTPZQ.dll</HintPath>
     </Reference>
     <Reference Include="SmartQuant.Data, Version=1.0.0.0, Culture=neutral, PublicKeyToken=844f265c18b031f9, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -54,7 +50,6 @@
     <Compile Include="CTPAPI.cs" />
     <Compile Include="CTPTrade.cs" />
     <Compile Include="DataConvert.cs" />
-    <Compile Include="ParseErrorType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
