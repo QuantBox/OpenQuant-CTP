@@ -32,14 +32,7 @@ namespace QuantBox.Helper.CTPZQ
             CTPTrade t = tradeField.GetValue(trade) as CTPTrade;
 #elif QD
             CTPTrade t = trade as CTPTrade;
-#endif
-            if (null != t)
-            {
-                DepthMarketData = t.DepthMarketData;
-                return true;
-            }
-
-            
+#endif           
             if (null != t)
             {
                 DepthMarketData = t.DepthMarketData;
