@@ -10,6 +10,7 @@ namespace QuantBox.OQ.CTP
 #elif CTPZQ
 using QuantBox.CSharp2CTPZQ;
 using QuantBox.Helper.CTPZQ;
+using System.Reflection;
 
 namespace QuantBox.OQ.CTPZQ
 #endif
@@ -44,6 +45,13 @@ namespace QuantBox.OQ.CTPZQ
         }
         public DbInMemInvestorPosition()
         {
+            //Type t = typeof(CThostFtdcInvestorPositionField);
+            //FieldInfo[] fields = t.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            //foreach (FieldInfo field in fields)
+            //{
+            //    dtInvestorPosition.Columns.Add(field.Name, field.GetType());
+            //}
+
             dtInvestorPosition.Columns.Add(InstrumentID, Type.GetType("System.String"));
             dtInvestorPosition.Columns.Add(PosiDirection, typeof(TThostFtdcPosiDirectionType));
             dtInvestorPosition.Columns.Add(HedgeFlag, typeof(TThostFtdcHedgeFlagType));

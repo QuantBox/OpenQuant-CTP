@@ -307,5 +307,22 @@ namespace QuantBox.OQ.CTPZQ
             tdlog.Info("RegisterOrder");
         }
         #endregion
+
+#if OQ
+        public void SendOrderCancelReplaceRequest(OrderCancelReplaceRequest request)
+        {
+            SendOrderCancelReplaceRequest(request as FIXOrderCancelReplaceRequest);
+        }
+
+        public void SendOrderCancelRequest(OrderCancelRequest request)
+        {
+            SendOrderCancelRequest(request as FIXOrderCancelRequest);
+        }
+
+        public void SendOrderStatusRequest(OrderStatusRequest request)
+        {
+            SendOrderStatusRequest(request as FIXOrderStatusRequest);
+        }
+#endif
     }
 }

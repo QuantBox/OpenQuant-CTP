@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\..\..\..\..\..\Program Files %28x86%29\SmartQuant Ltd\QuantDeveloper .NET\bin\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;CTP</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CTP,QD</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -77,7 +77,6 @@
     <Compile Include="APIProvider.ExecutionProvider.cs" />
     <Compile Include="APIProvider.InstrumentProvider.cs" />
     <Compile Include="APIProvider.MarketDataProvider.cs" />
-    <Compile Include="APIProvider.MarketDataProvider.QD.cs" />
     <Compile Include="APIProvider.Provider.cs" />
     <Compile Include="APIProvider.Settings.cs" />
     <Compile Include="BrokerItem.cs" />
