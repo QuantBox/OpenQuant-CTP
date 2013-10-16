@@ -225,9 +225,14 @@ namespace QuantBox.OQ.CTPZQ
             if (0 == pRspInfo.ErrorID)
             {
                 m_TradingAccount = pTradingAccount;
+
                 //有资金信息过来了，重新计时
                 timerAccount.Enabled = false;
                 timerAccount.Enabled = true;
+
+                //通知单例,还是使用GetBrokerInfo来取呢？
+                CTPAPI.GetInstance().__RegTradingAccount(m_TradingAccount);
+                CTPAPI.GetInstance().FireOnRspQryTradingAccount(pTradingAccount);
             }
             else
             {

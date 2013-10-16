@@ -367,7 +367,7 @@ namespace QuantBox.OQ.CTPZQ
                     MdApi.MD_ReleaseMdApi(m_pMdApi);
                     m_pMdApi = IntPtr.Zero;
 
-                    CTPAPI.GetInstance().__RegTdApi(m_pMdApi);
+                    CTPAPI.GetInstance().__RegMdApi(m_pMdApi);
                 }
                 _bMdConnected = false;
             }

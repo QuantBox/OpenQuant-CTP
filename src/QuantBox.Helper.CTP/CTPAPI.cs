@@ -37,10 +37,10 @@ namespace QuantBox.Helper.CTPZQ
         }
 
         #region 合列列表
-        private Dictionary<string, CThostFtdcInstrumentField> _dictInstruments = null;
+        public Dictionary<string, CThostFtdcInstrumentField> Instruments { get; private set; }
         public void __RegInstrumentDictionary(Dictionary<string, CThostFtdcInstrumentField> dict)
         {
-            _dictInstruments = dict;
+            Instruments = dict;
         }
 
         public delegate void RspQryInstrument(CThostFtdcInstrumentField pInstrument);
@@ -55,10 +55,10 @@ namespace QuantBox.Helper.CTPZQ
 
         public void ReqQryInstrument(string instrument)
         {
-            if (null != _dictInstruments)
+            if (null != Instruments)
             {
                 CThostFtdcInstrumentField value;
-                if (_dictInstruments.TryGetValue(instrument, out value))
+                if (Instruments.TryGetValue(instrument, out value))
                 {
                     FireOnRspQryInstrument(value);
                     return;
@@ -76,17 +76,17 @@ namespace QuantBox.Helper.CTPZQ
 
         #region 保证金率
 #if CTP
-        private Dictionary<string, CThostFtdcInstrumentMarginRateField> _dictMarginRate = null;
+        public Dictionary<string, CThostFtdcInstrumentMarginRateField> MarginRates { get; private set; }
         public void __RegInstrumentMarginRateDictionary(Dictionary<string, CThostFtdcInstrumentMarginRateField> dict)
         {
-            _dictMarginRate = dict;
+            MarginRates = dict;
         }
         public void ReqQryInstrumentMarginRate(string instrument, TThostFtdcHedgeFlagType HedgeFlag)
         {
-            if (null != _dictMarginRate)
+            if (null != MarginRates)
             {
                 CThostFtdcInstrumentMarginRateField value;
-                if (_dictMarginRate.TryGetValue(instrument, out value))
+                if (MarginRates.TryGetValue(instrument, out value))
                 {
                     FireOnRspQryInstrumentMarginRate(value);
                     return;
@@ -114,18 +114,18 @@ namespace QuantBox.Helper.CTPZQ
         #endregion
 
         #region 手续费率
-        private Dictionary<string, CThostFtdcInstrumentCommissionRateField> _dictCommissionRate = null;
+        public Dictionary<string, CThostFtdcInstrumentCommissionRateField> CommissionRates { get; private set; }
         public void __RegInstrumentCommissionRateDictionary(Dictionary<string, CThostFtdcInstrumentCommissionRateField> dict)
         {
-            _dictCommissionRate = dict;
+            CommissionRates = dict;
         }
 
         public void ReqQryInstrumentCommissionRate(string instrument)
         {
-            if (null != _dictCommissionRate)
+            if (null != CommissionRates)
             {
                 CThostFtdcInstrumentCommissionRateField value;
-                if (_dictCommissionRate.TryGetValue(instrument, out value))
+                if (CommissionRates.TryGetValue(instrument, out value))
                 {
                     FireOnRspQryInstrumentCommissionRate(value);
                     return;
@@ -152,18 +152,18 @@ namespace QuantBox.Helper.CTPZQ
         #endregion
 
         #region 深度行情1
-        private Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = null;
+        public Dictionary<string, CThostFtdcDepthMarketDataField> DepthMarketDatas { get; private set; }
         public void __RegDepthMarketDataDictionary(Dictionary<string, CThostFtdcDepthMarketDataField> dict)
         {
-            _dictDepthMarketData = dict;
+            DepthMarketDatas = dict;
         }
 
         public void ReqQryDepthMarketData(string instrument)
         {
-            if (null != _dictDepthMarketData)
+            if (null != DepthMarketDatas)
             {
                 CThostFtdcDepthMarketDataField value;
-                if (_dictDepthMarketData.TryGetValue(instrument, out value))
+                if (DepthMarketDatas.TryGetValue(instrument, out value))
                 {
                     FireOnRspQryDepthMarketData(value);
                     return;
@@ -189,18 +189,6 @@ namespace QuantBox.Helper.CTPZQ
         }
         #endregion
 
-        //#region 深度行情2
-        //public delegate void RtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData);
-        //public event RtnDepthMarketData OnRtnDepthMarketData;
-        //public void FireOnRtnDepthMarketData(CThostFtdcDepthMarketDataField pDepthMarketData)
-        //{
-        //    if (null != OnRtnDepthMarketData)
-        //    {
-        //        OnRtnDepthMarketData(pDepthMarketData);
-        //    }
-        //}
-        //#endregion
-
         #region 交易所状态
         public delegate void RtnInstrumentStatus(CThostFtdcInstrumentStatusField pInstrumentStatus);
         public event RtnInstrumentStatus OnRtnInstrumentStatus;
@@ -209,6 +197,32 @@ namespace QuantBox.Helper.CTPZQ
             if (null != OnRtnInstrumentStatus)
             {
                 OnRtnInstrumentStatus(pInstrumentStatus);
+            }
+        }
+        #endregion
+
+        #region 主动请求资金
+        public CThostFtdcTradingAccountField TradingAccount { get; private set; }
+        public void __RegTradingAccount(CThostFtdcTradingAccountField pTradingAccount)
+        {
+            TradingAccount = pTradingAccount;
+        }
+
+        public void ReqQryTradingAccount()
+        {
+            if (m_pTdApi == null || m_pTdApi == IntPtr.Zero)
+                return;
+
+            TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
+        }
+
+        public delegate void RspQryTradingAccount(CThostFtdcTradingAccountField pTradingAccount);
+        public event RspQryTradingAccount OnRspQryTradingAccount;
+        public void FireOnRspQryTradingAccount(CThostFtdcTradingAccountField pTradingAccount)
+        {
+            if (null != OnRspQryTradingAccount)
+            {
+                OnRspQryTradingAccount(pTradingAccount);
             }
         }
         #endregion
