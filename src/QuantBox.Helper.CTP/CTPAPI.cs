@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using QuantBox.OQ.Extensions;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -236,6 +237,56 @@ namespace QuantBox.Helper.CTPZQ
         }
         #endregion
 
+        #region 错误类型转换
+        public static EnumError ToQBError(int ErrorID)
+        {
+            ErrorType e = (ErrorType)ErrorID;
 
+            switch (e)
+            {
+                case ErrorType.NONE:
+                    return EnumError.SUCCESS;
+                case ErrorType.INSUFFICIENT_MONEY:
+                    return EnumError.INSUFFICIENT_MONEY;
+                case ErrorType.OVER_CLOSE_POSITION:
+                    return EnumError.OVER_CLOSE_POSITION;
+                case ErrorType.OVER_CLOSETODAY_POSITION:
+                    return EnumError.OVER_CLOSETODAY_POSITION;
+                case ErrorType.OVER_CLOSEYESTERDAY_POSITION:
+                    return EnumError.OVER_CLOSEYESTERDAY_POSITION;
+                default:
+                    return EnumError.OTHER;
+            }
+        }
+        #endregion
+
+        #region 开平转换
+        //public static OpenClose ToOpenClose(TThostFtdcOffsetFlagType offset)
+        //{
+        //    switch (offset)
+        //    {
+        //        case TThostFtdcOffsetFlagType.Open:
+        //            return OpenClose.OPEN;
+        //        case TThostFtdcOffsetFlagType.Close:
+        //            return OpenClose.CLOSE;
+        //        case TThostFtdcOffsetFlagType.CloseToday:
+        //            return OpenClose.CLOSE_TODAY;
+        //        case TThostFtdcOffsetFlagType.CloseYesterday:
+        //            return OpenClose.CLOSE_YESTERDAY;
+        //        default:
+        //            return OpenClose.NONE;
+        //    }
+        //}
+
+        //public static OpenClose ToOpenClose(byte b)
+        //{
+        //    return ToOpenClose((TThostFtdcOffsetFlagType)b);
+        //}
+
+        //public static OpenClose ToOpenClose(int)
+        //{
+        //    return ToOpenClose((TThostFtdcOffsetFlagType)c);
+        //}
+        #endregion
     }
 }

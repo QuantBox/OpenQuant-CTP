@@ -98,7 +98,7 @@ namespace QuantBox.OQ.CTPZQ
         //记录界面生成的报单，用于定位收到回报消息时所确定的报单,可以多个Ref对应一个Order
         private readonly Dictionary<string, SingleOrder> _OrderRef2Order = new Dictionary<string, SingleOrder>();
         //一个Order可能分拆成多个报单，如可能由平今与平昨，或开新单组合而成
-        private readonly Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>> _Orders4Cancel = new Dictionary<SingleOrder, Dictionary<string, CThostFtdcOrderField>>();
+        private readonly Dictionary<SingleOrder, CThostFtdcOrderField> _Orders4Cancel = new Dictionary<SingleOrder, CThostFtdcOrderField>();
         //交易所信息映射到本地信息
         private readonly Dictionary<string, string> _OrderSysID2OrderRef = new Dictionary<string, string>();
 

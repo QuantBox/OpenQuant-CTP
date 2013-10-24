@@ -11,7 +11,8 @@ using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
 using SmartQuant.Providers;
-
+using Newtonsoft.Json;
+using QuantBox.OQ.Extensions;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -41,33 +42,19 @@ namespace QuantBox.OQ.CTPZQ
                 return;
             }
 
-            Dictionary<string, CThostFtdcOrderField> _Ref2Action;
-            if (_Orders4Cancel.TryGetValue(order, out _Ref2Action))
+            CThostFtdcOrderField _Order;
+            if (_Orders4Cancel.TryGetValue(order, out _Order))
             {
                 // 标记下正在撤单
                 _PendingCancelFlags[order] = order.OrdStatus;
 
-                lock (_Ref2Action)
-                {
-                    CThostFtdcOrderField __Order;
-                    foreach (CThostFtdcOrderField _Order in _Ref2Action.Values)
-                    {
-                        __Order = _Order;
-                        //这地方要是过滤下就好了
-                        TraderApi.TD_CancelOrder(m_pTdApi, ref __Order);
-                    }
-                }
+                //这地方要是过滤下就好了
+                TraderApi.TD_CancelOrder(m_pTdApi, ref _Order);
             }
         }
         #endregion
 
-        #region 下单与订单分割
-        private struct SOrderSplitItem
-        {
-            public int qty;
-            public string szCombOffsetFlag;
-        };
-
+        #region 下单
         private void Send(NewOrderSingle order)
         {
             if (!_bTdConnected)
@@ -81,7 +68,7 @@ namespace QuantBox.OQ.CTPZQ
             string altSymbol = inst.GetSymbol(Name);
             string altExchange = inst.GetSecurityExchange(Name);
             double tickSize = inst.TickSize;
-            
+
             string apiSymbol = GetApiSymbol(altSymbol);
 
             CThostFtdcInstrumentField _Instrument;
@@ -167,31 +154,59 @@ namespace QuantBox.OQ.CTPZQ
                     TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
             }
 
-            List<SOrderSplitItem> OrderSplitList = new List<SOrderSplitItem>();
-            SOrderSplitItem orderSplitItem;
-
-            //根据 梦翔 与 马不停蹄 的提示，新加在Text域中指定开平标志的功能
             int nOpenCloseFlag = 0;
-            if (order.Text.StartsWith(OpenPrefix))
+            //根据 梦翔 与 马不停蹄 的提示，新加在Text域中指定开平标志的功能
+            // 表示特殊的Json格式
+            if (order.Text.StartsWith("{") && order.Text.EndsWith("}"))
             {
-                nOpenCloseFlag = 1;
+                //OrderTextRequest request = JsonConvert.DeserializeObject<OrderTextRequest>(order.Text);
+                //switch (request.OpenClose)
+                //{
+                //    case EnumOpenClose.NONE:
+                //        break;
+                //    case EnumOpenClose.OPEN:
+                //        nOpenCloseFlag = 1;
+                //        break;
+                //    case EnumOpenClose.CLOSE:
+                //        nOpenCloseFlag = -1;
+                //        break;
+                //    case EnumOpenClose.CLOSE_TODAY:
+                //        nOpenCloseFlag = -2;
+                //        break;
+                //    case EnumOpenClose.CLOSE_YESTERDAY:
+                //        nOpenCloseFlag = -3;
+                //        break;
+                //}
             }
-            else if (order.Text.StartsWith(ClosePrefix))
+            else
             {
-                nOpenCloseFlag = -1;
+                if (order.Text.StartsWith(OpenPrefix))
+                {
+                    nOpenCloseFlag = 1;
+                }
+                else if (order.Text.StartsWith(ClosePrefix))
+                {
+                    nOpenCloseFlag = -1;
+                }
+                else if (order.Text.StartsWith(CloseTodayPrefix))
+                {
+                    nOpenCloseFlag = -2;
+                }
+                else if (order.Text.StartsWith(CloseYesterdayPrefix))
+                {
+                    nOpenCloseFlag = -3;
+                }
             }
-            else if (order.Text.StartsWith(CloseTodayPrefix))
-            {
-                nOpenCloseFlag = -2;
-            }
-            else if (order.Text.StartsWith(CloseYesterdayPrefix))
-            {
-                nOpenCloseFlag = -3;
-            }
+
 
             int leave = (int)order.OrderQty;
 
 #if CTP
+            {
+                byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
+                szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
+            }
+
             //是否上海？上海先平今，然后平昨，最后开仓
             //使用do主要是想利用break功能
             //平仓部分
@@ -216,99 +231,41 @@ namespace QuantBox.OQ.CTPZQ
                         szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
                     }
 
-                    orderSplitItem.qty = leave;
-                    orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                    OrderSplitList.Add(orderSplitItem);
-
-                    leave = 0;
-
                     break;
                 }
 
                 if (SupportCloseToday.Contains(altExchange))
                 {
                     //先看平今
-                    if (leave > 0 && TodayPosition > 0)
+                    if (TodayPosition > 0)
                     {
-                        int min = Math.Min(TodayPosition, leave);
-                        leave -= min;
-
                         byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseToday, (byte)TThostFtdcOffsetFlagType.CloseToday };
                         szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-
-                        orderSplitItem.qty = min;
-                        orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                        OrderSplitList.Add(orderSplitItem);
                     }
-                    if (leave > 0 && YdPosition > 0)
+                    else if (YdPosition > 0)
                     {
-                        int min = Math.Min(YdPosition, leave);
-                        leave -= min;
-
                         byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseYesterday, (byte)TThostFtdcOffsetFlagType.CloseYesterday };
                         szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-
-                        orderSplitItem.qty = min;
-                        orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                        OrderSplitList.Add(orderSplitItem);
                     }
                 }
                 else
                 {
                     //平仓
                     int position = TodayPosition + YdPosition;
-                    if (leave > 0 && position > 0)
+                    if (position > 0)
                     {
-                        int min = Math.Min(position, leave);
-                        leave -= min;
-
                         byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Close, (byte)TThostFtdcOffsetFlagType.Close };
                         szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-
-                        orderSplitItem.qty = min;
-                        orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                        OrderSplitList.Add(orderSplitItem);
                     }
                 }
             } while (false);
 
-            do
-            {
-                //指定平仓，直接跳过
-                if (nOpenCloseFlag < 0)
-                    break;
-
-                if (leave > 0)
-                {
-                    byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
-                    szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-
-                    orderSplitItem.qty = leave;
-                    orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                    OrderSplitList.Add(orderSplitItem);
-
-                    leave = 0;
-                }
-            } while (false);
-
-            if (leave > 0)
-            {
-                tdlog.Info("CTP:还剩余{0}手,你应当是强制指定平仓了，但持仓数小于要平手数", leave);
-            }
-
             bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
 #elif CTPZQ
-            if (leave > 0)
             {
                 //开平已经没有意义了
                 byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
                 szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-
-                orderSplitItem.qty = leave;
-                orderSplitItem.szCombOffsetFlag = szCombOffsetFlag;
-                OrderSplitList.Add(orderSplitItem);
-
-                leave = 0;
             }
 
             bool bSupportMarketOrder = true;
@@ -326,8 +283,8 @@ namespace QuantBox.OQ.CTPZQ
             TThostFtdcTimeConditionType TimeCondition = TThostFtdcTimeConditionType.GFD;
             TThostFtdcContingentConditionType ContingentCondition = TThostFtdcContingentConditionType.Immediately;
             TThostFtdcVolumeConditionType VolumeCondition = TThostFtdcVolumeConditionType.AV;
-            
-            switch(order.TimeInForce)
+
+            switch (order.TimeInForce)
             {
                 case TimeInForce.IOC:
                     TimeCondition = TThostFtdcTimeConditionType.IOC;
@@ -341,62 +298,58 @@ namespace QuantBox.OQ.CTPZQ
                     break;
             }
 
-            foreach (SOrderSplitItem it in OrderSplitList)
-            {
-                int nRet = 0;
+            int nRet = 0;
 
-                switch (order.OrdType)
-                {
-                    case OrdType.Limit:
-                        break;
-                    case OrdType.Market:
-                        if (SwitchMakertOrderToLimitOrder || !bSupportMarketOrder)
-                        {
-                        }
-                        else
-                        {
-                            price = 0;
-                            OrderPriceType = TThostFtdcOrderPriceTypeType.AnyPrice;
-                            TimeCondition = TThostFtdcTimeConditionType.IOC;
-                        }
-                        break;
-                    default:
-                        tdlog.Warn("没有实现{0}", order.OrdType);
-                        return;
-                }
+            switch (order.OrdType)
+            {
+                case OrdType.Limit:
+                    break;
+                case OrdType.Market:
+                    if (SwitchMakertOrderToLimitOrder || !bSupportMarketOrder)
+                    {
+                    }
+                    else
+                    {
+                        price = 0;
+                        OrderPriceType = TThostFtdcOrderPriceTypeType.AnyPrice;
+                        TimeCondition = TThostFtdcTimeConditionType.IOC;
+                    }
+                    break;
+                default:
+                    tdlog.Warn("没有实现{0}", order.OrdType);
+                    return;
+            }
 
 #if CTP
-                nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                            altSymbol,
-                            Direction,
-                            it.szCombOffsetFlag,
-                            szCombHedgeFlag,
-                            it.qty,
-                            price,
-                            OrderPriceType,
-                            TimeCondition,
-                            ContingentCondition,
-                            order.StopPx,
-                            VolumeCondition);
+            nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                        altSymbol,
+                        Direction,
+                        szCombOffsetFlag,
+                        szCombHedgeFlag,
+                        leave,
+                        price,
+                        OrderPriceType,
+                        TimeCondition,
+                        ContingentCondition,
+                        order.StopPx,
+                        VolumeCondition);
 #elif CTPZQ
                 nRet = TraderApi.TD_SendOrder(m_pTdApi,
                             apiSymbol,
                             altExchange,
                             Direction,
-                            it.szCombOffsetFlag,
+                            szCombOffsetFlag,
                             szCombHedgeFlag,
-                            it.qty,
+                            leave,
                             string.Format("{0}", price),
                             OrderPriceType,
                             TimeCondition,
                             ContingentCondition,
                             order.StopPx);
 #endif
-
-                if (nRet > 0)
-                {
-                    _OrderRef2Order.Add(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), order as SingleOrder);
-                }
+            if (nRet > 0)
+            {
+                _OrderRef2Order.Add(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), order as SingleOrder);
             }
         }
         #endregion
@@ -419,17 +372,13 @@ namespace QuantBox.OQ.CTPZQ
             string strKey = string.Format("{0}:{1}:{2}", pOrder.FrontID, pOrder.SessionID, pOrder.OrderRef);
             if (_OrderRef2Order.TryGetValue(strKey, out order))
             {
-                order.Text = string.Format("{0}|{1}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pOrder.StatusMsg);
+                order.Text = string.Format("{0}|{1}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pOrder.StatusMsg);                
+                //order.Text = new OrderTextResponse()
+                //{
+                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
+                //    StatusMsg = pOrder.StatusMsg,
+                //}.ToString();
                 order.OrderID = pOrder.OrderSysID;
-
-                //找到对应的报单回应
-                Dictionary<string, CThostFtdcOrderField> _Ref2Action;
-                if (!_Orders4Cancel.TryGetValue(order, out _Ref2Action))
-                {
-                    //没找到，自己填一个
-                    _Ref2Action = new Dictionary<string, CThostFtdcOrderField>();
-                    _Orders4Cancel[order] = _Ref2Action;
-                }
 
                 // 有对它进行过撤单操作，这地方是为了加正在撤单状态
                 OrdStatus status;
@@ -440,7 +389,7 @@ namespace QuantBox.OQ.CTPZQ
                     EmitPendingCancel(order);
                 }
 
-                lock (_Ref2Action)
+                lock (_Orders4Cancel)
                 {
                     string strSysID = string.Format("{0}:{1}", pOrder.ExchangeID, pOrder.OrderSysID);
 
@@ -449,60 +398,45 @@ namespace QuantBox.OQ.CTPZQ
                         case TThostFtdcOrderStatusType.AllTraded:
                             //已经是最后状态，不能用于撤单了
                             _PendingCancelFlags.Remove(order);
-                            _Ref2Action.Remove(strKey);
+                            _Orders4Cancel.Remove(order);
                             break;
                         case TThostFtdcOrderStatusType.PartTradedQueueing:
-                            //只是部分成交，还可以撤单，所以要记录下来
-                            _Ref2Action[strKey] = pOrder;
                             break;
                         case TThostFtdcOrderStatusType.PartTradedNotQueueing:
                             //已经是最后状态，不能用于撤单了
                             _PendingCancelFlags.Remove(order);
-                            _Ref2Action.Remove(strKey);
+                            _Orders4Cancel.Remove(order);
                             break;
                         case TThostFtdcOrderStatusType.NoTradeQueueing:
                             // 用于收到成交回报时定位
                             _OrderSysID2OrderRef[strSysID] = strKey;
-
-                            if (0 == _Ref2Action.Count())
+                            
+                            if (!_Orders4Cancel.ContainsKey(order))
                             {
-                                _Ref2Action[strKey] = pOrder;
+                                _Orders4Cancel[order] = pOrder;
                                 EmitAccepted(order);
-                            }
-                            else
-                            {
-                                _Ref2Action[strKey] = pOrder;
                             }
                             break;
                         case TThostFtdcOrderStatusType.NoTradeNotQueueing:
                             //已经是最后状态，不能用于撤单了
                             _PendingCancelFlags.Remove(order);
-                            _Ref2Action.Remove(strKey);
+                            _Orders4Cancel.Remove(order);
                             break;
                         case TThostFtdcOrderStatusType.Canceled:
                             // 将撤单中记录表清理下
                             _PendingCancelFlags.Remove(order);
                             //已经是最后状态，不能用于撤单了
-                            _Ref2Action.Remove(strKey);
+                            _Orders4Cancel.Remove(order);
                             //分析此报单是否结束，如果结束分析整个Order是否结束
                             switch (pOrder.OrderSubmitStatus)
                             {
                                 case TThostFtdcOrderSubmitStatusType.InsertRejected:
                                     //如果是最后一个的状态，同意发出消息
-                                    if (0 == _Ref2Action.Count())
-                                    {
-                                        //唯一的从OnRtnOrder中就返回拒绝
-                                        EmitRejected(order, pOrder.StatusMsg);
-                                    }
-                                    else
-                                        Cancel(order);
+                                    EmitRejected(order, pOrder.StatusMsg);
                                     break;
                                 default:
                                     //如果是最后一个的状态，同意发出消息
-                                    if (0 == _Ref2Action.Count())
-                                        EmitCancelled(order);
-                                    else
-                                        Cancel(order);
+                                    EmitCancelled(order);
                                     break;
                             }
                             break;
@@ -513,15 +447,11 @@ namespace QuantBox.OQ.CTPZQ
                                     // 有可能头两个报单就这状态，就是报单编号由空变为了有。为空时，也记，没有关系
                                     _OrderSysID2OrderRef[strSysID] = strKey;
 
-                                    //新单，新加入记录以便撤单
-                                    if (0 == _Ref2Action.Count())
+                                    // 这种情况下
+                                    if(!_Orders4Cancel.ContainsKey(order))
                                     {
-                                        _Ref2Action[strKey] = pOrder;
+                                        _Orders4Cancel[order] = pOrder;
                                         EmitAccepted(order);
-                                    }
-                                    else
-                                    {
-                                        _Ref2Action[strKey] = pOrder;
                                     }
                                     break;
                             }
@@ -532,12 +462,6 @@ namespace QuantBox.OQ.CTPZQ
                         case TThostFtdcOrderStatusType.Touched:
                             //没有处理
                             break;
-                    }
-
-                    //已经是最后状态了，可以去除了
-                    if (0 == _Ref2Action.Count())
-                    {
-                        _Orders4Cancel.Remove(order);
                     }
                 }
             }
@@ -652,8 +576,15 @@ namespace QuantBox.OQ.CTPZQ
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                
-                EmitCancelReject(order,order.OrdStatus,order.Text);
+                //order.Text = new OrderTextResponse()
+                //{
+                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
+                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
+                //    ErrorID = pRspInfo.ErrorID,
+                //    ErrorMsg = pRspInfo.ErrorMsg,
+                //}.ToString();
+
+                EmitCancelReject(order, order.OrdStatus, pRspInfo.ErrorMsg);
             }
         }
 
@@ -677,7 +608,17 @@ namespace QuantBox.OQ.CTPZQ
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitCancelReject(order, order.OrdStatus, order.Text);
+
+                //order.Text = new OrderTextResponse()
+                //{
+                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
+                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
+                //    ErrorID = pRspInfo.ErrorID,
+                //    ErrorMsg = pRspInfo.ErrorMsg,
+                //    StatusMsg = pOrderAction.StatusMsg,
+                //}.ToString();
+
+                EmitCancelReject(order, order.OrdStatus, pRspInfo.ErrorMsg);
             }
         }
         #endregion
@@ -695,25 +636,16 @@ namespace QuantBox.OQ.CTPZQ
                         pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitRejected(order, order.Text);
-                //这些地方没法处理混合报单
-                //没得办法，这样全撤了状态就唯一了
-                //但由于不知道在错单时是否会有报单回报，所以在这查一次，以防重复撤单出错
-                //找到对应的报单回应
-                Dictionary<string, CThostFtdcOrderField> _Ref2Action;
-                if (_Orders4Cancel.TryGetValue(order, out _Ref2Action))
-                {
-                    lock (_Ref2Action)
-                    {
-                        _Ref2Action.Remove(strKey);
-                        if (0 == _Ref2Action.Count())
-                        {
-                            _Orders4Cancel.Remove(order);
-                            return;
-                        }
-                        Cancel(order);
-                    }
-                }
+                //order.Text = new OrderTextResponse()
+                //{
+                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
+                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
+                //    ErrorID = pRspInfo.ErrorID,
+                //    ErrorMsg = pRspInfo.ErrorMsg,
+                //}.ToString();
+
+                EmitRejected(order, pRspInfo.ErrorMsg);
+                _Orders4Cancel.Remove(order);
             }
         }
 
@@ -729,22 +661,16 @@ namespace QuantBox.OQ.CTPZQ
                         pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
                 order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                EmitRejected(order, order.Text);
-                //没得办法，这样全撤了状态就唯一了
-                Dictionary<string, CThostFtdcOrderField> _Ref2Action;
-                if (_Orders4Cancel.TryGetValue(order, out _Ref2Action))
-                {
-                    lock (_Ref2Action)
-                    {
-                        _Ref2Action.Remove(strKey);
-                        if (0 == _Ref2Action.Count())
-                        {
-                            _Orders4Cancel.Remove(order);
-                            return;
-                        }
-                        Cancel(order);
-                    }
-                }
+                //order.Text = new OrderTextResponse()
+                //{
+                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
+                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
+                //    ErrorID = pRspInfo.ErrorID,
+                //    ErrorMsg = pRspInfo.ErrorMsg,
+                //}.ToString();
+
+                EmitRejected(order, pRspInfo.ErrorMsg);
+                _Orders4Cancel.Remove(order);
             }
         }
         #endregion
