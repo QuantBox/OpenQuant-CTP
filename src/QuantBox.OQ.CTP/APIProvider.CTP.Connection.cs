@@ -22,9 +22,7 @@ namespace QuantBox.OQ.CTPZQ
         #region 清除数据
         private void Clear()
         {
-            _OrderSysID2OrderRef.Clear();
-            _OrderRef2Order.Clear();
-            _Orders4Cancel.Clear();
+            orderMap.Clear();
             _dbInMemInvestorPosition.Clear();
             _dictDepthMarketData.Clear();
             _dictInstruments.Clear();

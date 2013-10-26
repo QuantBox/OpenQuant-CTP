@@ -16,6 +16,7 @@ using QuantBox.OQ.CTP;
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
+using QuantBox.OQ.Extensions.Combiner;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ
@@ -95,12 +96,8 @@ namespace QuantBox.OQ.CTPZQ
         //记录交易登录成功后的SessionID、FrontID等信息
         private CThostFtdcRspUserLoginField _RspUserLogin;
 
-        //记录界面生成的报单，用于定位收到回报消息时所确定的报单,可以多个Ref对应一个Order
-        private readonly Dictionary<string, SingleOrder> _OrderRef2Order = new Dictionary<string, SingleOrder>();
-        //一个Order可能分拆成多个报单，如可能由平今与平昨，或开新单组合而成
-        private readonly Dictionary<SingleOrder, CThostFtdcOrderField> _Orders4Cancel = new Dictionary<SingleOrder, CThostFtdcOrderField>();
-        //交易所信息映射到本地信息
-        private readonly Dictionary<string, string> _OrderSysID2OrderRef = new Dictionary<string, string>();
+        // 报单信息维护
+        private readonly OrderMap orderMap = new OrderMap();
 
         //记录账号的实际持仓，保证以最低成本选择开平
         private readonly DbInMemInvestorPosition _dbInMemInvestorPosition = new DbInMemInvestorPosition();
@@ -267,41 +264,41 @@ namespace QuantBox.OQ.CTPZQ
             // 遍历是否过期
             if (pInstrumentStatus.InstrumentStatus == TThostFtdcInstrumentStatusType.Closed)
             {
-                List<SingleOrder> tmpList = new List<SingleOrder>();
-                string symbol = null;
-                foreach(var order in _Orders4Cancel.Keys)
-                {
-                    // 如果与上次处理的是同一合约，就立即处理
-                    if (symbol == order.Symbol)
-                    {
-                        EmitExpired(order);
-                        tmpList.Add(order);
-                        continue;
-                    }
+                //List<SingleOrder> tmpList = new List<SingleOrder>();
+                //string symbol = null;
+                //foreach(var order in _Orders4Cancel.Keys)
+                //{
+                //    // 如果与上次处理的是同一合约，就立即处理
+                //    if (symbol == order.Symbol)
+                //    {
+                //        EmitExpired(order);
+                //        tmpList.Add(order);
+                //        continue;
+                //    }
 
-                    string altSymbol = order.Instrument.GetSymbol(Name);
-                    string altExchange = order.Instrument.GetSecurityExchange(Name);
+                //    string altSymbol = order.Instrument.GetSymbol(Name);
+                //    string altExchange = order.Instrument.GetSecurityExchange(Name);
 
-                    CThostFtdcInstrumentField _Instrument;
-                    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
-                    {
-                        altExchange = _Instrument.ExchangeID;
-                        symbol = order.Symbol;
-                    }
+                //    CThostFtdcInstrumentField _Instrument;
+                //    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
+                //    {
+                //        altExchange = _Instrument.ExchangeID;
+                //        symbol = order.Symbol;
+                //    }
 
-                    if (altExchange == pInstrumentStatus.ExchangeID)
-                    {
-                        EmitExpired(order);
-                        tmpList.Add(order);
-                    }
-                }
+                //    if (altExchange == pInstrumentStatus.ExchangeID)
+                //    {
+                //        EmitExpired(order);
+                //        tmpList.Add(order);
+                //    }
+                //}
 
-                // 只能用一个临时列表来清理
-                foreach (var o in tmpList)
-                {
-                    _Orders4Cancel.Remove(o);
-                }
-                tmpList.Clear();
+                //// 只能用一个临时列表来清理
+                //foreach (var o in tmpList)
+                //{
+                //    _Orders4Cancel.Remove(o);
+                //}
+                //tmpList.Clear();
             }
         }
         #endregion

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using QuantBox.OQ.Extensions;
+using SmartQuant.FIX;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -238,7 +239,7 @@ namespace QuantBox.Helper.CTPZQ
         #endregion
 
         #region 错误类型转换
-        public static EnumError ToQBError(int ErrorID)
+        public static EnumError FromCTP(int ErrorID)
         {
             ErrorType e = (ErrorType)ErrorID;
 
@@ -261,22 +262,22 @@ namespace QuantBox.Helper.CTPZQ
         #endregion
 
         #region 开平转换
-        //public static OpenClose ToOpenClose(TThostFtdcOffsetFlagType offset)
-        //{
-        //    switch (offset)
-        //    {
-        //        case TThostFtdcOffsetFlagType.Open:
-        //            return OpenClose.OPEN;
-        //        case TThostFtdcOffsetFlagType.Close:
-        //            return OpenClose.CLOSE;
-        //        case TThostFtdcOffsetFlagType.CloseToday:
-        //            return OpenClose.CLOSE_TODAY;
-        //        case TThostFtdcOffsetFlagType.CloseYesterday:
-        //            return OpenClose.CLOSE_YESTERDAY;
-        //        default:
-        //            return OpenClose.NONE;
-        //    }
-        //}
+        public static TThostFtdcOffsetFlagType ToCTP(EnumOpenClose offset)
+        {
+            switch (offset)
+            {
+                case EnumOpenClose.OPEN:
+                    return TThostFtdcOffsetFlagType.Open;
+                case EnumOpenClose.CLOSE:
+                    return TThostFtdcOffsetFlagType.Close;
+                case EnumOpenClose.CLOSE_TODAY:
+                    return TThostFtdcOffsetFlagType.CloseToday;
+                case EnumOpenClose.CLOSE_YESTERDAY:
+                    return TThostFtdcOffsetFlagType.CloseYesterday;
+                default:
+                    return TThostFtdcOffsetFlagType.Open;
+            }
+        }
 
         //public static OpenClose ToOpenClose(byte b)
         //{
@@ -287,6 +288,21 @@ namespace QuantBox.Helper.CTPZQ
         //{
         //    return ToOpenClose((TThostFtdcOffsetFlagType)c);
         //}
+        #endregion
+
+        #region 买卖转换
+        public static Side FromCTP(TThostFtdcDirectionType Direction)
+        {
+            switch (Direction)
+            {
+                case TThostFtdcDirectionType.Buy:
+                    return Side.Buy;
+                case TThostFtdcDirectionType.Sell:
+                    return Side.Sell;
+                default:
+                    return Side.Undefined;
+            }
+        }
         #endregion
     }
 }

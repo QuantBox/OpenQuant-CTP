@@ -13,6 +13,8 @@ using SmartQuant.Instruments;
 using SmartQuant.Providers;
 using Newtonsoft.Json;
 using QuantBox.OQ.Extensions;
+using QuantBox.OQ.Extensions.OrderText;
+using QuantBox.OQ.Extensions.Combiner;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -42,19 +44,26 @@ namespace QuantBox.OQ.CTPZQ
                 return;
             }
 
-            CThostFtdcOrderField _Order;
-            if (_Orders4Cancel.TryGetValue(order, out _Order))
+            GenericOrderItem item;
+            if(orderMap.TryGetValue(order,out item))
             {
-                // 标记下正在撤单
-                _PendingCancelFlags[order] = order.OrdStatus;
+                CThostFtdcOrderField _order;
+                if (orderMap.TryGetValue(item, out _order))
+                {
+                    // 标记下正在撤单
+                    //_PendingCancelFlags[order] = order.OrdStatus;
 
-                //这地方要是过滤下就好了
-                TraderApi.TD_CancelOrder(m_pTdApi, ref _Order);
+                    TraderApi.TD_CancelOrder(m_pTdApi, ref _order);
+                }
             }
         }
         #endregion
 
         #region 下单
+        private GenericCombiner<CommonOrderItem, TextRequest> CommonOrderCombiner = new GenericCombiner<CommonOrderItem, TextRequest>();
+        private GenericCombiner<QuoteOrderItem, TextQuote> QuoteOrderCombiner = new GenericCombiner<QuoteOrderItem, TextQuote>();
+        private GenericCombiner<SPOrderItem, TextSP> SPOrderCombiner = new GenericCombiner<SPOrderItem, TextSP>();
+
         private void Send(NewOrderSingle order)
         {
             if (!_bTdConnected)
@@ -64,24 +73,104 @@ namespace QuantBox.OQ.CTPZQ
                 return;
             }
 
-            Instrument inst = InstrumentManager.Instruments[order.Symbol];
-            string altSymbol = inst.GetSymbol(Name);
-            string altExchange = inst.GetSecurityExchange(Name);
-            double tickSize = inst.TickSize;
+            // 表示特殊的Json格式
+            if (order.Text.StartsWith("{") && order.Text.EndsWith("}"))
+            {
+                TextParameter parameter = JsonConvert.DeserializeObject<TextParameter>(order.Text);
+                switch (parameter.Type)
+                {
+                    case EnumGroupType.COMMON:
+                        {
+                            TextRequest t = JsonConvert.DeserializeObject<TextRequest>(order.Text);
+                            CommonOrderItem item = CommonOrderCombiner.Add(order as SingleOrder, t);
+                            Send(item);
+                        }
+                        break;
+                    case EnumGroupType.QUOTE:
+                        {
+                            TextQuote t = JsonConvert.DeserializeObject<TextQuote>(order.Text);
+                            QuoteOrderItem item = QuoteOrderCombiner.Add(order as SingleOrder, t);
+                        }
+                        break;
+                    case EnumGroupType.SP:
+                        {
+                            TextSP t = JsonConvert.DeserializeObject<TextSP>(order.Text);
+                            SPOrderItem item = SPOrderCombiner.Add(order as SingleOrder, t);
+                            Send(item);
+                        }
+                        break;
+                }
+            }
+            else
+            {
+                // 无法识别的格式，直接发送报单，只开仓
+                TextRequest t = new TextRequest()
+                {
+                    Type = EnumGroupType.COMMON,
+                    OpenClose = EnumOpenClose.OPEN
+                };
+                CommonOrderItem item = CommonOrderCombiner.Add(order as SingleOrder, t);
+                Send(item);
+            }
+        }
+        #endregion
 
-            string apiSymbol = GetApiSymbol(altSymbol);
+        #region 取API信息
+        private void GetInstrumentInfoForCTP(Instrument inst, out string apiSymbol, out string apiExchange, out double apiTickSize)
+        {
+            apiSymbol = inst.GetSymbol(Name);
+            apiExchange = inst.GetSecurityExchange(Name);
+            apiTickSize = inst.TickSize;
 
             CThostFtdcInstrumentField _Instrument;
-            if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
+            if (_dictInstruments.TryGetValue(apiSymbol, out _Instrument))
             {
-                //从合约列表中取交易所名与tickSize，不再依赖用户手工设置的参数了
-                tickSize = _Instrument.PriceTick;
                 apiSymbol = _Instrument.InstrumentID;
-                altExchange = _Instrument.ExchangeID;
+                apiExchange = _Instrument.ExchangeID;
+                apiTickSize = _Instrument.PriceTick;
             }
+        }
 
-            //最小变动价格修正
+        private void GetInstrumentInfoForCTPZQ(Instrument inst, out string apiSymbol, out string apiExchange, out double apiTickSize,out string yahooSymbol)
+        {
+            // 如果设置了altSymbol取到600000;没设，取到600000.SS
+            apiSymbol = inst.GetSymbol(Name);
+            apiExchange = inst.GetSecurityExchange(Name);
+            apiTickSize = inst.TickSize;
+
+            apiSymbol = GetApiSymbol(apiSymbol);
+            yahooSymbol = GetYahooSymbol(apiSymbol, apiExchange);
+
+            CThostFtdcInstrumentField _Instrument;
+            if (_dictInstruments.TryGetValue(yahooSymbol, out _Instrument))
+            {
+                apiSymbol = _Instrument.InstrumentID;
+                apiExchange = _Instrument.ExchangeID;
+                apiTickSize = _Instrument.PriceTick;
+            }
+        }
+        #endregion
+
+        #region 发送普通单
+        private void Send(CommonOrderItem item)
+        {
+            if (item == null)
+                return;
+
+            SingleOrder order = item.Leg.Order;
+
+            string apiSymbol;
+            string apiExchange;
+            double apiTickSize;
+            string altSymbol;
+#if CTP
+            GetInstrumentInfoForCTP(order.Instrument,out apiSymbol,out apiExchange,out apiTickSize);
+            altSymbol = apiSymbol;
+#elif CTPZQ
+            GetInstrumentInfoForCTPZQ(order.Instrument,out apiSymbol,out apiExchange,out apiTickSize,out altSymbol);
+#endif
             double price = order.Price;
+            int qty = (int)order.OrderQty;
 
             //市价修正，如果不连接行情，此修正不执行，得策略层处理
             CThostFtdcDepthMarketDataField DepthMarket;
@@ -94,195 +183,35 @@ namespace QuantBox.OQ.CTPZQ
                 //按买卖调整价格
                 if (order.Side == Side.Buy)
                 {
-                    price = DepthMarket.LastPrice + LastPricePlusNTicks * tickSize;
+                    price = DepthMarket.LastPrice + LastPricePlusNTicks * apiTickSize;
                 }
                 else
                 {
-                    price = DepthMarket.LastPrice - LastPricePlusNTicks * tickSize;
+                    price = DepthMarket.LastPrice - LastPricePlusNTicks * apiTickSize;
                 }
             }
 
-            //没有设置就直接用
-            if (tickSize > 0)
-            {
-                decimal remainder = ((decimal)price % (decimal)tickSize);
-                if (remainder != 0)
-                {
-                    if (order.Side == Side.Buy)
-                    {
-                        price = Math.Ceiling(price / tickSize) * tickSize;
-                    }
-                    else
-                    {
-                        price = Math.Floor(price / tickSize) * tickSize;
-                    }
-                }
-                else
-                {
-                    //正好能整除，不操作
-                }
-            }
+            price = FixPrice(price, order.Side, apiTickSize, DepthMarket.LowerLimitPrice, DepthMarket.UpperLimitPrice);
 
-            if (0 == DepthMarket.UpperLimitPrice
-                && 0 == DepthMarket.LowerLimitPrice)
-            {
-                //涨跌停无效
-            }
-            else
-            {
-                //防止价格超过涨跌停
-                if (price >= DepthMarket.UpperLimitPrice)
-                    price = DepthMarket.UpperLimitPrice;
-                else if (price <= DepthMarket.LowerLimitPrice)
-                    price = DepthMarket.LowerLimitPrice;
-            }
+            // 是否要做价格调整？
+            byte[] bytes = { (byte)CTPAPI.ToCTP(item.Leg.OpenClose)};
+            string szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
 
-            int YdPosition = 0;
-            int TodayPosition = 0;
-
-            string szCombOffsetFlag;
-            if (order.Side == Side.Buy)
-            {
-                //买，先看有没有空单，有就平空单,没有空单，直接买开多单
-                _dbInMemInvestorPosition.GetPositions(altSymbol,
-                    TThostFtdcPosiDirectionType.Short, HedgeFlagType, out YdPosition, out TodayPosition);//TThostFtdcHedgeFlagType.Speculation
-            }
-            else//是否要区分Side.Sell与Side.SellShort呢？
-            {
-                //卖，先看有没有多单，有就平多单,没有多单，直接买开空单
-                _dbInMemInvestorPosition.GetPositions(altSymbol,
-                    TThostFtdcPosiDirectionType.Long, HedgeFlagType, out YdPosition, out TodayPosition);
-            }
-
-            int nOpenCloseFlag = 0;
-            //根据 梦翔 与 马不停蹄 的提示，新加在Text域中指定开平标志的功能
-            // 表示特殊的Json格式
-            if (order.Text.StartsWith("{") && order.Text.EndsWith("}"))
-            {
-                //OrderTextRequest request = JsonConvert.DeserializeObject<OrderTextRequest>(order.Text);
-                //switch (request.OpenClose)
-                //{
-                //    case EnumOpenClose.NONE:
-                //        break;
-                //    case EnumOpenClose.OPEN:
-                //        nOpenCloseFlag = 1;
-                //        break;
-                //    case EnumOpenClose.CLOSE:
-                //        nOpenCloseFlag = -1;
-                //        break;
-                //    case EnumOpenClose.CLOSE_TODAY:
-                //        nOpenCloseFlag = -2;
-                //        break;
-                //    case EnumOpenClose.CLOSE_YESTERDAY:
-                //        nOpenCloseFlag = -3;
-                //        break;
-                //}
-            }
-            else
-            {
-                if (order.Text.StartsWith(OpenPrefix))
-                {
-                    nOpenCloseFlag = 1;
-                }
-                else if (order.Text.StartsWith(ClosePrefix))
-                {
-                    nOpenCloseFlag = -1;
-                }
-                else if (order.Text.StartsWith(CloseTodayPrefix))
-                {
-                    nOpenCloseFlag = -2;
-                }
-                else if (order.Text.StartsWith(CloseYesterdayPrefix))
-                {
-                    nOpenCloseFlag = -3;
-                }
-            }
-
-
-            int leave = (int)order.OrderQty;
-
-#if CTP
-            {
-                byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
-                szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-            }
-
-            //是否上海？上海先平今，然后平昨，最后开仓
-            //使用do主要是想利用break功能
-            //平仓部分
-            do
-            {
-                //指定开仓，直接跳过
-                if (nOpenCloseFlag > 0)
-                    break;
-
-                //表示指定平今与平昨
-                if (nOpenCloseFlag < -1)
-                {
-                    if (-2 == nOpenCloseFlag)
-                    {
-                        byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseToday, (byte)TThostFtdcOffsetFlagType.CloseToday };
-                        szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-                    }
-                    else
-                    {
-                        //肯定是-3了
-                        byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseYesterday, (byte)TThostFtdcOffsetFlagType.CloseYesterday };
-                        szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-                    }
-
-                    break;
-                }
-
-                if (SupportCloseToday.Contains(altExchange))
-                {
-                    //先看平今
-                    if (TodayPosition > 0)
-                    {
-                        byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseToday, (byte)TThostFtdcOffsetFlagType.CloseToday };
-                        szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-                    }
-                    else if (YdPosition > 0)
-                    {
-                        byte[] bytes = { (byte)TThostFtdcOffsetFlagType.CloseYesterday, (byte)TThostFtdcOffsetFlagType.CloseYesterday };
-                        szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-                    }
-                }
-                else
-                {
-                    //平仓
-                    int position = TodayPosition + YdPosition;
-                    if (position > 0)
-                    {
-                        byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Close, (byte)TThostFtdcOffsetFlagType.Close };
-                        szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-                    }
-                }
-            } while (false);
-
-            bool bSupportMarketOrder = SupportMarketOrder.Contains(altExchange);
-#elif CTPZQ
-            {
-                //开平已经没有意义了
-                byte[] bytes = { (byte)TThostFtdcOffsetFlagType.Open, (byte)TThostFtdcOffsetFlagType.Open };
-                szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
-            }
-
-            bool bSupportMarketOrder = true;
-#endif
-
-            //将第二腿也设置成一样，这样在使用组合时这地方不用再调整
-            byte[] bytes2 = { (byte)HedgeFlagType, (byte)HedgeFlagType };
+            byte[] bytes2 = { (byte)HedgeFlagType};
             string szCombHedgeFlag = System.Text.Encoding.Default.GetString(bytes2, 0, bytes2.Length);
-
-            tdlog.Info("Side:{0},Price:{1},LastPrice:{2},Qty:{3},Text:{4},YdPosition:{5},TodayPosition:{6}",
-                order.Side, order.Price, DepthMarket.LastPrice, order.OrderQty, order.Text, YdPosition, TodayPosition);
 
             TThostFtdcDirectionType Direction = order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell;
             TThostFtdcOrderPriceTypeType OrderPriceType = TThostFtdcOrderPriceTypeType.LimitPrice;
             TThostFtdcTimeConditionType TimeCondition = TThostFtdcTimeConditionType.GFD;
             TThostFtdcContingentConditionType ContingentCondition = TThostFtdcContingentConditionType.Immediately;
             TThostFtdcVolumeConditionType VolumeCondition = TThostFtdcVolumeConditionType.AV;
+           
+
+#if CTP
+            bool bSupportMarketOrder = SupportMarketOrder.Contains(apiExchange);
+#elif CTPZQ
+            bool bSupportMarketOrder = true;
+#endif
 
             switch (order.TimeInForce)
             {
@@ -322,11 +251,11 @@ namespace QuantBox.OQ.CTPZQ
 
 #if CTP
             nRet = TraderApi.TD_SendOrder(m_pTdApi,
-                        altSymbol,
+                        apiSymbol,
                         Direction,
                         szCombOffsetFlag,
                         szCombHedgeFlag,
-                        leave,
+                        qty,
                         price,
                         OrderPriceType,
                         TimeCondition,
@@ -336,11 +265,11 @@ namespace QuantBox.OQ.CTPZQ
 #elif CTPZQ
                 nRet = TraderApi.TD_SendOrder(m_pTdApi,
                             apiSymbol,
-                            altExchange,
+                            apiExchange,
                             Direction,
                             szCombOffsetFlag,
                             szCombHedgeFlag,
-                            leave,
+                            qty,
                             string.Format("{0}", price),
                             OrderPriceType,
                             TimeCondition,
@@ -349,7 +278,55 @@ namespace QuantBox.OQ.CTPZQ
 #endif
             if (nRet > 0)
             {
-                _OrderRef2Order.Add(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), order as SingleOrder);
+                orderMap.CreateNewOrder(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), item);
+            }
+        }
+        #endregion
+
+        #region 发送交易所套利单
+        private void Send(SPOrderItem item)
+        {
+            if (item == null)
+                return;
+
+            SingleOrder order = item.Leg[0].Order;
+            SingleOrder order2 = item.Leg[1].Order;
+
+            string symbol = item.GetSymbol();
+            double price = order.Price - order2.Price;
+            int qty = (int)order.OrderQty;
+
+            // 是否要做价格调整？
+            byte[] bytes = { (byte)CTPAPI.ToCTP(item.Leg[0].OpenClose), (byte)CTPAPI.ToCTP(item.Leg[1].OpenClose) };
+            string szCombOffsetFlag = System.Text.Encoding.Default.GetString(bytes, 0, bytes.Length);
+
+            byte[] bytes2 = { (byte)HedgeFlagType, (byte)HedgeFlagType };
+            string szCombHedgeFlag = System.Text.Encoding.Default.GetString(bytes2, 0, bytes2.Length);
+
+            TThostFtdcDirectionType Direction = order.Side == Side.Buy ? TThostFtdcDirectionType.Buy : TThostFtdcDirectionType.Sell;
+            TThostFtdcOrderPriceTypeType OrderPriceType = TThostFtdcOrderPriceTypeType.LimitPrice;
+            TThostFtdcTimeConditionType TimeCondition = TThostFtdcTimeConditionType.GFD;
+            TThostFtdcContingentConditionType ContingentCondition = TThostFtdcContingentConditionType.Immediately;
+            TThostFtdcVolumeConditionType VolumeCondition = TThostFtdcVolumeConditionType.AV;
+
+            int nRet = 0;
+
+            nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                        symbol,
+                        Direction,
+                        szCombOffsetFlag,
+                        szCombHedgeFlag,
+                        qty,
+                        price,
+                        OrderPriceType,
+                        TimeCondition,
+                        ContingentCondition,
+                        0,
+                        VolumeCondition);
+
+            if (nRet > 0)
+            {
+                orderMap.CreateNewOrder(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), item);
             }
         }
         #endregion
@@ -368,189 +345,147 @@ namespace QuantBox.OQ.CTPZQ
                 return;
             }
 
-            SingleOrder order;
+            GenericOrderItem item;
             string strKey = string.Format("{0}:{1}:{2}", pOrder.FrontID, pOrder.SessionID, pOrder.OrderRef);
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
+            if (orderMap.TryGetValue(strKey, out item))
             {
-                order.Text = string.Format("{0}|{1}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pOrder.StatusMsg);                
-                //order.Text = new OrderTextResponse()
-                //{
-                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
-                //    StatusMsg = pOrder.StatusMsg,
-                //}.ToString();
-                order.OrderID = pOrder.OrderSysID;
+                string strSysID = string.Format("{0}:{1}", pOrder.ExchangeID, pOrder.OrderSysID);
 
-                // 有对它进行过撤单操作，这地方是为了加正在撤单状态
-                OrdStatus status;
-                if (_PendingCancelFlags.TryGetValue(order, out status))
+                switch (pOrder.OrderStatus)
                 {
-                    // 记下当时的状态
-                    _PendingCancelFlags[order] = order.OrdStatus;
-                    EmitPendingCancel(order);
+                        /// 不用处理
+                    case TThostFtdcOrderStatusType.PartTradedQueueing:
+                        break;
+                        /// 第一个状态，要注册
+                    case TThostFtdcOrderStatusType.NoTradeQueueing:
+                        OnRtnOrderFirstStatus(item, pOrder,strSysID,strKey);
+                        break;
+                        /// 最后一个状态，要清理
+                    case TThostFtdcOrderStatusType.AllTraded:
+                    case TThostFtdcOrderStatusType.PartTradedNotQueueing:
+                    case TThostFtdcOrderStatusType.NoTradeNotQueueing:
+                        OnRtnOrderLastStatus(item, pOrder, strSysID, strKey);
+                        break;
+                        /// 其它情况
+                    case TThostFtdcOrderStatusType.Canceled:
+                        //分析此报单是否结束
+                        switch (pOrder.OrderSubmitStatus)
+                        {
+                            case TThostFtdcOrderSubmitStatusType.InsertRejected:
+                                EmitRejected(item, pOrder.StatusMsg);
+                                break;
+                            default:
+                                EmitCancelled(item);
+                                break;
+                        }
+                        OnRtnOrderLastStatus(item, pOrder, strSysID, strKey);
+                        break;
+                    case TThostFtdcOrderStatusType.Unknown:
+                        switch (pOrder.OrderSubmitStatus)
+                        {
+                            case TThostFtdcOrderSubmitStatusType.InsertSubmitted:
+                                OnRtnOrderFirstStatus(item, pOrder, strSysID, strKey);
+                                break;
+                        }
+                        break;
+                    case TThostFtdcOrderStatusType.NotTouched:
+                        //没有处理
+                        break;
+                    case TThostFtdcOrderStatusType.Touched:
+                        //没有处理
+                        break;
                 }
-
-                lock (_Orders4Cancel)
-                {
-                    string strSysID = string.Format("{0}:{1}", pOrder.ExchangeID, pOrder.OrderSysID);
-
-                    switch (pOrder.OrderStatus)
-                    {
-                        case TThostFtdcOrderStatusType.AllTraded:
-                            //已经是最后状态，不能用于撤单了
-                            _PendingCancelFlags.Remove(order);
-                            _Orders4Cancel.Remove(order);
-                            break;
-                        case TThostFtdcOrderStatusType.PartTradedQueueing:
-                            break;
-                        case TThostFtdcOrderStatusType.PartTradedNotQueueing:
-                            //已经是最后状态，不能用于撤单了
-                            _PendingCancelFlags.Remove(order);
-                            _Orders4Cancel.Remove(order);
-                            break;
-                        case TThostFtdcOrderStatusType.NoTradeQueueing:
-                            // 用于收到成交回报时定位
-                            _OrderSysID2OrderRef[strSysID] = strKey;
-                            
-                            if (!_Orders4Cancel.ContainsKey(order))
-                            {
-                                _Orders4Cancel[order] = pOrder;
-                                EmitAccepted(order);
-                            }
-                            break;
-                        case TThostFtdcOrderStatusType.NoTradeNotQueueing:
-                            //已经是最后状态，不能用于撤单了
-                            _PendingCancelFlags.Remove(order);
-                            _Orders4Cancel.Remove(order);
-                            break;
-                        case TThostFtdcOrderStatusType.Canceled:
-                            // 将撤单中记录表清理下
-                            _PendingCancelFlags.Remove(order);
-                            //已经是最后状态，不能用于撤单了
-                            _Orders4Cancel.Remove(order);
-                            //分析此报单是否结束，如果结束分析整个Order是否结束
-                            switch (pOrder.OrderSubmitStatus)
-                            {
-                                case TThostFtdcOrderSubmitStatusType.InsertRejected:
-                                    //如果是最后一个的状态，同意发出消息
-                                    EmitRejected(order, pOrder.StatusMsg);
-                                    break;
-                                default:
-                                    //如果是最后一个的状态，同意发出消息
-                                    EmitCancelled(order);
-                                    break;
-                            }
-                            break;
-                        case TThostFtdcOrderStatusType.Unknown:
-                            switch (pOrder.OrderSubmitStatus)
-                            {
-                                case TThostFtdcOrderSubmitStatusType.InsertSubmitted:
-                                    // 有可能头两个报单就这状态，就是报单编号由空变为了有。为空时，也记，没有关系
-                                    _OrderSysID2OrderRef[strSysID] = strKey;
-
-                                    // 这种情况下
-                                    if(!_Orders4Cancel.ContainsKey(order))
-                                    {
-                                        _Orders4Cancel[order] = pOrder;
-                                        EmitAccepted(order);
-                                    }
-                                    break;
-                            }
-                            break;
-                        case TThostFtdcOrderStatusType.NotTouched:
-                            //没有处理
-                            break;
-                        case TThostFtdcOrderStatusType.Touched:
-                            //没有处理
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                //由第三方软件发出或上次登录时的剩余的单子在这次成交了，先不处理，当不存在
             }
         }
         #endregion
 
+        #region 委托与成交事件
+        private void OnRtnOrderFirstStatus(GenericOrderItem item, CThostFtdcOrderField pOrder, string OrderSysID, string Key)
+        {
+            // 判断是第一次报单，还是只是撤单时的第一条记录
+            if (!orderMap.OrderSysID_OrderRef.ContainsKey(OrderSysID))
+            {
+                orderMap.OrderSysID_OrderRef[OrderSysID] = Key;
+                
+
+                // 要标记某个原始Order可以撤单
+                // 先找到原始Order,这个时候只有下单时的OrderRef_OrderItem中有信息，已经通过参数传过来了，直接取即可
+
+                // 在OrderItem_OrderField中记录与API的对应
+                orderMap.OrderItem_OrderField[item] = pOrder;
+                // 在Order_OrderItem中记录绑定关系
+                foreach (var o in item.GetLegs())
+                {
+                    orderMap.Order_OrderItem[o.Order] = item;
+                }
+
+                EmitAccepted(item);
+            }
+        }
+
+        private void OnRtnOrderLastStatus(GenericOrderItem item, CThostFtdcOrderField pOrder, string OrderSysID, string Key)
+        {
+            // 给成交回报用的，由于成交回报返回慢，所以不能删
+            //orderMap.OrderSysID_OrderRef.Remove(OrderSysID);
+
+            // 已经是最后状态，不能用于撤单了
+            // 这个功能交给用户上层处理，报个重复撤单也没啥
+            //orderMap.OrderItem_OrderField.Remove(item);
+
+            OnLastStatus(item, OrderSysID, Key);
+        }
+
+        private void OnRtnTradeLastStatus(GenericOrderItem item, CThostFtdcTradeField pTrade, string OrderSysID, string Key)
+        {
+            OnLastStatus(item,OrderSysID,Key);
+        }
+
+        private void OnLastStatus(GenericOrderItem item, string OrderSysID, string Key)
+        {
+            // 一个单子成交完成，报单组可能还没有完，这个地方一定要留意
+            if (!item.IsDone())
+                return;
+
+            foreach (var order in item.GetLegs())
+            {
+                orderMap.Order_OrderItem.Remove(order.Order);
+            }
+
+            orderMap.OrderItem_OrderField.Remove(item);
+            orderMap.OrderRef_OrderItem.Remove(Key);
+            orderMap.OrderSysID_OrderRef.Remove(OrderSysID);
+        }
+        #endregion
+
         #region 成交回报
-
-        //用于计算组合成交
-        private readonly Dictionary<SingleOrder, DbInMemTrade> _Orders4Combination = new Dictionary<SingleOrder, DbInMemTrade>();
-
         private void OnRtnTrade(IntPtr pTraderApi, ref CThostFtdcTradeField pTrade)
         {
             tdlog.Info("时{0},合约{1},方向{2},开平{3},价{4},量{5},引用{6},成交编号{7}",
                     pTrade.TradeTime, pTrade.InstrumentID, pTrade.Direction, pTrade.OffsetFlag,
                     pTrade.Price, pTrade.Volume, pTrade.OrderRef, pTrade.TradeID);
 
-            //将仓位计算提前，防止在OnPositionOpened中下平仓时与“C|”配合出错
-            if (_dbInMemInvestorPosition.UpdateByTrade(pTrade))
-            {
-            }
-            else
-            {
-                //本地计算更新失败，重查一次
-                TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, pTrade.InstrumentID);
-            }
-
-            SingleOrder order;
             //找到自己发送的订单，标记成交
             string strSysID = string.Format("{0}:{1}", pTrade.ExchangeID, pTrade.OrderSysID);
             string strKey;
-            if (!_OrderSysID2OrderRef.TryGetValue(strSysID,out strKey))
+            if (!orderMap.TryGetValue(strSysID, out strKey))
             {
                 return;
             }
 
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
+            GenericOrderItem item;
+            if (orderMap.TryGetValue(strKey, out item))
             {
-                double Price = 0;
-                int Volume = 0;
-#if CTP
-                if (TThostFtdcTradeTypeType.CombinationDerived == pTrade.TradeType)
-                {
-                    //组合，得特别处理
-                    DbInMemTrade _trade;//用此对象维护组合对
-                    if (!_Orders4Combination.TryGetValue(order, out _trade))
-                    {
-                        _trade = new DbInMemTrade();
-                        _Orders4Combination[order] = _trade;
-                    }
+                MultiOrderLeg leg = item.GetLeg(CTPAPI.FromCTP(pTrade.Direction), pTrade.InstrumentID);
+                SingleOrder order = leg.Order;
 
-                    //找到成对交易的，得出价差
-                    if (_trade.OnTrade(ref order, ref pTrade, ref Price, ref Volume))
-                    {
-                        //完成使命了，删除
-                        //if (_trade.isEmpty())
-                        //{
-                        //    _Orders4Combination.Remove(order);
-                        //}
-                    }
-                }
-                else
-                {
-                    //普通订单，直接通知即可
-                    Price = pTrade.Price;
-                    Volume = pTrade.Volume;
-                }
-#elif CTPZQ
-                {
-                    Price = Convert.ToDouble(pTrade.Price);
-                    Volume = pTrade.Volume;
-                }
-#endif
+                double Price = pTrade.Price;
+                int Volume = pTrade.Volume;
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
                 EmitFilled(order, Price, Volume,CommType.Absolute,0);
 
-                //成交完全，清理
-                if (LeavesQty <= 0)
-                {
-                    _OrderRef2Order.Remove(strKey);
-                    _OrderSysID2OrderRef.Remove(strSysID);
-                    _Orders4Combination.Remove(order);
-                    _Orders4Cancel.Remove(order);
-                }
+                // 成交完成，清理数据
+                OnRtnTradeLastStatus(item, pTrade, strSysID, strKey);
             }
         }
         #endregion
@@ -558,24 +493,30 @@ namespace QuantBox.OQ.CTPZQ
         #region 撤单报错
         private void OnRspOrderAction(IntPtr pTraderApi, ref CThostFtdcInputOrderActionField pInputOrderAction, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
-            SingleOrder order;
-            string strKey = string.Format("{0}:{1}:{2}", pInputOrderAction.FrontID, pInputOrderAction.SessionID, pInputOrderAction.OrderRef);
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
-            {
-                OrdStatus status;
-                if (_PendingCancelFlags.TryGetValue(order, out status))
-                {
-                    _PendingCancelFlags.Remove(order);
-                    EmitExecutionReport(order, status);
-                }
-
-                tdlog.Error("CTP回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
+            tdlog.Error("CTP回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
                         pInputOrderAction.InstrumentID, pInputOrderAction.LimitPrice,
                         pInputOrderAction.VolumeChange,
                         pInputOrderAction.FrontID, pInputOrderAction.SessionID, pInputOrderAction.OrderRef,
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+            GenericOrderItem item;
+            string strKey = string.Format("{0}:{1}:{2}", pInputOrderAction.FrontID, pInputOrderAction.SessionID, pInputOrderAction.OrderRef);
+            if (orderMap.TryGetValue(strKey, out item))
+            {
+                EmitCancelReject(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+
+
+                //OrdStatus status;
+                //if (_PendingCancelFlags.TryGetValue(order, out status))
+                //{
+                //    _PendingCancelFlags.Remove(order);
+                //    EmitExecutionReport(order, status);
+                //}
+
+                
+
+                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                
                 //order.Text = new OrderTextResponse()
                 //{
                 //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
@@ -584,41 +525,24 @@ namespace QuantBox.OQ.CTPZQ
                 //    ErrorMsg = pRspInfo.ErrorMsg,
                 //}.ToString();
 
-                EmitCancelReject(order, order.OrdStatus, pRspInfo.ErrorMsg);
+                
             }
         }
 
         private void OnErrRtnOrderAction(IntPtr pTraderApi, ref CThostFtdcOrderActionField pOrderAction, ref CThostFtdcRspInfoField pRspInfo)
         {
-            SingleOrder order;
-            string strKey = string.Format("{0}:{1}:{2}", pOrderAction.FrontID, pOrderAction.SessionID, pOrderAction.OrderRef);
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
-            {
-                OrdStatus status;
-                if (_PendingCancelFlags.TryGetValue(order, out status))
-                {
-                    _PendingCancelFlags.Remove(order);
-                    EmitExecutionReport(order, status);
-                }
-
-                tdlog.Error("交易所回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
+            tdlog.Error("交易所回应：{0},价{1},变化量{2},前置{3},会话{4},引用{5},{6}#{7}",
                         pOrderAction.InstrumentID, pOrderAction.LimitPrice,
                         pOrderAction.VolumeChange,
                         pOrderAction.FrontID, pOrderAction.SessionID, pOrderAction.OrderRef,
                         pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+            GenericOrderItem item;
+            string strKey = string.Format("{0}:{1}:{2}", pOrderAction.FrontID, pOrderAction.SessionID, pOrderAction.OrderRef);
+            if (orderMap.TryGetValue(strKey, out item))
+            {
 
-                //order.Text = new OrderTextResponse()
-                //{
-                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
-                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
-                //    ErrorID = pRspInfo.ErrorID,
-                //    ErrorMsg = pRspInfo.ErrorMsg,
-                //    StatusMsg = pOrderAction.StatusMsg,
-                //}.ToString();
-
-                EmitCancelReject(order, order.OrdStatus, pRspInfo.ErrorMsg);
+                EmitCancelReject(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
             }
         }
         #endregion
@@ -626,16 +550,18 @@ namespace QuantBox.OQ.CTPZQ
         #region 下单报错
         private void OnRspOrderInsert(IntPtr pTraderApi, ref CThostFtdcInputOrderField pInputOrder, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
-            SingleOrder order;
-            string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
-            {
-                tdlog.Error("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
+            tdlog.Error("CTP回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+            GenericOrderItem item;
+            string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
+            if (orderMap.TryGetValue(strKey, out item))
+            {
+                EmitRejected(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+
+                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 //order.Text = new OrderTextResponse()
                 //{
                 //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
@@ -644,23 +570,26 @@ namespace QuantBox.OQ.CTPZQ
                 //    ErrorMsg = pRspInfo.ErrorMsg,
                 //}.ToString();
 
-                EmitRejected(order, pRspInfo.ErrorMsg);
-                _Orders4Cancel.Remove(order);
+                //EmitRejected(order, pRspInfo.ErrorMsg);
+                //_Orders_OrderItem.Remove(order);
             }
         }
 
         private void OnErrRtnOrderInsert(IntPtr pTraderApi, ref CThostFtdcInputOrderField pInputOrder, ref CThostFtdcRspInfoField pRspInfo)
         {
-            SingleOrder order;
-            string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
-            if (_OrderRef2Order.TryGetValue(strKey, out order))
-            {
-                tdlog.Error("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
+            tdlog.Error("交易所回应：{0},{1},开平{2},价{3},原量{4},引用{5},{6}#{7}",
                         pInputOrder.InstrumentID, pInputOrder.Direction, pInputOrder.CombOffsetFlag, pInputOrder.LimitPrice,
                         pInputOrder.VolumeTotalOriginal,
                         pInputOrder.OrderRef, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
 
-                order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+            GenericOrderItem item;
+            string strKey = string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, pInputOrder.OrderRef);
+            if (orderMap.TryGetValue(strKey, out item))
+            {
+                EmitRejected(item,pRspInfo.ErrorID,pRspInfo.ErrorMsg);
+
+
+                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
                 //order.Text = new OrderTextResponse()
                 //{
                 //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
@@ -669,8 +598,115 @@ namespace QuantBox.OQ.CTPZQ
                 //    ErrorMsg = pRspInfo.ErrorMsg,
                 //}.ToString();
 
-                EmitRejected(order, pRspInfo.ErrorMsg);
-                _Orders4Cancel.Remove(order);
+                //EmitRejected(order, pRspInfo.ErrorMsg);
+                //_Orders_OrderItem.Remove(order);
+            }
+        }
+        #endregion
+
+        #region 价格修正
+        public double FixPrice(double price, Side Side, double tickSize, double LowerLimitPrice, double UpperLimitPrice)
+        {
+            //没有设置就直接用
+            if (tickSize > 0)
+            {
+                decimal remainder = ((decimal)price % (decimal)tickSize);
+                if (remainder != 0)
+                {
+                    if (Side == Side.Buy)
+                    {
+                        price = Math.Ceiling(price / tickSize) * tickSize;
+                    }
+                    else
+                    {
+                        price = Math.Floor(price / tickSize) * tickSize;
+                    }
+                }
+                else
+                {
+                    //正好能整除，不操作
+                }
+            }
+
+            if (0 == UpperLimitPrice
+                && 0 == LowerLimitPrice)
+            {
+                //涨跌停无效
+            }
+            else
+            {
+                //防止价格超过涨跌停
+                if (price >= UpperLimitPrice)
+                    price = UpperLimitPrice;
+                else if (price <= LowerLimitPrice)
+                    price = LowerLimitPrice;
+            }
+            return price;
+        }
+        #endregion
+
+        #region 回报通知
+        private void UpdateOrderText(GenericOrderItem item, string message)
+        {
+            foreach (var leg in item.GetLegs())
+            {
+                leg.Order.Text = message;
+            }
+        }
+
+        private void EmitAccepted(GenericOrderItem item)
+        {
+            foreach (var leg in item.GetLegs())
+            {
+                EmitAccepted(leg.Order);
+            }
+        }
+
+        private void EmitRejected(GenericOrderItem item, string message)
+        {
+            foreach (var leg in item.GetLegs())
+            {
+                EmitRejected(leg.Order, message);
+            }
+        }
+
+        private void EmitRejected(GenericOrderItem item, int error_id, string message)
+        {
+            TextResponse r = new TextResponse()
+            {
+                Error = CTPAPI.FromCTP(error_id),
+                ErrorID = error_id,
+                ErrorMsg = message,
+            };
+
+            foreach (var leg in item.GetLegs())
+            {
+                r.OpenClose = leg.OpenClose;
+                EmitRejected(leg.Order, r.ToString());
+            }
+        }
+
+        private void EmitCancelled(GenericOrderItem item)
+        {
+            foreach (var leg in item.GetLegs())
+            {
+                EmitCancelled(leg.Order);
+            }
+        }
+
+        private void EmitCancelReject(GenericOrderItem item,int error_id,string message)
+        {
+            TextResponse r = new TextResponse()
+            {
+                Error = CTPAPI.FromCTP(error_id),
+                ErrorID = error_id,
+                ErrorMsg = message,
+            };
+
+            foreach (var leg in item.GetLegs())
+            {
+                r.OpenClose = leg.OpenClose;
+                EmitCancelReject(leg.Order, leg.Order.OrdStatus, r.ToString());
             }
         }
         #endregion
