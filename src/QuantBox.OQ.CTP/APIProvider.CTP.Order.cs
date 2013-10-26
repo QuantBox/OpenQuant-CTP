@@ -60,7 +60,7 @@ namespace QuantBox.OQ.CTPZQ
         #endregion
 
         #region 下单
-        private GenericCombiner<CommonOrderItem, TextRequest> CommonOrderCombiner = new GenericCombiner<CommonOrderItem, TextRequest>();
+        private GenericCombiner<CommonOrderItem, TextCommon> CommonOrderCombiner = new GenericCombiner<CommonOrderItem, TextCommon>();
         private GenericCombiner<QuoteOrderItem, TextQuote> QuoteOrderCombiner = new GenericCombiner<QuoteOrderItem, TextQuote>();
         private GenericCombiner<SPOrderItem, TextSP> SPOrderCombiner = new GenericCombiner<SPOrderItem, TextSP>();
 
@@ -81,7 +81,7 @@ namespace QuantBox.OQ.CTPZQ
                 {
                     case EnumGroupType.COMMON:
                         {
-                            TextRequest t = JsonConvert.DeserializeObject<TextRequest>(order.Text);
+                            TextCommon t = JsonConvert.DeserializeObject<TextCommon>(order.Text);
                             CommonOrderItem item = CommonOrderCombiner.Add(order as SingleOrder, t);
                             Send(item);
                         }
@@ -104,7 +104,7 @@ namespace QuantBox.OQ.CTPZQ
             else
             {
                 // 无法识别的格式，直接发送报单，只开仓
-                TextRequest t = new TextRequest()
+                TextCommon t = new TextCommon()
                 {
                     Type = EnumGroupType.COMMON,
                     OpenClose = EnumOpenClose.OPEN
