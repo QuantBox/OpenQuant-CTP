@@ -37,6 +37,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
     </Reference>
+    <Reference Include="QuantBox.OQ.Extensions">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.OQ.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="SmartQuant, Version=1.0.3762.22305, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\reference\using\SmartQuant.dll</HintPath>
@@ -81,8 +84,6 @@
     <Compile Include="APIProvider.Settings.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="DataRecord.cs" />
-    <Compile Include="DbInMemInvestorPosition.cs" />
-    <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerItem.cs" />

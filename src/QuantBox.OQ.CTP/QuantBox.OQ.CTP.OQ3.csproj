@@ -91,7 +91,6 @@
     <Compile Include="ApiWrapper.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="DataRecord.cs" />
-    <Compile Include="DbInMemInvestorPosition.cs" />
     <Compile Include="OrderMap.cs" />
     <Compile Include="OrderRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

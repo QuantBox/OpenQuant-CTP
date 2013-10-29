@@ -35,15 +35,9 @@ namespace QuantBox.OQ.CTPZQ
             {
                 if (_bTdConnected)
                 {
-                    //tdlog.Info("GetBrokerInfo");
                 }
                 else
                 {
-                    //if (nGetBrokerInfoCount < 5)
-                    //{
-                    //    tdlog.Info("GetBrokerInfo,交易没有连接，查询无效,5次后将不显示");
-                    //    ++nGetBrokerInfoCount;
-                    //}
                     return brokerInfo;
                 }
 
@@ -56,35 +50,30 @@ namespace QuantBox.OQ.CTPZQ
                     brokerAccount.AddField(field.Name, field.GetValue(m_TradingAccount).ToString());
                 }
 
-                DataRow[] rows = _dbInMemInvestorPosition.SelectAll();
-
-                foreach (DataRow dr in rows)
+                foreach (CThostFtdcInvestorPositionField pos in _dictPositions.Values)
                 {
-                    BrokerPosition brokerPosition = new BrokerPosition {
-                        Symbol = dr[DbInMemInvestorPosition.InstrumentID].ToString()
+                    BrokerPosition brokerPosition = new BrokerPosition
+                    {
+                        Symbol = pos.InstrumentID
                     };
 
-                    int pos = (int)dr[DbInMemInvestorPosition.Position];
-                    TThostFtdcPosiDirectionType PosiDirection = (TThostFtdcPosiDirectionType)dr[DbInMemInvestorPosition.PosiDirection];
-                    if (TThostFtdcPosiDirectionType.Long == PosiDirection)
+                    if (TThostFtdcPosiDirectionType.Long == pos.PosiDirection)
                     {
-                        brokerPosition.LongQty = pos;
+                        brokerPosition.LongQty = pos.Position;
                     }
-                    else if (TThostFtdcPosiDirectionType.Short == PosiDirection)
+                    else if (TThostFtdcPosiDirectionType.Short == pos.PosiDirection)
                     {
-                        brokerPosition.ShortQty = pos;
+                        brokerPosition.ShortQty = pos.Position;
                     }
-                    else
-                    {
-                        if (pos >= 0)//净NET这个概念是什么情况？
-                            brokerPosition.LongQty = pos;
-                        else
-                            brokerPosition.ShortQty = -pos;
-                    }
+
                     brokerPosition.Qty = brokerPosition.LongQty - brokerPosition.ShortQty;
-                    brokerPosition.AddCustomField(DbInMemInvestorPosition.PosiDirection, PosiDirection.ToString());
-                    brokerPosition.AddCustomField(DbInMemInvestorPosition.HedgeFlag, ((TThostFtdcHedgeFlagType)dr[DbInMemInvestorPosition.HedgeFlag]).ToString());
-                    brokerPosition.AddCustomField(DbInMemInvestorPosition.PositionDate, ((TThostFtdcPositionDateType)dr[DbInMemInvestorPosition.PositionDate]).ToString());
+
+                    Type t2 = typeof(CThostFtdcInvestorPositionField);
+                    FieldInfo[] fields2 = t2.GetFields(BindingFlags.Public | BindingFlags.Instance);
+                    foreach (FieldInfo field in fields2)
+                    {
+                        brokerPosition.AddCustomField(field.Name, field.GetValue(pos).ToString());
+                    }
                     brokerAccount.AddPosition(brokerPosition);
                 }
                 brokerInfo.Accounts.Add(brokerAccount);

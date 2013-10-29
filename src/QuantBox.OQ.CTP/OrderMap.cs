@@ -1,12 +1,17 @@
-﻿using QuantBox.CSharp2CTP;
-using QuantBox.OQ.Extensions.Combiner;
+﻿using QuantBox.OQ.Extensions.OrderItem;
 using SmartQuant.Execution;
-using System;
+using SmartQuant.FIX;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
+#if CTP
+using QuantBox.CSharp2CTP;
 
 namespace QuantBox.OQ.CTP
+#elif CTPZQ
+using QuantBox.CSharp2CTPZQ;
+
+namespace QuantBox.OQ.CTPZQ
+#endif
 {
     public class OrderMap
     {
@@ -18,6 +23,8 @@ namespace QuantBox.OQ.CTP
         public readonly Dictionary<GenericOrderItem, CThostFtdcOrderField> OrderItem_OrderField = new Dictionary<GenericOrderItem, CThostFtdcOrderField>();
         // 交易所信息映射到本地信息
         public readonly Dictionary<string, string> OrderSysID_OrderRef = new Dictionary<string, string>();
+        // 标记正在撤单
+        public readonly Dictionary<SingleOrder, OrdStatus> Order_OrdStatus = new Dictionary<SingleOrder, OrdStatus>();
 
         public void Clear()
         {
@@ -25,6 +32,7 @@ namespace QuantBox.OQ.CTP
             Order_OrderItem.Clear();
             OrderItem_OrderField.Clear();
             OrderSysID_OrderRef.Clear();
+            Order_OrdStatus.Clear();
         }
 
         // 用于收到委托回报信息后进行处理
@@ -51,16 +59,10 @@ namespace QuantBox.OQ.CTP
             return OrderItem_OrderField.TryGetValue(key, out value);
         }
 
-        // 通过界面撤单，找到其中的一腿即可
-        public bool TryGetValue(SingleOrder key, out CThostFtdcOrderField value)
+        // 返回状态
+        public bool TryGetValue(SingleOrder key, out OrdStatus value)
         {
-            GenericOrderItem item;
-            if(Order_OrderItem.TryGetValue(key,out item))
-            {
-                return OrderItem_OrderField.TryGetValue(item, out value);
-            }
-            value = new CThostFtdcOrderField();
-            return false;
+            return Order_OrdStatus.TryGetValue(key, out value);
         }
 
         public void CreateNewOrder(string key,GenericOrderItem value)

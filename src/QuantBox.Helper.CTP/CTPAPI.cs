@@ -229,6 +229,32 @@ namespace QuantBox.Helper.CTPZQ
         }
         #endregion
 
+        #region 主动查持仓
+        public Dictionary<string, CThostFtdcInvestorPositionField> InvestorPositions { get; private set; }
+        public void __RegInvestorPositionDictionary(Dictionary<string, CThostFtdcInvestorPositionField> dict)
+        {
+            InvestorPositions = dict;
+        }
+        public void ReqQryInvestorPosition(string instrument)
+        {
+            if (null != m_pTdApi
+                && IntPtr.Zero != m_pTdApi)
+            {
+                TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, instrument);
+            }
+        }
+
+        public delegate void RspReqQryInvestorPosition(CThostFtdcInvestorPositionField pInvestorPosition);
+        public event RspReqQryInvestorPosition OnRspReqQryInvestorPosition;
+        public void FireOnRspReqQryInvestorPosition(CThostFtdcInvestorPositionField pInvestorPosition)
+        {
+            if (null != OnRspReqQryInvestorPosition)
+            {
+                OnRspReqQryInvestorPosition(pInvestorPosition);
+            }
+        }
+        #endregion
+
         #region OnStrategyStart
         public EventHandler OnLive;
         public void EmitOnLive()
@@ -278,16 +304,6 @@ namespace QuantBox.Helper.CTPZQ
                     return TThostFtdcOffsetFlagType.Open;
             }
         }
-
-        //public static OpenClose ToOpenClose(byte b)
-        //{
-        //    return ToOpenClose((TThostFtdcOffsetFlagType)b);
-        //}
-
-        //public static OpenClose ToOpenClose(int)
-        //{
-        //    return ToOpenClose((TThostFtdcOffsetFlagType)c);
-        //}
         #endregion
 
         #region 买卖转换

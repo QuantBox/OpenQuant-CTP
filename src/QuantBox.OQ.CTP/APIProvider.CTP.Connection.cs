@@ -23,14 +23,13 @@ namespace QuantBox.OQ.CTPZQ
         private void Clear()
         {
             orderMap.Clear();
-            _dbInMemInvestorPosition.Clear();
+            _dictPositions.Clear();
             _dictDepthMarketData.Clear();
             _dictInstruments.Clear();
             _dictInstruments2.Clear();
             _dictCommissionRate.Clear();
             _dictMarginRate.Clear();
             _dictAltSymbol2Instrument.Clear();
-            _PendingCancelFlags.Clear();
 
             _yyyy = 0;
             _MM = 0;
@@ -157,6 +156,7 @@ namespace QuantBox.OQ.CTPZQ
             CTPAPI.GetInstance().__RegInstrumentDictionary(_dictInstruments);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(_dictCommissionRate);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(_dictDepthMarketData);
+            CTPAPI.GetInstance().__RegInvestorPositionDictionary(_dictPositions);
 #if CTP
             CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(_dictMarginRate);
 #endif
@@ -328,6 +328,7 @@ namespace QuantBox.OQ.CTPZQ
             CTPAPI.GetInstance().__RegInstrumentDictionary(null);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(null);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(null);
+            CTPAPI.GetInstance().__RegInvestorPositionDictionary(null);
 #if CTP
             CTPAPI.GetInstance().__RegInstrumentMarginRateDictionary(null);
 #endif
@@ -501,7 +502,7 @@ namespace QuantBox.OQ.CTPZQ
                     TraderApi.TD_ReqQryTradingAccount(m_pTdApi);
 
                     //请求查询全部持仓
-                    _dbInMemInvestorPosition.Clear();
+                    _dictPositions.Clear();
                     TraderApi.TD_ReqQryInvestorPosition(m_pTdApi, null);
 
                     //请求查询合约

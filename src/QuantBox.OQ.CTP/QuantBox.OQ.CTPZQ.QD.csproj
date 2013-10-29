@@ -80,8 +80,6 @@
     <Compile Include="APIProvider.Settings.cs" />
     <Compile Include="BrokerItem.cs" />
     <Compile Include="DataRecord.cs" />
-    <Compile Include="DbInMemInvestorPosition.cs" />
-    <Compile Include="DbInMemTrade.cs" />
     <Compile Include="OrderRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServerItem.cs" />

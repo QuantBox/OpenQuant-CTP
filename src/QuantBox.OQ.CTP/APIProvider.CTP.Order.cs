@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Windows.Forms;
 
-using SmartQuant;
-using SmartQuant.Data;
 using SmartQuant.Execution;
 using SmartQuant.FIX;
 using SmartQuant.Instruments;
-using SmartQuant.Providers;
 using Newtonsoft.Json;
 using QuantBox.OQ.Extensions;
 using QuantBox.OQ.Extensions.OrderText;
 using QuantBox.OQ.Extensions.Combiner;
+using QuantBox.OQ.Extensions.OrderItem;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -31,7 +25,6 @@ namespace QuantBox.OQ.CTPZQ
     partial class APIProvider
     {
         #region 撤单
-        private readonly Dictionary<SingleOrder, OrdStatus> _PendingCancelFlags = new Dictionary<SingleOrder, OrdStatus>();
         private void Cancel(SingleOrder order)
         {
             if (null == order)
@@ -51,7 +44,8 @@ namespace QuantBox.OQ.CTPZQ
                 if (orderMap.TryGetValue(item, out _order))
                 {
                     // 标记下正在撤单
-                    //_PendingCancelFlags[order] = order.OrdStatus;
+                    orderMap.Order_OrdStatus[order] = order.OrdStatus;
+                    EmitExecutionReport(order, OrdStatus.PendingCancel);
 
                     TraderApi.TD_CancelOrder(m_pTdApi, ref _order);
                 }
@@ -63,6 +57,8 @@ namespace QuantBox.OQ.CTPZQ
         private GenericCombiner<CommonOrderItem, TextCommon> CommonOrderCombiner = new GenericCombiner<CommonOrderItem, TextCommon>();
         private GenericCombiner<QuoteOrderItem, TextQuote> QuoteOrderCombiner = new GenericCombiner<QuoteOrderItem, TextQuote>();
         private GenericCombiner<SPOrderItem, TextSP> SPOrderCombiner = new GenericCombiner<SPOrderItem, TextSP>();
+        private GenericCombiner<SPCOrderItem, TextSPC> SPCOrderCombiner = new GenericCombiner<SPCOrderItem, TextSPC>();
+        private GenericCombiner<SPDOrderItem, TextSPD> SPDOrderCombiner = new GenericCombiner<SPDOrderItem, TextSPD>();
 
         private void Send(NewOrderSingle order)
         {
@@ -96,6 +92,20 @@ namespace QuantBox.OQ.CTPZQ
                         {
                             TextSP t = JsonConvert.DeserializeObject<TextSP>(order.Text);
                             SPOrderItem item = SPOrderCombiner.Add(order as SingleOrder, t);
+                            Send(item);
+                        }
+                        break;
+                    case EnumGroupType.SPC:
+                        {
+                            TextSPC t = JsonConvert.DeserializeObject<TextSPC>(order.Text);
+                            SPCOrderItem item = SPCOrderCombiner.Add(order as SingleOrder, t);
+                            Send(item);
+                        }
+                        break;
+                    case EnumGroupType.SPD:
+                        {
+                            TextSPD t = JsonConvert.DeserializeObject<TextSPD>(order.Text);
+                            SPDOrderItem item = SPDOrderCombiner.Add(order as SingleOrder, t);
                             Send(item);
                         }
                         break;
@@ -274,7 +284,8 @@ namespace QuantBox.OQ.CTPZQ
                             OrderPriceType,
                             TimeCondition,
                             ContingentCondition,
-                            order.StopPx);
+                            order.StopPx,
+                            VolumeCondition);
 #endif
             if (nRet > 0)
             {
@@ -310,7 +321,7 @@ namespace QuantBox.OQ.CTPZQ
             TThostFtdcVolumeConditionType VolumeCondition = TThostFtdcVolumeConditionType.AV;
 
             int nRet = 0;
-
+#if CTP
             nRet = TraderApi.TD_SendOrder(m_pTdApi,
                         symbol,
                         Direction,
@@ -323,7 +334,7 @@ namespace QuantBox.OQ.CTPZQ
                         ContingentCondition,
                         0,
                         VolumeCondition);
-
+#endif
             if (nRet > 0)
             {
                 orderMap.CreateNewOrder(string.Format("{0}:{1}:{2}", _RspUserLogin.FrontID, _RspUserLogin.SessionID, nRet), item);
@@ -372,7 +383,7 @@ namespace QuantBox.OQ.CTPZQ
                         switch (pOrder.OrderSubmitStatus)
                         {
                             case TThostFtdcOrderSubmitStatusType.InsertRejected:
-                                EmitRejected(item, pOrder.StatusMsg);
+                                EmitRejected(item,pOrder.StatusMsg);
                                 break;
                             default:
                                 EmitCancelled(item);
@@ -402,17 +413,21 @@ namespace QuantBox.OQ.CTPZQ
         #region 委托与成交事件
         private void OnRtnOrderFirstStatus(GenericOrderItem item, CThostFtdcOrderField pOrder, string OrderSysID, string Key)
         {
-            // 判断是第一次报单，还是只是撤单时的第一条记录
-            if (!orderMap.OrderSysID_OrderRef.ContainsKey(OrderSysID))
+            // 向上层报告保单引用
+            if(OrderSysID.Length>0)
             {
                 orderMap.OrderSysID_OrderRef[OrderSysID] = Key;
-                
 
-                // 要标记某个原始Order可以撤单
-                // 先找到原始Order,这个时候只有下单时的OrderRef_OrderItem中有信息，已经通过参数传过来了，直接取即可
-
-                // 在OrderItem_OrderField中记录与API的对应
-                orderMap.OrderItem_OrderField[item] = pOrder;
+                foreach (var o in item.GetLegs())
+                {
+                    // 这个地方要再查一查，是不是要移动出来？
+                    o.Order.OrderID = pOrder.OrderSysID;
+                }
+            }
+            
+            // 判断是第一次报单，还是只是撤单时的第一条记录
+            if (!orderMap.OrderItem_OrderField.ContainsKey(item))
+            {
                 // 在Order_OrderItem中记录绑定关系
                 foreach (var o in item.GetLegs())
                 {
@@ -421,6 +436,9 @@ namespace QuantBox.OQ.CTPZQ
 
                 EmitAccepted(item);
             }
+
+            // 在OrderItem_OrderField中记录与API的对应关系
+            orderMap.OrderItem_OrderField[item] = pOrder;
         }
 
         private void OnRtnOrderLastStatus(GenericOrderItem item, CThostFtdcOrderField pOrder, string OrderSysID, string Key)
@@ -455,6 +473,23 @@ namespace QuantBox.OQ.CTPZQ
             orderMap.OrderRef_OrderItem.Remove(Key);
             orderMap.OrderSysID_OrderRef.Remove(OrderSysID);
         }
+
+        private void OnLastStatus(SingleOrder order)
+        {
+            // 一个单子成交完成，报单组可能还没有完，这个地方一定要留意
+            if (!order.IsDone)
+                return;
+
+             GenericOrderItem item;
+             if (orderMap.TryGetValue(order, out item))
+             {
+                 CThostFtdcOrderField _order;
+                 if (orderMap.TryGetValue(item, out _order))
+                 {
+                     OnLastStatus(item, _order.OrderSysID, _order.OrderRef);
+                 }
+             }
+        }
         #endregion
 
         #region 成交回报
@@ -477,8 +512,11 @@ namespace QuantBox.OQ.CTPZQ
             {
                 MultiOrderLeg leg = item.GetLeg(CTPAPI.FromCTP(pTrade.Direction), pTrade.InstrumentID);
                 SingleOrder order = leg.Order;
-
+#if CTP
                 double Price = pTrade.Price;
+#elif CTPZQ
+                double Price = Convert.ToDouble(pTrade.Price);
+#endif
                 int Volume = pTrade.Volume;
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
@@ -504,28 +542,7 @@ namespace QuantBox.OQ.CTPZQ
             if (orderMap.TryGetValue(strKey, out item))
             {
                 EmitCancelReject(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-
-
-                //OrdStatus status;
-                //if (_PendingCancelFlags.TryGetValue(order, out status))
-                //{
-                //    _PendingCancelFlags.Remove(order);
-                //    EmitExecutionReport(order, status);
-                //}
-
-                
-
-                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                
-                //order.Text = new OrderTextResponse()
-                //{
-                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
-                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
-                //    ErrorID = pRspInfo.ErrorID,
-                //    ErrorMsg = pRspInfo.ErrorMsg,
-                //}.ToString();
-
-                
+                EmitCancelLastStatus(item);
             }
         }
 
@@ -541,8 +558,8 @@ namespace QuantBox.OQ.CTPZQ
             string strKey = string.Format("{0}:{1}:{2}", pOrderAction.FrontID, pOrderAction.SessionID, pOrderAction.OrderRef);
             if (orderMap.TryGetValue(strKey, out item))
             {
-
                 EmitCancelReject(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
+                EmitCancelLastStatus(item);
             }
         }
         #endregion
@@ -560,18 +577,7 @@ namespace QuantBox.OQ.CTPZQ
             if (orderMap.TryGetValue(strKey, out item))
             {
                 EmitRejected(item, pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-
-                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                //order.Text = new OrderTextResponse()
-                //{
-                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
-                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
-                //    ErrorID = pRspInfo.ErrorID,
-                //    ErrorMsg = pRspInfo.ErrorMsg,
-                //}.ToString();
-
-                //EmitRejected(order, pRspInfo.ErrorMsg);
-                //_Orders_OrderItem.Remove(order);
+                OnLastStatus(item, "", strKey);
             }
         }
 
@@ -587,19 +593,7 @@ namespace QuantBox.OQ.CTPZQ
             if (orderMap.TryGetValue(strKey, out item))
             {
                 EmitRejected(item,pRspInfo.ErrorID,pRspInfo.ErrorMsg);
-
-
-                //order.Text = string.Format("{0}|{1}#{2}", order.Text.Substring(0, Math.Min(order.Text.Length, 64)), pRspInfo.ErrorID, pRspInfo.ErrorMsg);
-                //order.Text = new OrderTextResponse()
-                //{
-                //    OpenClose = CTPAPI.ToOpenClose(order.PositionEffect),
-                //    Error = CTPAPI.ToQBError(pRspInfo.ErrorID),
-                //    ErrorID = pRspInfo.ErrorID,
-                //    ErrorMsg = pRspInfo.ErrorMsg,
-                //}.ToString();
-
-                //EmitRejected(order, pRspInfo.ErrorMsg);
-                //_Orders_OrderItem.Remove(order);
+                OnLastStatus(item, "", strKey);
             }
         }
         #endregion
@@ -664,9 +658,17 @@ namespace QuantBox.OQ.CTPZQ
 
         private void EmitRejected(GenericOrderItem item, string message)
         {
+            TextResponse r = new TextResponse()
+            {
+                Error = EnumError.OTHER,
+                StatusMsg = message,
+            };
+
             foreach (var leg in item.GetLegs())
             {
-                EmitRejected(leg.Order, message);
+                r.OpenClose = leg.OpenClose;
+                leg.Order.Text = r.ToString();
+                EmitRejected(leg.Order, r.ToString());
             }
         }
 
@@ -682,6 +684,7 @@ namespace QuantBox.OQ.CTPZQ
             foreach (var leg in item.GetLegs())
             {
                 r.OpenClose = leg.OpenClose;
+                leg.Order.Text = r.ToString();
                 EmitRejected(leg.Order, r.ToString());
             }
         }
@@ -706,7 +709,21 @@ namespace QuantBox.OQ.CTPZQ
             foreach (var leg in item.GetLegs())
             {
                 r.OpenClose = leg.OpenClose;
+                leg.Order.Text = r.ToString();
                 EmitCancelReject(leg.Order, leg.Order.OrdStatus, r.ToString());
+            }
+        }
+
+        private void EmitCancelLastStatus(GenericOrderItem item)
+        {
+            foreach (var leg in item.GetLegs())
+            {
+                OrdStatus status;
+                if (orderMap.TryGetValue(leg.Order , out status))
+                {
+                    EmitExecutionReport(leg.Order, status);
+                    orderMap.Order_OrdStatus.Remove(leg.Order);
+                }
             }
         }
         #endregion

@@ -12,11 +12,12 @@ using SmartQuant.Instruments;
 using SmartQuant.Providers;
 using QuantBox.OQ.CTP;
 
+using QuantBox.OQ.Extensions.Combiner;
+using QuantBox.OQ.Extensions.OrderItem;
 
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
-using QuantBox.OQ.Extensions.Combiner;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ
@@ -100,7 +101,7 @@ namespace QuantBox.OQ.CTPZQ
         private readonly OrderMap orderMap = new OrderMap();
 
         //记录账号的实际持仓，保证以最低成本选择开平
-        private readonly DbInMemInvestorPosition _dbInMemInvestorPosition = new DbInMemInvestorPosition();
+        private readonly Dictionary<string, CThostFtdcInvestorPositionField> _dictPositions = new Dictionary<string, CThostFtdcInvestorPositionField>();
         //记录合约实际行情，用于向界面通知行情用，这里应当记录AltSymbol
         private readonly Dictionary<string, CThostFtdcDepthMarketDataField> _dictDepthMarketData = new Dictionary<string, CThostFtdcDepthMarketDataField>();
         //记录合约列表,从实盘合约名到对象的映射
@@ -194,16 +195,27 @@ namespace QuantBox.OQ.CTPZQ
         #endregion
 
         #region 持仓回报
+        private string GetPositionKey(string InstrumentID,
+            TThostFtdcPosiDirectionType PosiDirection,
+            TThostFtdcHedgeFlagType HedgeFlag,
+            TThostFtdcPositionDateType PositionDate)
+        {
+            return string.Format("{0}:{1}:{2}:{3}", InstrumentID, PosiDirection, HedgeFlag, PositionDate);
+        }
+
+        private string GetPositionKey(CThostFtdcInvestorPositionField p)
+        {
+            return GetPositionKey(p.InstrumentID, p.PosiDirection, p.HedgeFlag, p.PositionDate);
+        }
+
         private void OnRspQryInvestorPosition(IntPtr pTraderApi, ref CThostFtdcInvestorPositionField pInvestorPosition, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
         {
             if (0 == pRspInfo.ErrorID)
             {
-                _dbInMemInvestorPosition.InsertOrReplace(
-                    pInvestorPosition.InstrumentID,
-                    pInvestorPosition.PosiDirection,
-                    pInvestorPosition.HedgeFlag,
-                    pInvestorPosition.PositionDate,
-                    pInvestorPosition.Position);
+                string key = GetPositionKey(pInvestorPosition);
+                _dictPositions[key] = pInvestorPosition;
+                CTPAPI.GetInstance().FireOnRspReqQryInvestorPosition(pInvestorPosition);
+
                 timerPonstion.Enabled = false;
                 timerPonstion.Enabled = true;
             }
@@ -264,41 +276,32 @@ namespace QuantBox.OQ.CTPZQ
             // 遍历是否过期
             if (pInstrumentStatus.InstrumentStatus == TThostFtdcInstrumentStatusType.Closed)
             {
-                //List<SingleOrder> tmpList = new List<SingleOrder>();
-                //string symbol = null;
-                //foreach(var order in _Orders4Cancel.Keys)
-                //{
-                //    // 如果与上次处理的是同一合约，就立即处理
-                //    if (symbol == order.Symbol)
-                //    {
-                //        EmitExpired(order);
-                //        tmpList.Add(order);
-                //        continue;
-                //    }
+                Dictionary<GenericOrderItem, CThostFtdcOrderField> tmp = new Dictionary<GenericOrderItem, CThostFtdcOrderField>();
+                foreach (var pair in orderMap.OrderItem_OrderField)
+                {
+                    if(pair.Value.ExchangeID == pInstrumentStatus.ExchangeID)
+                    {
+                        int cnt = pair.Key.GetLegNum();
+                        foreach(var pair2 in orderMap.Order_OrderItem)
+                        {
+                            // 得找到OpenQuant层的单子
+                            if(pair.Key == pair2.Value)
+                            {
+                                --cnt;
+                                EmitExpired(pair2.Key);
+                                if (cnt <= 0)
+                                    break;
+                            }
+                        }
+                        tmp[pair.Key] = pair.Value;
+                    }
+                }
 
-                //    string altSymbol = order.Instrument.GetSymbol(Name);
-                //    string altExchange = order.Instrument.GetSecurityExchange(Name);
-
-                //    CThostFtdcInstrumentField _Instrument;
-                //    if (_dictInstruments.TryGetValue(altSymbol, out _Instrument))
-                //    {
-                //        altExchange = _Instrument.ExchangeID;
-                //        symbol = order.Symbol;
-                //    }
-
-                //    if (altExchange == pInstrumentStatus.ExchangeID)
-                //    {
-                //        EmitExpired(order);
-                //        tmpList.Add(order);
-                //    }
-                //}
-
-                //// 只能用一个临时列表来清理
-                //foreach (var o in tmpList)
-                //{
-                //    _Orders4Cancel.Remove(o);
-                //}
-                //tmpList.Clear();
+                foreach (var pair in tmp)
+                {
+                    OnLastStatus(pair.Key, pair.Value.OrderSysID, pair.Value.OrderRef);
+                }
+                tmp.Clear();
             }
         }
         #endregion
