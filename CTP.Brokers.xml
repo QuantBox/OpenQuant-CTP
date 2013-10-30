@@ -238,17 +238,6 @@
       </ServerItem>
       <ServerItem>
         <AuthCode />
-        <BrokerID>2020</BrokerID>
-        <Trading>
-          <string>tcp://asp-sim2-front1.financial-trading-platform.com:26205</string>
-        </Trading>
-        <MarketData>
-          <string>tcp://asp-sim2-md1.financial-trading-platform.com:26213</string>
-        </MarketData>
-        <Label>国际期货模拟(商品)</Label>
-      </ServerItem>
-      <ServerItem>
-        <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
 	    <string>tcp://cifco-front2.financial-trading-platform.com:41205</string>
