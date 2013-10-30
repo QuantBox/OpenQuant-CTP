@@ -217,7 +217,7 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://cifco-front1.financial-trading-platform.com:41205</string>
+	    <string>tcp://cifco-front1.financial-trading-platform.com:41205</string>
             <string>tcp://cifco-front3.financial-trading-platform.com:41205</string>
             <string>tcp://cifco-front4.financial-trading-platform.com:41205</string>
             <string>tcp://cifco-front5.financial-trading-platform.com:41205</string>
@@ -226,7 +226,7 @@
             <string>tcp://cifco-front9.financial-trading-platform.com:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://tcp://cifco-md1.financial-trading-platform.com:41213</string>
+	    <string>tcp://tcp://cifco-md1.financial-trading-platform.com:41213</string>
             <string>tcp://tcp://cifco-md3.financial-trading-platform.com:41213</string>
             <string>tcp://tcp://cifco-md4.financial-trading-platform.com:41213</string>
             <string>tcp://tcp://cifco-md5.financial-trading-platform.com:41213</string>
@@ -251,12 +251,12 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://cifco-front2.financial-trading-platform.com:41205</string>
+	    <string>tcp://cifco-front2.financial-trading-platform.com:41205</string>
             <string>tcp://cifco-front6.financial-trading-platform.com:41205</string>
             <string>tcp://cifco-front9.financial-trading-platform.com:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://cifco-md2.financial-trading-platform.com:41213</string>
+	    <string>tcp://cifco-md2.financial-trading-platform.com:41213</string>
             <string>tcp://cifco-md6.financial-trading-platform.com:41213</string>
             <string>tcp://cifco-md9.financial-trading-platform.com:41213</string>
         </MarketData>
@@ -266,11 +266,11 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			<string>tcp://218.241.197.56:41205</string>
+	    <string>tcp://218.241.197.56:41205</string>
             <string>tcp://218.241.197.55:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://218.241.197.56:41213</string>
+	    <string>tcp://218.241.197.56:41213</string>
             <string>tcp://218.241.197.55:41213</string>
         </MarketData>
         <Label>国际期货实盘(北京电信)</Label>
@@ -279,12 +279,12 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://123.127.45.138:41205</string>
+	    <string>tcp://123.127.45.138:41205</string>
             <string>tcp://123.127.45.137:41205</string>
             <string>tcp://123.127.45.139:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://123.127.45.138:41213</string>
+	    <string>tcp://123.127.45.138:41213</string>
             <string>tcp://123.127.45.137:41213</string>
             <string>tcp://123.127.45.139:41213</string>
         </MarketData>
@@ -294,12 +294,12 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://61.144.241.113:41205</string>
+	    <string>tcp://61.144.241.113:41205</string>
             <string>tcp://61.144.241.114:41205</string>
             <string>tcp://61.144.241.115:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://61.144.241.113:41213</string>
+	    <string>tcp://61.144.241.113:41213</string>
             <string>tcp://61.144.241.114:41213</string>
             <string>tcp://61.144.241.115:41213</string>
         </MarketData>
@@ -309,11 +309,11 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://210.22.25.180:41205</string>
+	    <string>tcp://210.22.25.180:41205</string>
             <string>tcp://210.22.25.184:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://210.22.25.180:41213</string>
+	    <string>tcp://210.22.25.180:41213</string>
             <string>tcp://210.22.25.184:41213</string>
         </MarketData>
         <Label>国际期货实盘(深圳联通)</Label>
@@ -322,14 +322,14 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://218.241.197.52:41205</string>
+	    <string>tcp://218.241.197.52:41205</string>
             <string>tcp://218.241.197.53:41205</string>
             <string>tcp://218.241.197.54:41205</string>
             <string>tcp://123.127.45.145:41205</string>
             <string>tcp://218.241.197.59:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://218.241.197.52:41213</string>
+	    <string>tcp://218.241.197.52:41213</string>
             <string>tcp://218.241.197.53:41213</string>
             <string>tcp://218.241.197.54:41213</string>
             <string>tcp://123.127.45.145:41213</string>
@@ -341,14 +341,14 @@
         <AuthCode />
         <BrokerID>8090</BrokerID>
         <Trading>
-			      <string>tcp://123.127.45.141:41205</string>
+	    <string>tcp://123.127.45.141:41205</string>
             <string>tcp://123.127.45.144:41205</string>
             <string>tcp://123.127.45.142:41205</string>
             <string>tcp://123.127.45.143:41205</string>
             <string>tcp://123.127.45.145:41205</string>
         </Trading>
         <MarketData>
-			      <string>tcp://123.127.45.141:41213</string>
+	    <string>tcp://123.127.45.141:41213</string>
             <string>tcp://123.127.45.144:41213</string>
             <string>tcp://123.127.45.142:41213</string>
             <string>tcp://123.127.45.143:41213</string>
