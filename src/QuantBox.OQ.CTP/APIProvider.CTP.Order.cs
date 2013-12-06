@@ -375,6 +375,9 @@ namespace QuantBox.OQ.CTPZQ
                     case TThostFtdcOrderStatusType.AllTraded:
                     case TThostFtdcOrderStatusType.PartTradedNotQueueing:
                     case TThostFtdcOrderStatusType.NoTradeNotQueueing:
+                        // 郑商所如果立即成交可能只收到两条信息
+                        // 第二条就是全成，并且只在这有OrderSysID
+                        OnRtnOrderFirstStatus(item, pOrder, strSysID, strKey);
                         OnRtnOrderLastStatus(item, pOrder, strSysID, strKey);
                         break;
                         /// 其它情况
@@ -504,6 +507,11 @@ namespace QuantBox.OQ.CTPZQ
             string strKey;
             if (!orderMap.TryGetValue(strSysID, out strKey))
             {
+                tdlog.Warn("找不到对应OrderSysID: {0},{1},{2}",
+                    strSysID,
+                    pTrade.BrokerOrderSeq,
+                    pTrade.OrderLocalID);
+
                 return;
             }
 
@@ -520,10 +528,15 @@ namespace QuantBox.OQ.CTPZQ
                 int Volume = pTrade.Volume;
 
                 int LeavesQty = (int)order.LeavesQty - Volume;
-                EmitFilled(order, Price, Volume,CommType.Absolute,0);
+                EmitFilled(order, Price, Volume, CommType.Absolute, 0);
 
                 // 成交完成，清理数据
                 OnRtnTradeLastStatus(item, pTrade, strSysID, strKey);
+            }
+            else
+            {
+                tdlog.Warn("找不到对应Key: {0}",
+                    strKey);
             }
         }
         #endregion

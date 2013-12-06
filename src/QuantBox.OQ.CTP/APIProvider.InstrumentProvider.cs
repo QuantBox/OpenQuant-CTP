@@ -143,6 +143,17 @@ namespace QuantBox.OQ.CTPZQ
                         {
                             tdlog.Warn("合约:{0},字段内容:{1},{2}", inst.InstrumentID, inst.ExpireDate, ex.Message);
                         }
+
+                        if (inst.ProductClass == TThostFtdcProductClassType.Options)
+                        {
+                            // 支持中金所，大商所，郑商所
+                            var match = Regex.Match(inst.InstrumentID, @"(\d+)(-?)([CP])(-?)(\d+)");
+                            if (match.Success)
+                            {
+                                definition.AddField(EFIXField.PutOrCall, match.Groups[3].Value == "C" ? FIXPutOrCall.Call : FIXPutOrCall.Put);
+                                definition.AddField(EFIXField.StrikePrice, double.Parse(match.Groups[5].Value));
+                            }
+                        }
                     }
 
                     FIXSecurityAltIDGroup group = new FIXSecurityAltIDGroup();
@@ -186,7 +197,7 @@ namespace QuantBox.OQ.CTPZQ
                     securityType = FIXSecurityType.MultiLegInstrument;//此处是否理解上有不同
                     break;
                 case TThostFtdcProductClassType.Options:
-                    securityType = FIXSecurityType.Option;
+                    securityType = FIXSecurityType.FutureOption;
                     break;
 #if CTPZQ
                 case TThostFtdcProductClassType.StockA:
