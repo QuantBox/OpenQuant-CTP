@@ -219,7 +219,7 @@ namespace QuantBox.OQ.CTPZQ
             }
 
             //新建目录
-            _newTempPath = ApiTempPath + Path.DirectorySeparatorChar + server.BrokerID + Path.DirectorySeparatorChar + account.InvestorId;
+            _newTempPath = string.Format("{1}{0}{2}{0}{3}{0}{4}",Path.DirectorySeparatorChar,ApiTempPath,this.Name, server.BrokerID, account.InvestorId);
             Directory.CreateDirectory(_newTempPath);
 
             ChangeStatus(ProviderStatus.Connecting);
