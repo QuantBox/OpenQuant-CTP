@@ -473,8 +473,9 @@ namespace QuantBox.OQ.CTPZQ
             }
 
             orderMap.OrderItem_OrderField.Remove(item);
-            orderMap.OrderRef_OrderItem.Remove(Key);
             orderMap.OrderSysID_OrderRef.Remove(OrderSysID);
+            // 这个地方如果删除了关系，会导致成交完成的单子撤单拒绝没有回报,如何操作？
+            orderMap.OrderRef_OrderItem.Remove(Key);
         }
 
         private void OnLastStatus(SingleOrder order)

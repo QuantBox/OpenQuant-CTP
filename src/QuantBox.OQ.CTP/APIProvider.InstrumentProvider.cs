@@ -210,7 +210,7 @@ namespace QuantBox.OQ.CTPZQ
                     break;
 #endif
                 default:
-                    securityType = FIXSecurityType.NoSecurityType;
+                    securityType = FIXSecurityType.CommonStock;
                     break;
             }
             return securityType;
@@ -276,8 +276,13 @@ namespace QuantBox.OQ.CTPZQ
                 case "SZETF":
                     securityType = FIXSecurityType.ExchangeTradedFund;
                     break;
+                case "SHRATIONED":
+                case "SZRATIONED":
+                case "SZCYB":
+                    securityType = FIXSecurityType.CommonStock;
+                    break;
                 default:
-                    securityType = FIXSecurityType.NoSecurityType;
+                    securityType = FIXSecurityType.CommonStock;
                     break;
             }
             return securityType;
@@ -290,6 +295,12 @@ namespace QuantBox.OQ.CTPZQ
             {
                 case "SHA":
                     securityType = FIXSecurityType.CommonStock;
+                    break;
+                case "SHETF":
+                    securityType = FIXSecurityType.ExchangeTradedFund;
+                    break;
+                case "SZETF":
+                    securityType = FIXSecurityType.ExchangeTradedFund;
                     break;
                 case "SZA":
                     {
@@ -320,7 +331,7 @@ namespace QuantBox.OQ.CTPZQ
                         }
                         else
                         {
-                            securityType = FIXSecurityType.NoSecurityType;
+                            securityType = FIXSecurityType.CommonStock;
                         }
                     }
                     break;
