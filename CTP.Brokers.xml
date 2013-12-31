@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <ArrayOfBrokerItem xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <BrokerItem>
     <Label>银河期货</Label>
@@ -53,6 +53,16 @@
           <string>tcp://124.207.185.169:41213</string>
         </MarketData>
         <Label>银河期货中金仿真(电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <BrokerID>3030</BrokerID>
+        <Trading>
+          <string>tcp://124.207.185.168:4120</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://124.207.185.168:4121</string>
+        </MarketData>
+        <Label>银河期货股指期权仿真</Label>
       </ServerItem>
     </Server>
   </BrokerItem>

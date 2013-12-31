@@ -341,7 +341,7 @@ namespace QuantBox.OQ.CTPZQ
 
         private string GetYahooSymbol(string InstrumentID, string ExchangeID)
         {
-            if (ExchangeID.Length >= 2)
+            if (InstrumentID.Length >= 6 && ExchangeID.Length >= 2)
             {
                 return string.Format("{0}.{1}", InstrumentID.Substring(0,6), ExchangeID.Substring(0, 2));
             }
