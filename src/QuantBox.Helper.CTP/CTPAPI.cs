@@ -298,8 +298,6 @@ namespace QuantBox.Helper.CTPZQ
                     return TThostFtdcOffsetFlagType.Close;
                 case EnumOpenClose.CLOSE_TODAY:
                     return TThostFtdcOffsetFlagType.CloseToday;
-                case EnumOpenClose.CLOSE_YESTERDAY:
-                    return TThostFtdcOffsetFlagType.CloseYesterday;
                 default:
                     return TThostFtdcOffsetFlagType.Open;
             }
