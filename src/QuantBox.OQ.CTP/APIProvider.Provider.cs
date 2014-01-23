@@ -12,6 +12,7 @@ using System.Windows.Forms;
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
+using System.Collections.Generic;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ
@@ -23,6 +24,9 @@ namespace QuantBox.OQ.CTPZQ
 {
     public partial class APIProvider : IProvider, IDisposable
     {
+        private byte _Id;
+        private string _Name;
+
         private ProviderStatus status;
         private bool isConnected;
 
@@ -42,8 +46,33 @@ namespace QuantBox.OQ.CTPZQ
             Dispose(false);
         }
 
+        static bool bDoOnce = true;
         public APIProvider()
         {
+#if CTP
+            if (bDoOnce)
+            {
+                Init(55, "CTP");
+                bDoOnce = false;
+
+                // 在QR中用多Provider变相实现多账号功能
+                new APIProvider().Init(100, "CTP100");
+                new APIProvider().Init(101, "CTP101");
+                new APIProvider().Init(102, "CTP102");
+                new APIProvider().Init(103, "CTP103");
+                new APIProvider().Init(104, "CTP104");
+                new APIProvider().Init(105, "CTP105");
+            }
+#elif CTPZQ
+            Init(56,"CTPZQ");
+#endif
+        }
+
+        public void Init(byte Id,string Name)
+        {
+            _Id = Id;
+            _Name = Name;
+
             mdlog = LogManager.GetLogger(Name + ".M");
             tdlog = LogManager.GetLogger(Name + ".T");
 
@@ -51,7 +80,7 @@ namespace QuantBox.OQ.CTPZQ
             {
                 LogManager.Configuration = new XmlLoggingConfiguration(@"Bin/QuantBox.nlog");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 tdlog.Warn(ex.Message);
             }
@@ -98,21 +127,15 @@ namespace QuantBox.OQ.CTPZQ
         [Category(CATEGORY_INFO)]
         public byte Id//不能与已经安装的插件ID重复
         {
-#if CTP
-            get { return 55; }
-#elif CTPZQ
-            get { return 56; }
-#endif
+            get { return _Id; }
+            set { _Id = value; }
         }
 
         [Category(CATEGORY_INFO)]
         public string Name
         {
-#if CTP
-            get { return "CTP"; }//不能与已经安装的插件Name重复
-#elif CTPZQ
-            get { return "CTPZQ"; }//不能与已经安装的插件Name重复
-#endif
+            get { return _Name; }
+            set { _Name = value; }
         }
 
         [Category(CATEGORY_INFO)]
