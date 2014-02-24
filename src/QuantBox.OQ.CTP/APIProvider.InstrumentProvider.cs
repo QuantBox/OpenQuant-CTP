@@ -187,18 +187,21 @@ namespace QuantBox.OQ.CTPZQ
          */
         private string GetSecurityType(CThostFtdcInstrumentField inst)
         {
-            string securityType = FIXSecurityType.NoSecurityType;
-            switch (inst.ProductClass)
+            string securityType = FIXSecurityType.CommonStock;
+
+            try
             {
-                case TThostFtdcProductClassType.Futures:
-                    securityType = FIXSecurityType.Future;
-                    break;
-                case TThostFtdcProductClassType.Combination:
-                    securityType = FIXSecurityType.MultiLegInstrument;//此处是否理解上有不同
-                    break;
-                case TThostFtdcProductClassType.Options:
-                    securityType = FIXSecurityType.FutureOption;
-                    break;
+                switch (inst.ProductClass)
+                {
+                    case TThostFtdcProductClassType.Futures:
+                        securityType = FIXSecurityType.Future;
+                        break;
+                    case TThostFtdcProductClassType.Combination:
+                        securityType = FIXSecurityType.MultiLegInstrument;//此处是否理解上有不同
+                        break;
+                    case TThostFtdcProductClassType.Options:
+                        securityType = FIXSecurityType.FutureOption;
+                        break;
 #if CTPZQ
                 case TThostFtdcProductClassType.StockA:
                 case TThostFtdcProductClassType.StockB:
@@ -209,10 +212,17 @@ namespace QuantBox.OQ.CTPZQ
                     securityType = GetSecurityTypeETF(inst.ProductID, inst.InstrumentID);
                     break;
 #endif
-                default:
-                    securityType = FIXSecurityType.CommonStock;
-                    break;
+                    default:
+                        securityType = FIXSecurityType.CommonStock;
+                        break;
+                }
+                return securityType;
             }
+            catch(Exception ex)
+            {
+                tdlog.Warn("合约:{0},字段内容:{1}", inst.InstrumentID, ex.Message);
+            }
+
             return securityType;
         }
 

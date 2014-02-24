@@ -33,10 +33,7 @@ namespace QuantBox.OQ.CTPZQ
 
             if (IsConnected)
             {
-                if (_bTdConnected)
-                {
-                }
-                else
+                if (!_bTdConnected || m_TradingAccount.AccountID == null)
                 {
                     return brokerInfo;
                 }

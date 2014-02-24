@@ -36,8 +36,8 @@ namespace QuantBox.OQ.CTPZQ
 
         private bool disposed;
 
-        private static Logger mdlog;
-        private static Logger tdlog;
+        private Logger mdlog;
+        private Logger tdlog;
         
         // Use C# destructor syntax for finalization code.
         ~APIProvider()
@@ -56,12 +56,12 @@ namespace QuantBox.OQ.CTPZQ
                 bDoOnce = false;
 
                 // 在QR中用多Provider变相实现多账号功能
-                new APIProvider().Init(100, "CTP100");
-                new APIProvider().Init(101, "CTP101");
-                new APIProvider().Init(102, "CTP102");
-                new APIProvider().Init(103, "CTP103");
-                new APIProvider().Init(104, "CTP104");
-                new APIProvider().Init(105, "CTP105");
+                //new APIProvider().Init(100, "CTP100");
+                //new APIProvider().Init(101, "CTP101");
+                //new APIProvider().Init(102, "CTP102");
+                //new APIProvider().Init(103, "CTP103");
+                //new APIProvider().Init(104, "CTP104");
+                //new APIProvider().Init(105, "CTP105");
             }
 #elif CTPZQ
             Init(56,"CTPZQ");

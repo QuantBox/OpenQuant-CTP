@@ -48,7 +48,6 @@ namespace QuantBox.OQ.CTPZQ
 
         private string _SupportMarketOrder;
         private string _SupportCloseToday;
-        private string _DefaultOpenClosePrefix;
 
         [Category(CATEGORY_OTHER)]
         [Description("支持市价单的交易所")]
@@ -63,13 +62,6 @@ namespace QuantBox.OQ.CTPZQ
         public string SupportCloseToday
         {
             get { return _SupportCloseToday; }
-        }
-
-        [Category(CATEGORY_OTHER)]
-        [Description("指定开平，利用Order的Text域开始部分指定开平\n“O|”开仓；“C|”智能平仓；“T|”平今仓；“Y|”平昨仓；")]
-        public string DefaultOpenClosePrefix
-        {
-            get { return _DefaultOpenClosePrefix; }
         }
 
 #elif CTPZQ
@@ -95,11 +87,6 @@ namespace QuantBox.OQ.CTPZQ
             CZCETime,
             FFEXTime
         }
-
-        private const string OpenPrefix = "O|";
-        private const string ClosePrefix = "C|";
-        private const string CloseTodayPrefix = "T|";
-        private const string CloseYesterdayPrefix = "Y|";
 
         #region 参数设置
         private TimeMode _TimeMode;
@@ -234,7 +221,6 @@ namespace QuantBox.OQ.CTPZQ
 #if CTP
             _SupportMarketOrder = String.Format("{0};{1};{2};", ExchangID.DCE, ExchangID.CZCE, ExchangID.CFFEX);
             _SupportCloseToday = ExchangID.SHFE + ";";
-            _DefaultOpenClosePrefix = String.Format("{0};{1};{2};{3}", OpenPrefix, ClosePrefix, CloseTodayPrefix, CloseYesterdayPrefix);
 #elif CTPZQ
 
 #endif
