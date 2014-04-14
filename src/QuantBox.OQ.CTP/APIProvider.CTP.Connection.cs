@@ -4,12 +4,12 @@ using System.Linq;
 using System.Windows.Forms;
 using SmartQuant.Providers;
 using QuantBox.OQ.CTP;
+using SmartQuant;
+using System.Reflection;
 
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
-using SmartQuant;
-using System.Reflection;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ

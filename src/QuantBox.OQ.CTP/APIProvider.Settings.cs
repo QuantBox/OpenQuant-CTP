@@ -5,6 +5,7 @@ using System.Drawing.Design;
 using System.IO;
 using System.Xml.Serialization;
 using QuantBox.OQ.CTP;
+using QuantBox.OQ.Extensions;
 
 #if CTP
 using QuantBox.CSharp2CTP;
@@ -49,6 +50,7 @@ namespace QuantBox.OQ.CTPZQ
         private string _SupportMarketOrder;
         private string _SupportCloseToday;
 
+
         [Category(CATEGORY_OTHER)]
         [Description("支持市价单的交易所")]
         public string SupportMarketOrder
@@ -64,6 +66,8 @@ namespace QuantBox.OQ.CTPZQ
             get { return _SupportCloseToday; }
         }
 
+
+
 #elif CTPZQ
         private enum ExchangID
         {
@@ -71,6 +75,16 @@ namespace QuantBox.OQ.CTPZQ
             SZE
         }
 #endif
+        private EnumOpenClose _DefaultOpenClose;
+
+        [DefaultValue(EnumOpenClose.OPEN)]
+        [Category(CATEGORY_OTHER)]
+        [Description("默认开平：当没有指定开平时，按此进行开平")]
+        public EnumOpenClose DefaultOpenClose
+        {
+            get { return _DefaultOpenClose; }
+            set { _DefaultOpenClose = value; }
+        }
 
         public enum TimeMode
         {
@@ -221,6 +235,7 @@ namespace QuantBox.OQ.CTPZQ
 #if CTP
             _SupportMarketOrder = String.Format("{0};{1};{2};", ExchangID.DCE, ExchangID.CZCE, ExchangID.CFFEX);
             _SupportCloseToday = ExchangID.SHFE + ";";
+            _DefaultOpenClose = EnumOpenClose.OPEN;
 #elif CTPZQ
 
 #endif

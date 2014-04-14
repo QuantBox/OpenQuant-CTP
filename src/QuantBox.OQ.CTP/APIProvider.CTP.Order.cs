@@ -113,11 +113,11 @@ namespace QuantBox.OQ.CTPZQ
             }
             else
             {
-                // 无法识别的格式，直接发送报单，只开仓
+                // 无法识别的格式，直接发送报单，按设定值进行开平
                 TextCommon t = new TextCommon()
                 {
                     Type = EnumGroupType.COMMON,
-                    OpenClose = EnumOpenClose.OPEN
+                    OpenClose = DefaultOpenClose,
                 };
                 CommonOrderItem item = CommonOrderCombiner.Add(order as SingleOrder, t);
                 Send(item);
