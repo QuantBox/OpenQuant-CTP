@@ -8,6 +8,8 @@ using QuantBox.OQ.CTP;
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
+using SmartQuant;
+using System.Reflection;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ
@@ -153,6 +155,24 @@ namespace QuantBox.OQ.CTPZQ
         private string _newTempPath;
         private void _Connect()
         {
+            // 限制低版本的OpenQuant不能使用，其它产品不做限制
+            switch(Framework.Installation.MainProduct)
+            {
+                case "OpenQuant":
+                    if (Assembly.GetEntryAssembly().GetName().Version < new Version(3, 9, 3))
+                    {
+                        MessageBox.Show("您的OpenQuant版本过低，请装最新版");
+                        return;
+                    }
+                    break;
+                case "QuantRouter":
+                    break;
+                case "QuantBase":
+                    break;
+                case "QuantTrader":
+                    break;
+            }
+
             CTPAPI.GetInstance().__RegInstrumentDictionary(_dictInstruments);
             CTPAPI.GetInstance().__RegInstrumentCommissionRateDictionary(_dictCommissionRate);
             CTPAPI.GetInstance().__RegDepthMarketDataDictionary(_dictDepthMarketData);
