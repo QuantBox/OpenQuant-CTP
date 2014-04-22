@@ -144,16 +144,24 @@ namespace QuantBox.OQ.CTPZQ
                             tdlog.Warn("合约:{0},字段内容:{1},{2}", inst.InstrumentID, inst.ExpireDate, ex.Message);
                         }
 
-                        if (inst.ProductClass == TThostFtdcProductClassType.Options)
-                        {
-                            // 支持中金所，大商所，郑商所
-                            var match = Regex.Match(inst.InstrumentID, @"(\d+)(-?)([CP])(-?)(\d+)");
-                            if (match.Success)
-                            {
-                                definition.AddField(EFIXField.PutOrCall, match.Groups[3].Value == "C" ? FIXPutOrCall.Call : FIXPutOrCall.Put);
-                                definition.AddField(EFIXField.StrikePrice, double.Parse(match.Groups[5].Value));
-                            }
-                        }
+                        //if (inst.ProductClass == TThostFtdcProductClassType.Options)
+                        //{
+                        //    // 支持中金所，大商所，郑商所
+                        //    var match = Regex.Match(inst.InstrumentID, @"(\d+)(-?)([CP])(-?)(\d+)");
+                        //    if (match.Success)
+                        //    {
+                        //        definition.AddField(EFIXField.PutOrCall, match.Groups[3].Value == "C" ? FIXPutOrCall.Call : FIXPutOrCall.Put);
+                        //        definition.AddField(EFIXField.StrikePrice, double.Parse(match.Groups[5].Value));
+                        //    }
+                        //}
+                    }
+
+                    // 中金所仿真平台下，居然全设的是股票
+                    var match = Regex.Match(inst.InstrumentID, @"(\d+)(-?)([CP])(-?)(\d+)");
+                    if (match.Success)
+                    {
+                        definition.AddField(EFIXField.PutOrCall, match.Groups[3].Value == "C" ? FIXPutOrCall.Call : FIXPutOrCall.Put);
+                        definition.AddField(EFIXField.StrikePrice, double.Parse(match.Groups[5].Value));
                     }
 
                     FIXSecurityAltIDGroup group = new FIXSecurityAltIDGroup();

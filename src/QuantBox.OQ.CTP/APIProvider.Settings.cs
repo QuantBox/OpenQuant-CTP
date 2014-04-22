@@ -227,6 +227,8 @@ namespace QuantBox.OQ.CTPZQ
             ApiTempPath = Framework.Installation.TempDir.FullName;
             ResumeType = THOST_TE_RESUME_TYPE.THOST_TERT_QUICK;
             HedgeFlagType = TThostFtdcHedgeFlagType.Speculation;
+            _DefaultOpenClose = EnumOpenClose.OPEN;
+
             SwitchMakertOrderToLimitOrder = false;
 
             _bWantMdConnect = true;
@@ -235,7 +237,7 @@ namespace QuantBox.OQ.CTPZQ
 #if CTP
             _SupportMarketOrder = String.Format("{0};{1};{2};", ExchangID.DCE, ExchangID.CZCE, ExchangID.CFFEX);
             _SupportCloseToday = ExchangID.SHFE + ";";
-            _DefaultOpenClose = EnumOpenClose.OPEN;
+            
 #elif CTPZQ
 
 #endif

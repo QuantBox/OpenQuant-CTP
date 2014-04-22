@@ -7,6 +7,36 @@
         <AuthCode />
         <BrokerID>4040</BrokerID>
         <Trading>
+          <string>tcp://yhzx-front1.yhqh.com:51205</string>
+          <string>tcp://yhzx-front3.yhqh.com:52205</string>
+          <string>tcp://101.95.8.178:53205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://yhzx-front1.yhqh.com:41213</string>
+          <string>tcp://yhzx-front3.yhqh.com:41213</string>
+          <string>tcp://101.95.8.178:53213</string>
+        </MarketData>
+        <Label>银河期货主席(电信)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
+          <string>tcp://yhzx-front2.yhqh.com:51205</string>
+          <string>tcp://yhzx-front4.yhqh.com:52205</string>
+          <string>tcp://58.247.171.146:53205</string>
+        </Trading>
+        <MarketData>
+          <string>tcp://yhzx-front2.yhqh.com:41213</string>
+          <string>tcp://yhzx-front4.yhqh.com:41213</string>
+          <string>tcp://58.247.171.146:53213</string>
+        </MarketData>
+        <Label>银河期货主席(联通)</Label>
+      </ServerItem>
+      <ServerItem>
+        <AuthCode />
+        <BrokerID>4040</BrokerID>
+        <Trading>
           <string>tcp://yhctp-front1.yhqh.com:41205</string>
           <string>tcp://yhctp-front3.yhqh.com:41205</string>
         </Trading>
@@ -14,7 +44,7 @@
           <string>tcp://yhctp-front1.yhqh.com:41213</string>
           <string>tcp://yhctp-front3.yhqh.com:41213</string>
         </MarketData>
-        <Label>银河期货实盘(电信)</Label>
+        <Label>银河期货二席(电信)</Label>
       </ServerItem>
       <ServerItem>
         <AuthCode />
@@ -27,7 +57,7 @@
           <string>tcp://yhctp-front2.yhqh.com:41213</string>
           <string>tcp://yhctp-front4.yhqh.com:41213</string>
         </MarketData>
-        <Label>银河期货实盘(联通)</Label>
+        <Label>银河期货二席(联通)</Label>
       </ServerItem>
       <ServerItem>
         <AuthCode />
@@ -41,18 +71,6 @@
           <string>tcp://192.168.106.52:41213</string>
         </MarketData>
         <Label>银河期货实盘(张江内网)</Label>
-      </ServerItem>
-      <ServerItem>
-        <BrokerID>1010</BrokerID>
-        <Trading>
-          <string>tcp://124.207.185.168:41205</string>
-          <string>tcp://124.207.185.169:41205</string>
-        </Trading>
-        <MarketData>
-          <string>tcp://124.207.185.168:41213</string>
-          <string>tcp://124.207.185.169:41213</string>
-        </MarketData>
-        <Label>银河期货中金仿真(电信)</Label>
       </ServerItem>
       <ServerItem>
         <BrokerID>3030</BrokerID>
