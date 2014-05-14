@@ -139,7 +139,7 @@ namespace QuantBox.OQ.CTPZQ
                         record.Exchange = apiExchange;
                         _dictAltSymbol2Instrument[altSymbol] = record;
 
-                        mdlog.Info("订阅合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
+                        mdlog.Info("订阅合约/订阅询价 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
 
                         if (_bTdConnected)
                         {
@@ -158,6 +158,7 @@ namespace QuantBox.OQ.CTPZQ
 
                     // 多次订阅也无所谓
                     MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
+                    MdApi.MD_SubscribeQuote(m_pMdApi, record.Symbol, record.Exchange);
 
                     if (bTrade)
                         record.TradeRequested = true;
@@ -200,13 +201,15 @@ namespace QuantBox.OQ.CTPZQ
                     {
                         _dictDepthMarketData.Remove(altSymbol);
                         _dictAltSymbol2Instrument.Remove(altSymbol);
-                        mdlog.Info("取消合约 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
+                        mdlog.Info("取消合约/取消询价 {0} {1} {2}", altSymbol, record.Symbol, record.Exchange);
                         MdApi.MD_Unsubscribe(m_pMdApi, record.Symbol, record.Exchange);
+                        MdApi.MD_UnsubscribeQuote(m_pMdApi, record.Symbol, record.Exchange);
                     }
                     else
                     {
                         // 只要有一种类型说要订阅，就给订上
                         MdApi.MD_Subscribe(m_pMdApi, record.Symbol, record.Exchange);
+                        MdApi.MD_SubscribeQuote(m_pMdApi, record.Symbol, record.Exchange);
                     }
                 }
             }

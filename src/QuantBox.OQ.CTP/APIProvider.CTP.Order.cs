@@ -86,6 +86,7 @@ namespace QuantBox.OQ.CTPZQ
                         {
                             TextQuote t = JsonConvert.DeserializeObject<TextQuote>(order.Text);
                             QuoteOrderItem item = QuoteOrderCombiner.Add(order as SingleOrder, t);
+                            Send(item);
                         }
                         break;
                     case EnumGroupType.SP:
@@ -261,6 +262,7 @@ namespace QuantBox.OQ.CTPZQ
 
 #if CTP
             nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                -1,
                         apiSymbol,
                         Direction,
                         szCombOffsetFlag,
@@ -323,6 +325,7 @@ namespace QuantBox.OQ.CTPZQ
             int nRet = 0;
 #if CTP
             nRet = TraderApi.TD_SendOrder(m_pTdApi,
+                -1,
                         symbol,
                         Direction,
                         szCombOffsetFlag,

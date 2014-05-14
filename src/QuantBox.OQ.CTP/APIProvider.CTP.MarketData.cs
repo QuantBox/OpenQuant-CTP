@@ -182,7 +182,14 @@ namespace QuantBox.OQ.CTPZQ
                 EmitError(nRequestID, pRspInfo.ErrorID, "OnRspQryDepthMarketData:" + pRspInfo.ErrorMsg);
             }
         }
+        #endregion
 
+
+        #region 询价
+        private void OnRtnForQuoteRsp(IntPtr pMdUserApi, ref CThostFtdcForQuoteRspField pForQuoteRsp)
+        {
+
+        }
         #endregion
     }
 }

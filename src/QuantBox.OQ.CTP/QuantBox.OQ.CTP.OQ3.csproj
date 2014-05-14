@@ -41,6 +41,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.CSharp2CTP.dll</HintPath>
     </Reference>
+    <Reference Include="QuantBox.Libray">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.Libray.dll</HintPath>
+    </Reference>
     <Reference Include="QuantBox.OQ.Extensions">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\SmartQuant Ltd\OpenQuant\Bin\QuantBox.OQ.Extensions.dll</HintPath>
     </Reference>
@@ -81,6 +84,7 @@
     <Compile Include="APIProvider.CTP.Connection.cs" />
     <Compile Include="APIProvider.CTP.cs" />
     <Compile Include="APIProvider.CTP.MarketData.cs" />
+    <Compile Include="APIProvider.CTP.Quote.cs" />
     <Compile Include="APIProvider.CTP.Order.cs" />
     <Compile Include="APIProvider.ExecutionProvider.cs" />
     <Compile Include="APIProvider.InstrumentProvider.cs" />

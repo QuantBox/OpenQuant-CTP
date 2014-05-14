@@ -42,6 +42,7 @@ namespace QuantBox.OQ.CTPZQ
         private fnOnRspQryInvestorPosition _fnOnRspQryInvestorPosition_Holder;
         private fnOnRspQryTradingAccount _fnOnRspQryTradingAccount_Holder;
         private fnOnRtnDepthMarketData _fnOnRtnDepthMarketData_Holder;
+        private fnOnRtnForQuoteRsp _fnOnRtnForQuoteRsp_Holder;
         private fnOnRtnInstrumentStatus _fnOnRtnInstrumentStatus_Holder;
         private fnOnRtnOrder _fnOnRtnOrder_Holder;
         private fnOnRtnTrade _fnOnRtnTrade_Holder;
@@ -68,6 +69,7 @@ namespace QuantBox.OQ.CTPZQ
             _fnOnRspQryTradingAccount_Holder = OnRspQryTradingAccount;
             _fnOnRtnInstrumentStatus_Holder = OnRtnInstrumentStatus;
             _fnOnRtnDepthMarketData_Holder = OnRtnDepthMarketData;
+            _fnOnRtnForQuoteRsp_Holder = OnRtnForQuoteRsp;
             _fnOnRtnOrder_Holder = OnRtnOrder;
             _fnOnRtnTrade_Holder = OnRtnTrade;
 

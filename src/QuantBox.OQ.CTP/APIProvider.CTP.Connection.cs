@@ -10,6 +10,7 @@ using System.Reflection;
 #if CTP
 using QuantBox.CSharp2CTP;
 using QuantBox.Helper.CTP;
+using QuantBox.Libray;
 
 namespace QuantBox.OQ.CTP
 #elif CTPZQ
@@ -291,6 +292,8 @@ namespace QuantBox.OQ.CTPZQ
                 {
                     m_pMdApi = MdApi.MD_CreateMdApi();
                     MdApi.CTP_RegOnRtnDepthMarketData(m_pMsgQueue, _fnOnRtnDepthMarketData_Holder);
+                    MdApi.CTP_RegOnRtnForQuoteRsp(m_pMsgQueue, _fnOnRtnForQuoteRsp_Holder);
+
                     MdApi.MD_RegMsgQueue2MdApi(m_pMdApi, m_pMsgQueue);
                     MdApi.MD_Connect(m_pMdApi, _newTempPath, string.Join(";", server.MarketData.ToArray()), server.BrokerID, account.InvestorId, account.Password);
 
@@ -324,6 +327,9 @@ namespace QuantBox.OQ.CTPZQ
 #if CTP
                     TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
 #endif
+
+
+
                     TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);
                     TraderApi.TD_Connect(m_pTdApi, _newTempPath, string.Join(";", server.Trading.ToArray()),
                         server.BrokerID, account.InvestorId, account.Password,
@@ -477,7 +483,7 @@ namespace QuantBox.OQ.CTPZQ
             if (m_pMdApi == pApi)//行情
             {
                 _bMdConnected = false;
-                if (ConnectionStatus.E_logined == result)
+                if (ConnectionStatus.Logined == result)
                 {
                     _bMdConnected = true;
 
@@ -502,7 +508,7 @@ namespace QuantBox.OQ.CTPZQ
             else if (m_pTdApi == pApi)//交易
             {
                 _bTdConnected = false;
-                if (ConnectionStatus.E_logined == result)
+                if (ConnectionStatus.Logined == result)
                 {
                     _RspUserLogin = pRspUserLogin;
 
@@ -514,7 +520,7 @@ namespace QuantBox.OQ.CTPZQ
                     UpdateLocalTime(SetLocalTimeMode, pRspUserLogin);
 #if CTP
                 }
-                else if (ConnectionStatus.E_confirmed == result)
+                else if (ConnectionStatus.Confirmed == result)
                 {
 #endif
                     _bTdConnected = true;
