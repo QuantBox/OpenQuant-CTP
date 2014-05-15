@@ -50,6 +50,11 @@ namespace QuantBox.OQ.CTPZQ
 #if CTP
         private fnOnRspQryInstrumentMarginRate _fnOnRspQryInstrumentMarginRate_Holder;
 #endif
+        private fnOnErrRtnQuoteAction _fnOnErrRtnQuoteAction_Holder;
+        private fnOnErrRtnQuoteInsert _fnOnErrRtnQuoteInsert_Holder;
+        private fnOnRspQuoteAction _fnOnRspQuoteAction_Holder;
+        private fnOnRspQuoteInsert _fnOnRspQuoteInsert_Holder;
+        private fnOnRtnQuote _fnOnRtnQuote_Holder;
 
         #region 回调
         private void InitCallbacks()
@@ -69,13 +74,19 @@ namespace QuantBox.OQ.CTPZQ
             _fnOnRspQryTradingAccount_Holder = OnRspQryTradingAccount;
             _fnOnRtnInstrumentStatus_Holder = OnRtnInstrumentStatus;
             _fnOnRtnDepthMarketData_Holder = OnRtnDepthMarketData;
-            _fnOnRtnForQuoteRsp_Holder = OnRtnForQuoteRsp;
             _fnOnRtnOrder_Holder = OnRtnOrder;
             _fnOnRtnTrade_Holder = OnRtnTrade;
 
 #if CTP
             _fnOnRspQryInstrumentMarginRate_Holder = OnRspQryInstrumentMarginRate;
 #endif
+            
+            _fnOnRtnForQuoteRsp_Holder = OnRtnForQuoteRsp;
+            _fnOnErrRtnQuoteAction_Holder = OnErrRtnQuoteAction;
+            _fnOnErrRtnQuoteInsert_Holder = OnErrRtnQuoteInsert;
+            _fnOnRspQuoteAction_Holder = OnRspQuoteAction;
+            _fnOnRspQuoteInsert_Holder = OnRspQuoteInsert;
+            _fnOnRtnQuote_Holder = OnRtnQuote;
         }
         #endregion
 

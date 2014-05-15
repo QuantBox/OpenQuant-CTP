@@ -328,6 +328,11 @@ namespace QuantBox.OQ.CTPZQ
                     TraderApi.CTP_RegOnRspQryInstrumentMarginRate(m_pMsgQueue, _fnOnRspQryInstrumentMarginRate_Holder);
 #endif
 
+                    TraderApi.CTP_RegOnErrRtnQuoteAction(m_pMsgQueue, _fnOnErrRtnQuoteAction_Holder);
+                    TraderApi.CTP_RegOnErrRtnQuoteInsert(m_pMsgQueue, _fnOnErrRtnQuoteInsert_Holder);
+                    TraderApi.CTP_RegOnRspQuoteAction(m_pMsgQueue, _fnOnRspQuoteAction_Holder);
+                    TraderApi.CTP_RegOnRspQuoteInsert(m_pMsgQueue, _fnOnRspQuoteInsert_Holder);
+                    TraderApi.CTP_RegOnRtnQuote(m_pMsgQueue, _fnOnRtnQuote_Holder);
 
 
                     TraderApi.TD_RegMsgQueue2TdApi(m_pTdApi, m_pMsgQueue);

@@ -185,11 +185,6 @@ namespace QuantBox.OQ.CTPZQ
         #endregion
 
 
-        #region 询价
-        private void OnRtnForQuoteRsp(IntPtr pMdUserApi, ref CThostFtdcForQuoteRspField pForQuoteRsp)
-        {
-
-        }
-        #endregion
+        
     }
 }

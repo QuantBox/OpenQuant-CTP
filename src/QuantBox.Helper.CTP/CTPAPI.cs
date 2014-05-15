@@ -255,6 +255,18 @@ namespace QuantBox.Helper.CTPZQ
         }
         #endregion
 
+        #region 询价
+        public delegate void RtnForQuoteRsp(CThostFtdcForQuoteRspField pForQuoteRsp);
+        public event RtnForQuoteRsp OnRtnForQuoteRsp;
+        public void FireOnRtnForQuoteRsp(CThostFtdcForQuoteRspField pForQuoteRsp)
+        {
+            if (null != OnRtnForQuoteRsp)
+            {
+                OnRtnForQuoteRsp(pForQuoteRsp);
+            }
+        }
+        #endregion
+
         #region OnStrategyStart
         public EventHandler OnLive;
         public void EmitOnLive()

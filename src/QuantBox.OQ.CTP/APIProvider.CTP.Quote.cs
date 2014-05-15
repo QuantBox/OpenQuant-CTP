@@ -24,6 +24,40 @@ namespace QuantBox.OQ.CTPZQ
 {
     partial class APIProvider
     {
+        #region 询价
+        private void OnRtnForQuoteRsp(IntPtr pMdUserApi, ref CThostFtdcForQuoteRspField pForQuoteRsp)
+        {
+            Console.WriteLine("OnRtnForQuoteRsp");
+            // 询价请求
+            CTPAPI.GetInstance().FireOnRtnForQuoteRsp(pForQuoteRsp);
+        }
+        #endregion
+
+        private void OnErrRtnQuoteAction(IntPtr pTraderApi, ref CThostFtdcQuoteActionField pQuoteAction, ref CThostFtdcRspInfoField pRspInfo)
+        {
+            Console.WriteLine("OnErrRtnQuoteAction");
+        }
+
+        private void OnErrRtnQuoteInsert(IntPtr pTraderApi, ref CThostFtdcInputQuoteField pInputQuote, ref CThostFtdcRspInfoField pRspInfo)
+        {
+            Console.WriteLine("OnErrRtnQuoteAction");
+        }
+
+        private void OnRspQuoteAction(IntPtr pTraderApi, ref CThostFtdcInputQuoteActionField pInputQuoteAction, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
+        {
+            Console.WriteLine("OnRspQuoteAction");
+        }
+
+        private void OnRspQuoteInsert(IntPtr pTraderApi, ref CThostFtdcInputQuoteField pInputQuote, ref CThostFtdcRspInfoField pRspInfo, int nRequestID, bool bIsLast)
+        {
+            Console.WriteLine("OnRspQuoteInsert");
+        }
+
+        private void OnRtnQuote(IntPtr pTraderApi, ref CThostFtdcQuoteField pQuote)
+        {
+            Console.WriteLine("OnRtnQuote");
+        }
+
 
         #region 发双向报价单
         private void Send(QuoteOrderItem item)
